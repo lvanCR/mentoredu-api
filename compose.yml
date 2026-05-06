@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: mentoredu_db
+    environment:
+      POSTGRES_DB: mentoredu_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: mentoredu_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mentoredu.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8082:80"
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
