@@ -33,4 +33,10 @@ public class User {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
+
+    @Column(nullable = false)
+    private Integer points = 0;
+
+    @Column(nullable = false)
+    private Integer coins = 0;
 }
