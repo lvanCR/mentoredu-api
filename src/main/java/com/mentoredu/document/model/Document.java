@@ -35,6 +35,17 @@ public class Document {
     @Column(nullable = false)
     private String fileUrl;
 
+    private String fileName;
+
+    private String contentType;
+
+    private Long fileSize;
+
+    private String fileHash;
+
+    @Column(nullable = false)
+    private Integer version;
+
     @NotBlank
     @Column(nullable = false)
     private String university;
@@ -65,5 +76,6 @@ public class Document {
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (verified == null) verified = false;
         if (anonymous == null) anonymous = false;
+        if (version == null) version = 1;
     }
 }
