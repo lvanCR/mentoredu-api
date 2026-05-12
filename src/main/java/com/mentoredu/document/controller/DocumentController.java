@@ -1,18 +1,28 @@
 package com.mentoredu.document.controller;
 
-import com.mentoredu.document.dto.DuplicateDocumentResponse;
 import com.mentoredu.document.dto.DocumentResponse;
+import com.mentoredu.document.dto.DownloadDocumentResponse;
+import com.mentoredu.document.dto.DuplicateDocumentResponse;
+import com.mentoredu.document.exception.DailyDownloadLimitExceededException;
 import com.mentoredu.document.exception.DuplicateDocumentException;
 import com.mentoredu.document.model.Document;
 import com.mentoredu.document.service.IDocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
@@ -56,9 +66,10 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<DocumentResponse> download(@PathVariable Long id,
-                                                     @AuthenticationPrincipal UserDetails userDetails) {
-        DocumentResponse document = documentService.download(id, userDetails.getUsername());
+    public ResponseEntity<DownloadDocumentResponse> download(@PathVariable Long id,
+                                                             @RequestParam(defaultValue = "false") boolean useCoins,
+                                                             @AuthenticationPrincipal UserDetails userDetails) {
+        DownloadDocumentResponse document = documentService.download(id, userDetails.getUsername(), useCoins);
         return ResponseEntity.ok(document);
     }
 
@@ -76,6 +87,11 @@ public class DocumentController {
                 ex.getDuplicates().stream().map(DocumentResponse::new).toList()
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(DailyDownloadLimitExceededException.class)
+    public ResponseEntity<Map<String, String>> handleDailyDownloadLimit(DailyDownloadLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("message", ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
