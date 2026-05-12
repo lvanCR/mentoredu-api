@@ -41,6 +41,12 @@ public class UserService implements IUserService, UserDetailsService {
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(defaultRole);
+        if (user.getPoints() == null) {
+            user.setPoints(0);
+        }
+        if (user.getCoins() == null) {
+            user.setCoins(0);
+        }
         // Si el frontend envió algún rol, se ignora y se fuerza STUDENT (por ahora)
         return userRepository.save(user);
     }
