@@ -11,6 +11,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     @Query("""
             SELECT d FROM Document d
+            JOIN FETCH d.author
             WHERE (:university IS NULL OR LOWER(d.university) = LOWER(:university))
               AND (:year IS NULL OR d.year = :year)
               AND (:area IS NULL OR LOWER(d.area) = LOWER(:area))
