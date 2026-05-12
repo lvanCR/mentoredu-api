@@ -1,6 +1,8 @@
 package com.mentoredu.document.controller;
 
 import com.mentoredu.document.dto.DocumentResponse;
+import com.mentoredu.document.dto.DownloadDocumentResponse;
+import com.mentoredu.document.exception.DailyDownloadLimitExceededException;
 import com.mentoredu.document.model.Document;
 import com.mentoredu.document.service.IDocumentService;
 import jakarta.validation.Valid;
@@ -10,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -26,9 +30,10 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<DocumentResponse> download(@PathVariable Long id,
-                                                     @AuthenticationPrincipal UserDetails userDetails) {
-        DocumentResponse document = documentService.download(id, userDetails.getUsername());
+    public ResponseEntity<DownloadDocumentResponse> download(@PathVariable Long id,
+                                                             @RequestParam(defaultValue = "false") boolean useCoins,
+                                                             @AuthenticationPrincipal UserDetails userDetails) {
+        DownloadDocumentResponse document = documentService.download(id, userDetails.getUsername(), useCoins);
         return ResponseEntity.ok(document);
     }
 
@@ -37,5 +42,15 @@ public class DocumentController {
                                                             @AuthenticationPrincipal UserDetails userDetails) {
         DocumentResponse document = documentService.toggleAnonymous(id, userDetails.getUsername());
         return ResponseEntity.ok(document);
+    }
+
+    @ExceptionHandler(DailyDownloadLimitExceededException.class)
+    public ResponseEntity<Map<String, String>> handleDailyDownloadLimit(DailyDownloadLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleBadRequest(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
     }
 }

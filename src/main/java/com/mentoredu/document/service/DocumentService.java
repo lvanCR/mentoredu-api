@@ -3,6 +3,8 @@ package com.mentoredu.document.service;
 import com.mentoredu.auth.model.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.document.dto.DocumentResponse;
+import com.mentoredu.document.dto.DownloadDocumentResponse;
+import com.mentoredu.document.exception.DailyDownloadLimitExceededException;
 import com.mentoredu.document.model.Document;
 import com.mentoredu.document.model.DownloadLog;
 import com.mentoredu.document.repository.DocumentRepository;
@@ -34,19 +36,27 @@ public class DocumentService implements IDocumentService {
 
     @Override
     @Transactional
-    public DocumentResponse download(Long documentId, String email) {
+    public DownloadDocumentResponse download(Long documentId, String email, boolean useCoins) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
 
-        if (user.getRole().getName().equals("STUDENT")) {
-            LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-            long todayDownloads = downloadLogRepository.countTodayDownloads(user.getId(), startOfDay);
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        long todayDownloads = downloadLogRepository.countTodayDownloads(user.getId(), startOfDay);
+        boolean unlimitedByRole = hasUnlimitedDownloads(user);
+        boolean paidWithCoins = false;
+        Integer remainingDailyDownloads = null;
+
+        if (!unlimitedByRole && useCoins) {
+            redeemOneCoin(user);
+            paidWithCoins = true;
+        } else if (!unlimitedByRole) {
             if (todayDownloads >= DAILY_DOWNLOAD_LIMIT) {
-                throw new RuntimeException("Límite diario de " + DAILY_DOWNLOAD_LIMIT + " descargas alcanzado");
+                throw new DailyDownloadLimitExceededException();
             }
+            remainingDailyDownloads = (int) (DAILY_DOWNLOAD_LIMIT - todayDownloads - 1);
         }
 
         downloadLogRepository.save(DownloadLog.builder()
@@ -54,7 +64,13 @@ public class DocumentService implements IDocumentService {
                 .document(document)
                 .build());
 
-        return new DocumentResponse(document);
+        return new DownloadDocumentResponse(
+                "Descarga iniciada",
+                new DocumentResponse(document),
+                remainingDailyDownloads,
+                !unlimitedByRole && !paidWithCoins,
+                paidWithCoins
+        );
     }
 
     @Override
@@ -72,5 +88,18 @@ public class DocumentService implements IDocumentService {
 
         document.setAnonymous(!Boolean.TRUE.equals(document.getAnonymous()));
         return new DocumentResponse(documentRepository.save(document));
+    }
+
+    private boolean hasUnlimitedDownloads(User user) {
+        String roleName = user.getRole().getName();
+        return "ADMIN".equals(roleName) || "PREMIUM".equals(roleName);
+    }
+
+    private void redeemOneCoin(User user) {
+        if (user.getCoins() == null || user.getCoins() < 1) {
+            throw new IllegalArgumentException("Saldo insuficiente de monedas");
+        }
+        user.setCoins(user.getCoins() - 1);
+        userRepository.save(user);
     }
 }
