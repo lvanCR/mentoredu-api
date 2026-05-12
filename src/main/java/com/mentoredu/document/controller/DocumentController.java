@@ -1,6 +1,7 @@
 package com.mentoredu.document.controller;
 
 import com.mentoredu.document.dto.DocumentResponse;
+import com.mentoredu.document.dto.DocumentSearchResponse;
 import com.mentoredu.document.dto.DownloadDocumentResponse;
 import com.mentoredu.document.dto.DuplicateDocumentResponse;
 import com.mentoredu.document.exception.DailyDownloadLimitExceededException;
@@ -63,6 +64,14 @@ public class DocumentController {
                 userDetails.getUsername()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<DocumentSearchResponse> search(@RequestParam(required = false) String university,
+                                                         @RequestParam(required = false) Integer year,
+                                                         @RequestParam(required = false) String area,
+                                                         @RequestParam(required = false, name = "q") String query) {
+        return ResponseEntity.ok(documentService.search(university, year, area, query));
     }
 
     @GetMapping("/{id}/download")
