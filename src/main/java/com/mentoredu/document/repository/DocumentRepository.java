@@ -11,6 +11,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     @Query("""
             SELECT d FROM Document d
+            JOIN FETCH d.author
             WHERE (:fileHash IS NOT NULL AND d.fileHash = :fileHash)
                OR (
                     LOWER(d.title) = LOWER(:title)
