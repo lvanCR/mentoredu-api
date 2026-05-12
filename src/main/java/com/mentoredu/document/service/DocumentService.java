@@ -4,9 +4,11 @@ import com.mentoredu.auth.model.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.document.dto.DocumentResponse;
 import com.mentoredu.document.dto.DocumentSearchResponse;
+import com.mentoredu.document.dto.DocumentViewerResponse;
 import com.mentoredu.document.dto.DownloadDocumentResponse;
 import com.mentoredu.document.exception.DailyDownloadLimitExceededException;
 import com.mentoredu.document.exception.DuplicateDocumentException;
+import com.mentoredu.document.exception.PdfPreviewException;
 import com.mentoredu.document.model.Document;
 import com.mentoredu.document.model.DownloadLog;
 import com.mentoredu.document.repository.DocumentRepository;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -116,6 +119,36 @@ public class DocumentService implements IDocumentService {
     }
 
     @Override
+    public DocumentViewerResponse getViewer(Long documentId) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        validatePdfPreview(document);
+
+        String previewUrl = "/api/documents/" + document.getId() + "/preview";
+        return new DocumentViewerResponse(
+                document.getId(),
+                document.getTitle(),
+                previewUrl,
+                "/api/documents/" + document.getId() + "/download",
+                previewUrl + "?quality=low",
+                true,
+                true,
+                true,
+                true,
+                true,
+                "RANGE_REQUESTS"
+        );
+    }
+
+    @Override
+    public Path getPreviewPath(Long documentId) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        validatePdfPreview(document);
+        return resolvePreviewPath(document);
+    }
+
+    @Override
     @Transactional
     public DownloadDocumentResponse download(Long documentId, String email, boolean useCoins) {
         User user = userRepository.findByEmail(email)
@@ -211,6 +244,48 @@ public class DocumentService implements IDocumentService {
             return storedFileName;
         } catch (IOException ex) {
             throw new RuntimeException("No se pudo guardar el documento", ex);
+        }
+    }
+
+    private void validatePdfPreview(Document document) {
+        if (!isPdf(document) || !hasValidPdfHeader(resolvePreviewPath(document))) {
+            throw new PdfPreviewException();
+        }
+    }
+
+    private boolean isPdf(Document document) {
+        String type = document.getType();
+        String fileUrl = document.getFileUrl();
+        String contentType = document.getContentType();
+        return (type != null && type.equalsIgnoreCase("PDF"))
+                || (contentType != null && contentType.equalsIgnoreCase("application/pdf"))
+                || (fileUrl != null && fileUrl.toLowerCase().endsWith(".pdf"));
+    }
+
+    private Path resolvePreviewPath(Document document) {
+        String fileUrl = document.getFileUrl();
+        if (fileUrl == null || fileUrl.trim().isEmpty() || fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
+            throw new PdfPreviewException();
+        }
+
+        String localPath = fileUrl.startsWith("/") ? fileUrl.substring(1) : fileUrl;
+        Path path = Path.of(localPath).normalize();
+        if (!Files.isRegularFile(path)) {
+            throw new PdfPreviewException();
+        }
+        return path;
+    }
+
+    private boolean hasValidPdfHeader(Path path) {
+        byte[] header = new byte[4];
+        try (InputStream inputStream = Files.newInputStream(path)) {
+            return inputStream.read(header) == 4
+                    && header[0] == '%'
+                    && header[1] == 'P'
+                    && header[2] == 'D'
+                    && header[3] == 'F';
+        } catch (IOException ex) {
+            return false;
         }
     }
 
