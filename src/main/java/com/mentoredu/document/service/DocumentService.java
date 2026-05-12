@@ -2,6 +2,7 @@ package com.mentoredu.document.service;
 
 import com.mentoredu.auth.model.User;
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.document.dto.DocumentResponse;
 import com.mentoredu.document.model.Document;
 import com.mentoredu.document.model.DownloadLog;
 import com.mentoredu.document.repository.DocumentRepository;
@@ -24,16 +25,16 @@ public class DocumentService implements IDocumentService {
     private final UserRepository userRepository;
 
     @Override
-    public Document publish(Document document, String email) {
+    public DocumentResponse publish(Document document, String email) {
         User author = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         document.setAuthor(author);
-        return documentRepository.save(document);
+        return new DocumentResponse(documentRepository.save(document));
     }
 
     @Override
     @Transactional
-    public Document download(Long documentId, String email) {
+    public DocumentResponse download(Long documentId, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -53,6 +54,23 @@ public class DocumentService implements IDocumentService {
                 .document(document)
                 .build());
 
-        return document;
+        return new DocumentResponse(document);
+    }
+
+    @Override
+    @Transactional
+    public DocumentResponse toggleAnonymous(Long documentId, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+
+        if (!document.getAuthor().getId().equals(user.getId())) {
+            throw new RuntimeException("No tienes permiso para modificar este documento");
+        }
+
+        document.setAnonymous(!Boolean.TRUE.equals(document.getAnonymous()));
+        return new DocumentResponse(documentRepository.save(document));
     }
 }

@@ -1,5 +1,6 @@
 package com.mentoredu.document.controller;
 
+import com.mentoredu.document.dto.DocumentResponse;
 import com.mentoredu.document.model.Document;
 import com.mentoredu.document.service.IDocumentService;
 import jakarta.validation.Valid;
@@ -18,16 +19,23 @@ public class DocumentController {
     private final IDocumentService documentService;
 
     @PostMapping
-    public ResponseEntity<Document> publish(@Valid @RequestBody Document document,
-                                            @AuthenticationPrincipal UserDetails userDetails) {
-        Document created = documentService.publish(document, userDetails.getUsername());
+    public ResponseEntity<DocumentResponse> publish(@Valid @RequestBody Document document,
+                                                    @AuthenticationPrincipal UserDetails userDetails) {
+        DocumentResponse created = documentService.publish(document, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<Document> download(@PathVariable Long id,
-                                             @AuthenticationPrincipal UserDetails userDetails) {
-        Document document = documentService.download(id, userDetails.getUsername());
+    public ResponseEntity<DocumentResponse> download(@PathVariable Long id,
+                                                     @AuthenticationPrincipal UserDetails userDetails) {
+        DocumentResponse document = documentService.download(id, userDetails.getUsername());
+        return ResponseEntity.ok(document);
+    }
+
+    @PatchMapping("/{id}/anonymous")
+    public ResponseEntity<DocumentResponse> toggleAnonymous(@PathVariable Long id,
+                                                            @AuthenticationPrincipal UserDetails userDetails) {
+        DocumentResponse document = documentService.toggleAnonymous(id, userDetails.getUsername());
         return ResponseEntity.ok(document);
     }
 }
