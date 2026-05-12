@@ -13,6 +13,10 @@ public class DocumentResponse {
     private final String type;
     private final String category;
     private final String fileUrl;
+    private final String fileName;
+    private final String contentType;
+    private final Long fileSize;
+    private final Integer version;
     private final String university;
     private final Integer year;
     private final String area;
@@ -27,6 +31,10 @@ public class DocumentResponse {
         this.type = document.getType();
         this.category = document.getCategory();
         this.fileUrl = document.getFileUrl();
+        this.fileName = document.getFileName();
+        this.contentType = document.getContentType();
+        this.fileSize = document.getFileSize();
+        this.version = document.getVersion();
         this.university = document.getUniversity();
         this.year = document.getYear();
         this.area = document.getArea();
