@@ -1,6 +1,7 @@
 package com.mentoredu.document.controller;
 
 import com.mentoredu.document.dto.DocumentResponse;
+import com.mentoredu.document.dto.DocumentSearchResponse;
 import com.mentoredu.document.model.Document;
 import com.mentoredu.document.service.IDocumentService;
 import jakarta.validation.Valid;
@@ -23,6 +24,14 @@ public class DocumentController {
                                                     @AuthenticationPrincipal UserDetails userDetails) {
         DocumentResponse created = documentService.publish(document, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<DocumentSearchResponse> search(@RequestParam(required = false) String university,
+                                                         @RequestParam(required = false) Integer year,
+                                                         @RequestParam(required = false) String area,
+                                                         @RequestParam(required = false, name = "q") String query) {
+        return ResponseEntity.ok(documentService.search(university, year, area, query));
     }
 
     @GetMapping("/{id}/download")

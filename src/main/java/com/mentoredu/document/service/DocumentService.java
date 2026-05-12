@@ -3,6 +3,7 @@ package com.mentoredu.document.service;
 import com.mentoredu.auth.model.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.document.dto.DocumentResponse;
+import com.mentoredu.document.dto.DocumentSearchResponse;
 import com.mentoredu.document.model.Document;
 import com.mentoredu.document.model.DownloadLog;
 import com.mentoredu.document.repository.DocumentRepository;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,25 @@ public class DocumentService implements IDocumentService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         document.setAuthor(author);
         return new DocumentResponse(documentRepository.save(document));
+    }
+
+    @Override
+    public DocumentSearchResponse search(String university, Integer year, String area, String query) {
+        List<DocumentResponse> documents = documentRepository.search(
+                        clean(university),
+                        year,
+                        clean(area),
+                        clean(query)
+                )
+                .stream()
+                .map(DocumentResponse::new)
+                .toList();
+
+        String message = documents.isEmpty()
+                ? "No se encontraron documentos con esos criterios. Prueba con otros filtros."
+                : "Documentos encontrados";
+
+        return new DocumentSearchResponse(message, documents);
     }
 
     @Override
@@ -72,5 +93,12 @@ public class DocumentService implements IDocumentService {
 
         document.setAnonymous(!Boolean.TRUE.equals(document.getAnonymous()));
         return new DocumentResponse(documentRepository.save(document));
+    }
+
+    private String clean(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 }
