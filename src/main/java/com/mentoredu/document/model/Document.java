@@ -51,6 +51,9 @@ public class Document {
     private Boolean verified;
 
     @Column(nullable = false)
+    private Boolean anonymous;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -61,5 +64,6 @@ public class Document {
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (verified == null) verified = false;
+        if (anonymous == null) anonymous = false;
     }
 }
