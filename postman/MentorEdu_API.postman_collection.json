@@ -51,6 +51,115 @@
       ]
     },
     {
+      "name": "00.1 - Seed Data / Demo",
+      "item": [
+        {
+          "name": "Login seed - Ana demo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('token', json.token);",
+                  "  pm.environment.set('userId', json.userId || json.id);",
+                  "  pm.environment.set('email', json.email);",
+                  "}",
+                  "pm.test('seed login devuelve token', function () { pm.expect(pm.response.json().token).to.exist; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{seedEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Usuario semilla: ana.demo@mentoredu.com / Password123. Usa este request al iniciar la sustentacion para obtener token sin crear datos nuevos."
+          }
+        },
+        {
+          "name": "Login seed - Luis demo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('secondUserId', json.userId || json.id);",
+                  "}",
+                  "pm.test('segundo seed login devuelve token', function () { pm.expect(pm.response.json().token).to.exist; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{seedSecondEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Obtiene el id del segundo usuario semilla para probar follows."
+          }
+        },
+        {
+          "name": "Seed search - documentos iniciales",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 && pm.response.json().documents.length > 0) {",
+                  "  const docs = pm.response.json().documents;",
+                  "  const previewable = docs.find(d => d.fileUrl && d.fileUrl.includes('sample-pdfs')) || docs[0];",
+                  "  pm.environment.set('documentId', previewable.id);",
+                  "  pm.environment.set('uploadedDocumentId', previewable.id);",
+                  "}",
+                  "pm.test('hay documentos semilla', function () { pm.expect(pm.response.json().documents.length).to.be.above(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/search?university=UNI&year=2025&area=Quimica&q=Quimica",
+            "description": "Muestra documentos cargados por data.sql y guarda documentId para descargar/preview."
+          }
+        },
+        {
+          "name": "Seed points - antes de alterar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/gamification/users/{{userId}}/points",
+            "description": "Foto inicial de puntos antes de ejecutar Add points."
+          }
+        },
+        {
+          "name": "Seed coins - antes de alterar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/gamification/users/{{userId}}/coins",
+            "description": "Foto inicial de monedas antes de ejecutar Add/Redeem coins o Download con monedas."
+          }
+        }
+      ]
+    },
+    {
       "name": "01 - Auth",
       "item": [
         {
@@ -121,7 +230,7 @@
                   "if (pm.response.code === 200) {",
                   "  const json = pm.response.json();",
                   "  pm.environment.set('token', json.token);",
-                  "  pm.environment.set('userId', json.userId);",
+                  "  pm.environment.set('userId', json.userId || json.id);",
                   "}",
                   "pm.test('login devuelve token', function () { pm.expect(pm.response.json().token).to.exist; });"
                 ]

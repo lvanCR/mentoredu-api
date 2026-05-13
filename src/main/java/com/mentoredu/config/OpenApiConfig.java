@@ -18,7 +18,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("MentorEdu API")
                         .version("0.0.1")
-                        .description("Web services para autenticación, gamificación, reportes y repositorio de documentos EP03."))
+                        .description("Web services para autenticación, gamificación, reportes y repositorio de documentos."))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components().addSecuritySchemes(
                         securitySchemeName,
