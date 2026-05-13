@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Getter
 public class DocumentResponse {
 
-    private final Long id;
+    private final java.util.UUID id;
     private final String title;
     private final String type;
     private final String category;

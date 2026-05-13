@@ -7,8 +7,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 
-public interface DownloadLogRepository extends JpaRepository<DownloadLog, Long> {
+public interface DownloadLogRepository extends JpaRepository<DownloadLog, java.util.UUID> {
 
     @Query("SELECT COUNT(d) FROM DownloadLog d WHERE d.user.id = :userId AND d.downloadedAt >= :startOfDay")
-    long countTodayDownloads(@Param("userId") Long userId, @Param("startOfDay") LocalDateTime startOfDay);
+    long countTodayDownloads(@Param("userId") java.util.UUID userId, @Param("startOfDay") LocalDateTime startOfDay);
 }

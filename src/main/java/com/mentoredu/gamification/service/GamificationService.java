@@ -13,13 +13,13 @@ public class GamificationService {
     @Autowired
     private UserRepository userRepository;
 
-    public PointsResponse getPoints(Long userId) {
+    public PointsResponse getPoints(java.util.UUID userId) {
         User user = getUserOrThrow(userId);
         return new PointsResponse(user.getId(), user.getPoints());
     }
 
     @Transactional
-    public PointsResponse addPoints(Long userId, PointsRequest request) {
+    public PointsResponse addPoints(java.util.UUID userId, PointsRequest request) {
         if (request.getAmount() == null || request.getAmount() <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor a 0");
         }
@@ -29,13 +29,13 @@ public class GamificationService {
         return new PointsResponse(user.getId(), user.getPoints());
     }
 
-    public CoinsResponse getCoins(Long userId) {
+    public CoinsResponse getCoins(java.util.UUID userId) {
         User user = getUserOrThrow(userId);
         return new CoinsResponse(user.getId(), user.getCoins());
     }
 
     @Transactional
-    public CoinsResponse addCoins(Long userId, CoinsRequest request) {
+    public CoinsResponse addCoins(java.util.UUID userId, CoinsRequest request) {
         if (request.getAmount() == null || request.getAmount() <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor a 0");
         }
@@ -46,7 +46,7 @@ public class GamificationService {
     }
 
     @Transactional
-    public CoinsResponse redeemCoins(Long userId, CoinsRequest request) {
+    public CoinsResponse redeemCoins(java.util.UUID userId, CoinsRequest request) {
         if (request.getAmount() == null || request.getAmount() <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor a 0");
         }
@@ -59,7 +59,7 @@ public class GamificationService {
         return new CoinsResponse(user.getId(), user.getCoins());
     }
 
-    private User getUserOrThrow(Long userId) {
+    private User getUserOrThrow(java.util.UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario inexistente"));
     }

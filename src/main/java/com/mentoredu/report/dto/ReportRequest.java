@@ -13,7 +13,7 @@ public class ReportRequest {
     private TargetType targetType;
 
     @NotNull
-    private Long targetId;
+    private java.util.UUID targetId;
 
     @NotBlank
     private String reason;

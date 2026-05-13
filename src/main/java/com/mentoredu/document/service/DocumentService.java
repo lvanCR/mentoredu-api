@@ -119,7 +119,7 @@ public class DocumentService implements IDocumentService {
     }
 
     @Override
-    public DocumentViewerResponse getViewer(Long documentId) {
+    public DocumentViewerResponse getViewer(java.util.UUID documentId) {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
         validatePdfPreview(document);
@@ -141,7 +141,7 @@ public class DocumentService implements IDocumentService {
     }
 
     @Override
-    public Path getPreviewPath(Long documentId) {
+    public Path getPreviewPath(java.util.UUID documentId) {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
         validatePdfPreview(document);
@@ -150,7 +150,7 @@ public class DocumentService implements IDocumentService {
 
     @Override
     @Transactional
-    public DownloadDocumentResponse download(Long documentId, String email, boolean useCoins) {
+    public DownloadDocumentResponse download(java.util.UUID documentId, String email, boolean useCoins) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -189,7 +189,7 @@ public class DocumentService implements IDocumentService {
 
     @Override
     @Transactional
-    public DocumentResponse toggleAnonymous(Long documentId, String email) {
+    public DocumentResponse toggleAnonymous(java.util.UUID documentId, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 

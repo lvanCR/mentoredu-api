@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PointsResponse {
-    private Long userId;
+    private java.util.UUID userId;
     private Integer points;
 }

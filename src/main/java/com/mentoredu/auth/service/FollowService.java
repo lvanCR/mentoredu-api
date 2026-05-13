@@ -21,7 +21,7 @@ public class FollowService {
     private FollowRepository followRepository;
 
     @Transactional
-    public void follow(Long followerId, Long followedId) {
+    public void follow(java.util.UUID followerId, java.util.UUID followedId) {
         if (followerId.equals(followedId)) {
             throw new IllegalArgumentException("No puedes seguirte a ti mismo");
         }
@@ -39,7 +39,7 @@ public class FollowService {
     }
 
     @Transactional
-    public void unfollow(Long followerId, Long followedId) {
+    public void unfollow(java.util.UUID followerId, java.util.UUID followedId) {
         User follower = getUserOrThrow(followerId);
         User followed = getUserOrThrow(followedId);
         Follow follow = followRepository.findByFollowerAndFollowed(follower, followed)
@@ -47,7 +47,7 @@ public class FollowService {
         followRepository.delete(follow);
     }
 
-    public List<FollowResponse> getFollowing(Long userId) {
+    public List<FollowResponse> getFollowing(java.util.UUID userId) {
         User user = getUserOrThrow(userId);
         return followRepository.findByFollower(user).stream()
                 .map(f -> new FollowResponse(
@@ -58,7 +58,7 @@ public class FollowService {
                 )).collect(Collectors.toList());
     }
 
-    public List<FollowResponse> getFollowers(Long userId) {
+    public List<FollowResponse> getFollowers(java.util.UUID userId) {
         User user = getUserOrThrow(userId);
         return followRepository.findByFollowed(user).stream()
                 .map(f -> new FollowResponse(
@@ -69,7 +69,7 @@ public class FollowService {
                 )).collect(Collectors.toList());
     }
 
-    private User getUserOrThrow(Long userId) {
+    private User getUserOrThrow(java.util.UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario inexistente"));
     }

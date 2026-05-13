@@ -13,27 +13,27 @@ public class GamificationController {
     private GamificationService gamificationService;
 
     @GetMapping("/points")
-    public ResponseEntity<PointsResponse> getPoints(@PathVariable Long userId) {
+    public ResponseEntity<PointsResponse> getPoints(@PathVariable java.util.UUID userId) {
         return ResponseEntity.ok(gamificationService.getPoints(userId));
     }
 
     @PostMapping("/points/add")
-    public ResponseEntity<PointsResponse> addPoints(@PathVariable Long userId, @RequestBody PointsRequest request) {
+    public ResponseEntity<PointsResponse> addPoints(@PathVariable java.util.UUID userId, @RequestBody PointsRequest request) {
         return ResponseEntity.ok(gamificationService.addPoints(userId, request));
     }
 
     @GetMapping("/coins")
-    public ResponseEntity<CoinsResponse> getCoins(@PathVariable Long userId) {
+    public ResponseEntity<CoinsResponse> getCoins(@PathVariable java.util.UUID userId) {
         return ResponseEntity.ok(gamificationService.getCoins(userId));
     }
 
     @PostMapping("/coins/add")
-    public ResponseEntity<CoinsResponse> addCoins(@PathVariable Long userId, @RequestBody CoinsRequest request) {
+    public ResponseEntity<CoinsResponse> addCoins(@PathVariable java.util.UUID userId, @RequestBody CoinsRequest request) {
         return ResponseEntity.ok(gamificationService.addCoins(userId, request));
     }
 
     @PostMapping("/coins/redeem")
-    public ResponseEntity<CoinsResponse> redeemCoins(@PathVariable Long userId, @RequestBody CoinsRequest request) {
+    public ResponseEntity<CoinsResponse> redeemCoins(@PathVariable java.util.UUID userId, @RequestBody CoinsRequest request) {
         return ResponseEntity.ok(gamificationService.redeemCoins(userId, request));
     }
 }

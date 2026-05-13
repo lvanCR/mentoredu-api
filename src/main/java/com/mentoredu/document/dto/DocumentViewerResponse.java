@@ -1,7 +1,7 @@
 package com.mentoredu.document.dto;
 
 public record DocumentViewerResponse(
-        Long documentId,
+        java.util.UUID documentId,
         String title,
         String previewUrl,
         String downloadUrl,

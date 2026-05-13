@@ -15,24 +15,24 @@ public class FollowController {
     private FollowService followService;
 
     @PostMapping("/{followerId}/follow/{followedId}")
-    public ResponseEntity<Void> follow(@PathVariable Long followerId, @PathVariable Long followedId) {
+    public ResponseEntity<Void> follow(@PathVariable java.util.UUID followerId, @PathVariable java.util.UUID followedId) {
         followService.follow(followerId, followedId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{followerId}/unfollow/{followedId}")
-    public ResponseEntity<Void> unfollow(@PathVariable Long followerId, @PathVariable Long followedId) {
+    public ResponseEntity<Void> unfollow(@PathVariable java.util.UUID followerId, @PathVariable java.util.UUID followedId) {
         followService.unfollow(followerId, followedId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{userId}/following")
-    public ResponseEntity<List<FollowResponse>> getFollowing(@PathVariable Long userId) {
+    public ResponseEntity<List<FollowResponse>> getFollowing(@PathVariable java.util.UUID userId) {
         return ResponseEntity.ok(followService.getFollowing(userId));
     }
 
     @GetMapping("/{userId}/followers")
-    public ResponseEntity<List<FollowResponse>> getFollowers(@PathVariable Long userId) {
+    public ResponseEntity<List<FollowResponse>> getFollowers(@PathVariable java.util.UUID userId) {
         return ResponseEntity.ok(followService.getFollowers(userId));
     }
 }

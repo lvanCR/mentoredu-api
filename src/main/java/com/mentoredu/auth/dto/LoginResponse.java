@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class LoginResponse {
     private String token;
-    private Long id;
+    private java.util.UUID id;
     private String firstName;
     private String lastName;
     private String email;

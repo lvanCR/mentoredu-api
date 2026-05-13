@@ -18,11 +18,11 @@ public interface IDocumentService {
 
     DocumentSearchResponse search(String university, Integer year, String area, String query);
 
-    DocumentViewerResponse getViewer(Long documentId);
+    DocumentViewerResponse getViewer(java.util.UUID documentId);
 
-    Path getPreviewPath(Long documentId);
+    Path getPreviewPath(java.util.UUID documentId);
 
-    DownloadDocumentResponse download(Long documentId, String email, boolean useCoins);
+    DownloadDocumentResponse download(java.util.UUID documentId, String email, boolean useCoins);
 
-    DocumentResponse toggleAnonymous(Long documentId, String email);
+    DocumentResponse toggleAnonymous(java.util.UUID documentId, String email);
 }

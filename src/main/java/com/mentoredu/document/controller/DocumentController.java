@@ -110,7 +110,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "200", description = "Configuración del visor", content = @Content(schema = @Schema(implementation = DocumentViewerResponse.class))),
             @ApiResponse(responseCode = "422", description = "No se puede previsualizar el archivo")
     })
-    public ResponseEntity<DocumentViewerResponse> viewer(@PathVariable Long id) {
+    public ResponseEntity<DocumentViewerResponse> viewer(@PathVariable java.util.UUID id) {
         return ResponseEntity.ok(documentService.getViewer(id));
     }
 
@@ -121,7 +121,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "206", description = "Fragmento del PDF para carga parcial"),
             @ApiResponse(responseCode = "422", description = "Archivo dañado o no previsualizable")
     })
-    public ResponseEntity<?> preview(@PathVariable Long id,
+    public ResponseEntity<?> preview(@PathVariable java.util.UUID id,
                                      @RequestHeader(value = HttpHeaders.RANGE, required = false) String rangeHeader) {
         try {
             Path previewPath = documentService.getPreviewPath(id);
@@ -163,7 +163,7 @@ public class DocumentController {
             @ApiResponse(responseCode = "400", description = "Saldo insuficiente de monedas"),
             @ApiResponse(responseCode = "429", description = "Límite diario alcanzado")
     })
-    public ResponseEntity<DownloadDocumentResponse> download(@PathVariable Long id,
+    public ResponseEntity<DownloadDocumentResponse> download(@PathVariable java.util.UUID id,
                                                              @RequestParam(defaultValue = "false") boolean useCoins,
                                                              @AuthenticationPrincipal UserDetails userDetails) {
         DownloadDocumentResponse document = documentService.download(id, userDetails.getUsername(), useCoins);
@@ -173,7 +173,7 @@ public class DocumentController {
     @PatchMapping("/{id}/anonymous")
     @Operation(summary = "Alternar anonimato del documento", description = "Permite al autor ocultar o mostrar su nombre en el documento.")
     @ApiResponse(responseCode = "200", description = "Anonimato actualizado", content = @Content(schema = @Schema(implementation = DocumentResponse.class)))
-    public ResponseEntity<DocumentResponse> toggleAnonymous(@PathVariable Long id,
+    public ResponseEntity<DocumentResponse> toggleAnonymous(@PathVariable java.util.UUID id,
                                                             @AuthenticationPrincipal UserDetails userDetails) {
         DocumentResponse document = documentService.toggleAnonymous(id, userDetails.getUsername());
         return ResponseEntity.ok(document);
