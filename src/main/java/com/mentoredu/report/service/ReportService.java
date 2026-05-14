@@ -2,9 +2,10 @@ package com.mentoredu.report.service;
 
 import com.mentoredu.auth.model.User;
 import com.mentoredu.auth.repository.UserRepository;
-import com.mentoredu.document.model.Document;
-import com.mentoredu.document.repository.DocumentRepository;
+import com.mentoredu.content.model.Document;
+import com.mentoredu.content.repository.DocumentRepository;
 import com.mentoredu.report.dto.ReportRequest;
+import com.mentoredu.report.dto.ReportResponse;
 import com.mentoredu.report.model.Report;
 import com.mentoredu.report.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class ReportService implements IReportService {
     private final DocumentRepository documentRepository;
 
     @Override
-    public Report create(ReportRequest request, String reporterEmail) {
+    public ReportResponse create(ReportRequest request, String reporterEmail) {
         User reporter = userRepository.findByEmail(reporterEmail)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -42,6 +43,6 @@ public class ReportService implements IReportService {
                 .reason(request.getReason())
                 .build();
 
-        return reportRepository.save(report);
+        return new ReportResponse(reportRepository.save(report));
     }
 }

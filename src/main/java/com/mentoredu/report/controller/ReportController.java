@@ -1,7 +1,7 @@
 package com.mentoredu.report.controller;
 
 import com.mentoredu.report.dto.ReportRequest;
-import com.mentoredu.report.model.Report;
+import com.mentoredu.report.dto.ReportResponse;
 import com.mentoredu.report.service.IReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,16 +12,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/reports")
+@RequestMapping("/api/v1/moderation/reports")
 @RequiredArgsConstructor
 public class ReportController {
 
     private final IReportService reportService;
 
     @PostMapping
-    public ResponseEntity<Report> create(@Valid @RequestBody ReportRequest request,
-                                         @AuthenticationPrincipal UserDetails userDetails) {
-        Report report = reportService.create(request, userDetails.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).body(report);
+    public ResponseEntity<ReportResponse> create(@Valid @RequestBody ReportRequest request,
+                                                  @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reportService.create(request, userDetails.getUsername()));
     }
 }

@@ -30,18 +30,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        // Bypass explícito para MentorEdu Auth
         String path = request.getServletPath();
-        if (path.startsWith("/api/auth/")) {
+        if (path.startsWith("/api/v1/auth/")) {
             chain.doFilter(request, response);
             return;
         }
-        
+
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             chain.doFilter(request, response);
             return;
         }
+
         String token = header.substring(7);
         if (jwtUtil.isTokenValid(token)) {
             String email = jwtUtil.extractEmail(token);

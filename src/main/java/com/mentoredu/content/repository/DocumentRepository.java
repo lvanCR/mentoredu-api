@@ -1,0 +1,62 @@
+package com.mentoredu.content.repository;
+
+import com.mentoredu.content.model.Document;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface DocumentRepository extends JpaRepository<Document, UUID> {
+
+    @Query("""
+            SELECT d FROM Document d
+            JOIN FETCH d.author
+            WHERE (:fileHash IS NOT NULL AND d.fileHash = :fileHash)
+               OR (
+                    LOWER(d.title) = LOWER(:title)
+                AND LOWER(d.university) = LOWER(:university)
+                AND d.year = :year
+                AND LOWER(d.area) = LOWER(:area)
+               )
+            """)
+    List<Document> findDuplicates(@Param("fileHash") String fileHash,
+                                  @Param("title") String title,
+                                  @Param("university") String university,
+                                  @Param("year") Integer year,
+                                  @Param("area") String area);
+
+    @Query("""
+            SELECT COALESCE(MAX(d.version), 0) FROM Document d
+            WHERE LOWER(d.title) = LOWER(:title)
+              AND LOWER(d.university) = LOWER(:university)
+              AND d.year = :year
+              AND LOWER(d.area) = LOWER(:area)
+            """)
+    Integer findMaxVersionForMetadata(@Param("title") String title,
+                                      @Param("university") String university,
+                                      @Param("year") Integer year,
+                                      @Param("area") String area);
+
+    @Query("""
+            SELECT d FROM Document d
+            JOIN FETCH d.author
+            WHERE (:university IS NULL OR LOWER(d.university) = LOWER(:university))
+              AND (:year IS NULL OR d.year = :year)
+              AND (:area IS NULL OR LOWER(d.area) = LOWER(:area))
+              AND (
+                    :query IS NULL
+                 OR LOWER(d.title) LIKE LOWER(CONCAT('%', :query, '%'))
+                 OR LOWER(d.university) LIKE LOWER(CONCAT('%', :query, '%'))
+                 OR LOWER(d.area) LIKE LOWER(CONCAT('%', :query, '%'))
+                 OR LOWER(d.category) LIKE LOWER(CONCAT('%', :query, '%'))
+                 OR LOWER(d.type) LIKE LOWER(CONCAT('%', :query, '%'))
+              )
+            ORDER BY d.createdAt DESC
+            """)
+    List<Document> search(@Param("university") String university,
+                          @Param("year") Integer year,
+                          @Param("area") String area,
+                          @Param("query") String query);
+}

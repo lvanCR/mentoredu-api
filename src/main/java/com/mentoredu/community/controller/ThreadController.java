@@ -11,9 +11,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/threads")
+@RequestMapping("/api/v1/threads")
 @RequiredArgsConstructor
 public class ThreadController {
 
@@ -22,18 +23,18 @@ public class ThreadController {
     @PostMapping
     public ResponseEntity<ThreadResponse> create(@Valid @RequestBody CreateThreadRequest request,
                                                  @AuthenticationPrincipal UserDetails userDetails) {
-        var resp = threadService.create(request, userDetails.getUsername());
-        return ResponseEntity.status(201).body(resp);
+        return ResponseEntity.status(201).body(threadService.create(request, userDetails.getUsername()));
     }
 
     @GetMapping
-    public ResponseEntity<List<ThreadResponse>> recent(@RequestParam(defaultValue = "0") int page,
-                                                        @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<List<ThreadResponse>> recent(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(threadService.listRecent(page, size));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ThreadResponse> get(@PathVariable java.util.UUID id) {
+    public ResponseEntity<ThreadResponse> get(@PathVariable UUID id) {
         return ResponseEntity.ok(threadService.get(id));
     }
 }

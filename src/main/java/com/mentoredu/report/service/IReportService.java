@@ -1,8 +1,8 @@
 package com.mentoredu.report.service;
 
 import com.mentoredu.report.dto.ReportRequest;
-import com.mentoredu.report.model.Report;
+import com.mentoredu.report.dto.ReportResponse;
 
 public interface IReportService {
-    Report create(ReportRequest request, String reporterEmail);
+    ReportResponse create(ReportRequest request, String reporterEmail);
 }

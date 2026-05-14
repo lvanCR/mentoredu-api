@@ -1,10 +1,11 @@
 package com.mentoredu.auth.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.UUID;
 import org.hibernate.annotations.GenericGenerator;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -12,35 +13,51 @@ import org.hibernate.annotations.GenericGenerator;
 @NoArgsConstructor @AllArgsConstructor
 @Builder
 public class User {
+
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "first_name", nullable = false, length = 80)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(name = "last_name", nullable = false, length = 80)
     private String lastName;
 
-    @Column(nullable = false)
-    private Integer age;
-
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 120)
     private String email;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @Column(nullable = false)
-    private String password;
+    @Column(name = "password_hash", nullable = false, length = 255)
+    private String passwordHash;
+
+    @Column(nullable = false, length = 20)
+    private String provider = "EMAIL";
+
+    @Column(nullable = false, length = 20)
+    private String status = "ACTIVE";
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-    @Column(nullable = false)
-    private Integer points = 0;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    @Column(nullable = false)
-    private Integer coins = 0;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (provider == null) provider = "EMAIL";
+        if (status == null) status = "ACTIVE";
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

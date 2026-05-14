@@ -7,11 +7,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-import java.util.UUID;
-import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @Table(name = "reports")
@@ -27,7 +26,7 @@ public class Report {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reported_by", nullable = false)
+    @JoinColumn(name = "reporter_user_id", nullable = false)
     private User reportedBy;
 
     @Enumerated(EnumType.STRING)
@@ -46,7 +45,7 @@ public class Report {
     @Column(nullable = false)
     private ReportStatus status;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @PrePersist

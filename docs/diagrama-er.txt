@@ -1,0 +1,491 @@
+@startuml
+title Diagrama ER Físico\nMentorEdu — Agrupado por Bounded Context
+
+left to right direction
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Arial
+
+' =========================
+' AUTH
+' =========================
+package "auth" {
+  entity "roles" as roles {
+    *id : UUID <<PK>>
+    --
+    *name : VARCHAR(30) <<UQ>>
+    description : VARCHAR(120)
+  }
+
+  entity "users" as users {
+    *id : UUID <<PK>>
+    --
+    *first_name : VARCHAR(80)
+    *last_name : VARCHAR(80)
+    *email : VARCHAR(120) <<UQ>>
+    *password_hash : VARCHAR(255)
+    *provider : VARCHAR(20)
+    *status : VARCHAR(20)
+    *role_id : UUID <<FK>>
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+
+  entity "password_reset_tokens" as password_reset_tokens {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    *token : VARCHAR(255) <<UQ>>
+    *expires_at : TIMESTAMP
+    *used : BOOLEAN
+    created_at : TIMESTAMP
+  }
+
+  entity "sessions" as sessions {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    *refresh_token : VARCHAR(255) <<UQ>>
+    *expires_at : TIMESTAMP
+    revoked_at : TIMESTAMP
+    created_at : TIMESTAMP
+  }
+}
+
+' =========================
+' PROFILE
+' =========================
+package "profile" {
+  entity "student_profiles" as student_profiles {
+    *user_id : UUID <<PK, FK>>
+    --
+    school_name : VARCHAR(120)
+    grade_level : VARCHAR(20)
+    target_university : VARCHAR(120)
+    target_career : VARCHAR(120)
+    study_shift : VARCHAR(30)
+    is_anonymous_allowed : BOOLEAN
+  }
+
+  entity "moderator_profiles" as moderator_profiles {
+    *user_id : UUID <<PK, FK>>
+    --
+    permission_level : VARCHAR(30)
+    active : BOOLEAN
+  }
+
+  entity "admin_profiles" as admin_profiles {
+    *user_id : UUID <<PK, FK>>
+    --
+    department : VARCHAR(80)
+  }
+
+  entity "teacher_profiles" as teacher_profiles {
+    *user_id : UUID <<PK, FK>>
+    --
+    specialty : VARCHAR(120)
+    verification_status : VARCHAR(20)
+    bio : TEXT
+  }
+
+  entity "academy_profiles" as academy_profiles {
+    *user_id : UUID <<PK, FK>>
+    --
+    academy_name : VARCHAR(120)
+    ruc : VARCHAR(20) <<UQ>>
+    verification_status : VARCHAR(20)
+    website : VARCHAR(255)
+  }
+
+  entity "notification_preferences" as notification_preferences {
+    *user_id : UUID <<PK, FK>>
+    --
+    email_enabled : BOOLEAN
+    in_app_enabled : BOOLEAN
+    community_enabled : BOOLEAN
+    moderation_enabled : BOOLEAN
+  }
+}
+
+' =========================
+' CONTENT
+' =========================
+package "content" {
+  entity "universities" as universities {
+    *id : UUID <<PK>>
+    --
+    *name : VARCHAR(120) <<UQ>>
+    city : VARCHAR(80)
+  }
+
+  entity "subjects" as subjects {
+    *id : UUID <<PK>>
+    --
+    *name : VARCHAR(80) <<UQ>>
+  }
+
+  entity "tags" as tags {
+    *id : UUID <<PK>>
+    --
+    *name : VARCHAR(60) <<UQ>>
+  }
+
+  entity "resource_files" as resource_files {
+    *id : UUID <<PK>>
+    --
+    *file_url : TEXT
+    *file_name : VARCHAR(255)
+    mime_type : VARCHAR(80)
+    size_bytes : BIGINT
+    created_at : TIMESTAMP
+  }
+
+  entity "academic_resources" as academic_resources {
+    *id : UUID <<PK>>
+    --
+    *author_user_id : UUID <<FK>>
+    *subject_id : UUID <<FK>>
+    university_id : UUID <<FK>>
+    *title : VARCHAR(160)
+    description : TEXT
+    *resource_type : VARCHAR(30)
+    *visibility : VARCHAR(20)
+    verification_status : VARCHAR(20)
+    verified_by : UUID <<FK>>
+    exam_year : INT
+    exam_cycle : VARCHAR(30)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+
+  entity "resource_tags" as resource_tags {
+    *resource_id : UUID <<PK, FK>>
+    *tag_id : UUID <<PK, FK>>
+    created_at : TIMESTAMP
+  }
+}
+
+' =========================
+' COMMUNITY
+' =========================
+package "community" {
+  entity "threads" as threads {
+    *id : UUID <<PK>>
+    --
+    *author_user_id : UUID <<FK>>
+    *subject_id : UUID <<FK>>
+    *title : VARCHAR(160)
+    *body : TEXT
+    *is_anonymous : BOOLEAN
+    *status : VARCHAR(20)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+
+  entity "answers" as answers {
+    *id : UUID <<PK>>
+    --
+    *thread_id : UUID <<FK>>
+    *author_user_id : UUID <<FK>>
+    *body : TEXT
+    *is_accepted : BOOLEAN
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+
+  entity "comments" as comments {
+    *id : UUID <<PK>>
+    --
+    *thread_id : UUID <<FK>>
+    answer_id : UUID <<FK>>
+    *author_user_id : UUID <<FK>>
+    *body : TEXT
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+
+  entity "follow_relations" as follow_relations {
+    *id : UUID <<PK>>
+    --
+    *follower_user_id : UUID <<FK>>
+    *followed_user_id : UUID <<FK>>
+    created_at : TIMESTAMP
+  }
+
+  entity "reactions" as reactions {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    thread_id : UUID <<FK>>
+    answer_id : UUID <<FK>>
+    comment_id : UUID <<FK>>
+    *reaction_type : VARCHAR(20)
+    created_at : TIMESTAMP
+  }
+}
+
+' =========================
+' GAMIFICATION
+' =========================
+package "gamification" {
+  entity "coin_wallets" as coin_wallets {
+    *user_id : UUID <<PK, FK>>
+    --
+    *balance : INT
+    updated_at : TIMESTAMP
+  }
+
+  entity "point_transactions" as point_transactions {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    *source_type : VARCHAR(30)
+    source_id : UUID
+    *points_delta : INT
+    *reason : VARCHAR(120)
+    created_at : TIMESTAMP
+  }
+
+  entity "badges" as badges {
+    *id : UUID <<PK>>
+    --
+    *code : VARCHAR(40) <<UQ>>
+    *name : VARCHAR(80)
+    description : TEXT
+  }
+
+  entity "user_badges" as user_badges {
+    *user_id : UUID <<PK, FK>>
+    *badge_id : UUID <<PK, FK>>
+    earned_at : TIMESTAMP
+  }
+
+  entity "level_progress" as level_progress {
+    *user_id : UUID <<PK, FK>>
+    --
+    *current_level : INT
+    *experience : INT
+    *progress_percentage : DECIMAL(5,2)
+    updated_at : TIMESTAMP
+  }
+}
+
+' =========================
+' MODERATION
+' =========================
+package "moderation" {
+  entity "reports" as reports {
+    *id : UUID <<PK>>
+    --
+    *reporter_user_id : UUID <<FK>>
+    *target_type : VARCHAR(30)
+    *target_id : UUID
+    *reason : VARCHAR(200)
+    *status : VARCHAR(20)
+    resolved_by : UUID <<FK>>
+    created_at : TIMESTAMP
+    resolved_at : TIMESTAMP
+  }
+
+  entity "moderation_actions" as moderation_actions {
+    *id : UUID <<PK>>
+    --
+    *report_id : UUID <<FK>>
+    *moderator_user_id : UUID <<FK>>
+    *action_type : VARCHAR(30)
+    notes : TEXT
+    created_at : TIMESTAMP
+  }
+
+  entity "audit_logs" as audit_logs {
+    *id : UUID <<PK>>
+    --
+    *actor_user_id : UUID <<FK>>
+    *action_type : VARCHAR(50)
+    *entity_type : VARCHAR(50)
+    *entity_id : UUID
+    detail : TEXT
+    created_at : TIMESTAMP
+  }
+
+  entity "appeals" as appeals {
+    *id : UUID <<PK>>
+    --
+    *report_id : UUID <<FK>>
+    *user_id : UUID <<FK>>
+    *reason : TEXT
+    *status : VARCHAR(20)
+    created_at : TIMESTAMP
+    reviewed_at : TIMESTAMP
+  }
+}
+
+' =========================
+' VERIFICATION
+' =========================
+package "verification" {
+  entity "verification_requests" as verification_requests {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    *entity_type : VARCHAR(20)
+    *status : VARCHAR(20)
+    submitted_at : TIMESTAMP
+    reviewed_by : UUID <<FK>>
+    reviewed_at : TIMESTAMP
+  }
+
+  entity "verification_documents" as verification_documents {
+    *id : UUID <<PK>>
+    --
+    *request_id : UUID <<FK>>
+    *document_type : VARCHAR(50)
+    *file_url : TEXT
+    uploaded_at : TIMESTAMP
+  }
+}
+
+' =========================
+' SUBSCRIPTION / MONETIZATION
+' =========================
+package "subscription" {
+  entity "plans" as plans {
+    *id : UUID <<PK>>
+    --
+    *name : VARCHAR(40) <<UQ>>
+    *price : DECIMAL(10,2)
+    *duration_days : INT
+    *description : VARCHAR(200)
+  }
+
+  entity "subscriptions" as subscriptions {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    *plan_id : UUID <<FK>>
+    *status : VARCHAR(20)
+    starts_at : TIMESTAMP
+    ends_at : TIMESTAMP
+    created_at : TIMESTAMP
+  }
+
+  entity "payments" as payments {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    subscription_id : UUID <<FK>>
+    coin_purchase_id : UUID <<FK>>
+    *amount : DECIMAL(10,2)
+    *currency : VARCHAR(10)
+    *payment_method : VARCHAR(30)
+    *status : VARCHAR(20)
+    created_at : TIMESTAMP
+  }
+
+  entity "coin_packages" as coin_packages {
+    *id : UUID <<PK>>
+    --
+    *name : VARCHAR(60)
+    *coins : INT
+    *price : DECIMAL(10,2)
+    active : BOOLEAN
+  }
+
+  entity "coin_purchases" as coin_purchases {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    *coin_package_id : UUID <<FK>>
+    *quantity : INT
+    *total_amount : DECIMAL(10,2)
+    *status : VARCHAR(20)
+    created_at : TIMESTAMP
+  }
+}
+
+' =========================
+' NOTIFICATION
+' =========================
+package "notification" {
+  entity "notifications" as notifications {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    *type : VARCHAR(30)
+    *title : VARCHAR(120)
+    *message : TEXT
+    read_at : TIMESTAMP
+    created_at : TIMESTAMP
+  }
+}
+
+' =========================
+' RELATIONSHIPS
+' =========================
+
+roles ||--o{ users : role_id
+
+users ||--o| student_profiles : user_id
+users ||--o| moderator_profiles : user_id
+users ||--o| admin_profiles : user_id
+users ||--o| teacher_profiles : user_id
+users ||--o| academy_profiles : user_id
+users ||--o| notification_preferences : user_id
+
+users ||--o{ password_reset_tokens : user_id
+users ||--o{ sessions : user_id
+
+users ||--o{ academic_resources : author_user_id
+subjects ||--o{ academic_resources : subject_id
+universities ||--o{ academic_resources : university_id
+users ||--o{ academic_resources : verified_by
+academic_resources ||--|| resource_files : id
+academic_resources ||--o{ resource_tags : resource_id
+tags ||--o{ resource_tags : tag_id
+
+users ||--o{ threads : author_user_id
+subjects ||--o{ threads : subject_id
+threads ||--o{ answers : thread_id
+users ||--o{ answers : author_user_id
+threads ||--o{ comments : thread_id
+answers ||--o{ comments : answer_id
+users ||--o{ comments : author_user_id
+
+users ||--o{ follow_relations : follower_user_id
+users ||--o{ follow_relations : followed_user_id
+users ||--o{ reactions : user_id
+threads ||--o{ reactions : thread_id
+answers ||--o{ reactions : answer_id
+comments ||--o{ reactions : comment_id
+
+users ||--|| coin_wallets : user_id
+users ||--o{ point_transactions : user_id
+users ||--o{ user_badges : user_id
+badges ||--o{ user_badges : badge_id
+users ||--|| level_progress : user_id
+
+users ||--o{ reports : reporter_user_id
+users ||--o{ reports : resolved_by
+reports ||--o{ moderation_actions : report_id
+users ||--o{ moderation_actions : moderator_user_id
+users ||--o{ audit_logs : actor_user_id
+reports ||--o{ appeals : report_id
+users ||--o{ appeals : user_id
+
+users ||--o{ verification_requests : user_id
+users ||--o{ verification_requests : reviewed_by
+verification_requests ||--o{ verification_documents : request_id
+
+users ||--o{ subscriptions : user_id
+plans ||--o{ subscriptions : plan_id
+users ||--o{ payments : user_id
+subscriptions ||--o{ payments : subscription_id
+coin_purchases ||--o{ payments : coin_purchase_id
+users ||--o{ coin_purchases : user_id
+coin_packages ||--o{ coin_purchases : coin_package_id
+
+users ||--o{ notifications : user_id
+
+@enduml
