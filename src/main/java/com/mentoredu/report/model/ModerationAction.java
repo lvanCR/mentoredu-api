@@ -1,4 +1,4 @@
-package com.mentoredu.content.model;
+package com.mentoredu.report.model;
 
 import com.mentoredu.auth.model.User;
 import jakarta.persistence.*;
@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "download_logs")
+@Table(name = "moderation_actions")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class DownloadLog {
+public class ModerationAction {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -22,18 +22,24 @@ public class DownloadLog {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "report_id", nullable = false)
+    private Report report;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resource_id", nullable = false)
-    private AcademicResource resource;
+    @JoinColumn(name = "moderator_user_id", nullable = false)
+    private User moderator;
 
-    @Column(name = "downloaded_at", nullable = false)
-    private LocalDateTime downloadedAt;
+    @Column(name = "action_type", nullable = false, length = 30)
+    private String actionType;
+
+    @Column(columnDefinition = "text")
+    private String notes;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        if (downloadedAt == null) downloadedAt = LocalDateTime.now();
+        if (createdAt == null) createdAt = LocalDateTime.now();
     }
 }

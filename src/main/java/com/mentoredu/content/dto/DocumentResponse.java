@@ -1,6 +1,6 @@
 package com.mentoredu.content.dto;
 
-import com.mentoredu.content.model.Document;
+import com.mentoredu.content.model.AcademicResource;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -26,24 +26,24 @@ public class DocumentResponse {
     private final LocalDateTime createdAt;
     private final String authorName;
 
-    public DocumentResponse(Document document) {
-        this.id = document.getId();
-        this.title = document.getTitle();
-        this.type = document.getType();
-        this.category = document.getCategory();
-        this.fileUrl = document.getFileUrl();
-        this.fileName = document.getFileName();
-        this.contentType = document.getContentType();
-        this.fileSize = document.getFileSize();
-        this.version = document.getVersion();
-        this.university = document.getUniversity();
-        this.year = document.getYear();
-        this.area = document.getArea();
-        this.verified = document.getVerified();
-        this.anonymous = document.getAnonymous();
-        this.createdAt = document.getCreatedAt();
-        this.authorName = Boolean.TRUE.equals(document.getAnonymous())
+    public DocumentResponse(AcademicResource resource) {
+        this.id = resource.getId();
+        this.title = resource.getTitle();
+        this.type = resource.getType();
+        this.category = resource.getCategory();
+        this.fileUrl = resource.getFileUrl();
+        this.fileName = resource.getFileName();
+        this.contentType = resource.getContentType();
+        this.fileSize = resource.getFileSize();
+        this.version = resource.getVersion();
+        this.university = resource.getUniversity();
+        this.year = resource.getYear();
+        this.area = resource.getArea();
+        this.verified = "VERIFIED".equals(resource.getVerificationStatus());
+        this.anonymous = resource.getAnonymous();
+        this.createdAt = resource.getCreatedAt();
+        this.authorName = Boolean.TRUE.equals(resource.getAnonymous())
                 ? "Usuario Anónimo"
-                : document.getAuthor().getFirstName() + " " + document.getAuthor().getLastName();
+                : resource.getAuthor().getFirstName() + " " + resource.getAuthor().getLastName();
     }
 }

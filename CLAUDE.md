@@ -18,16 +18,20 @@ Backend de MentorEdu: API REST construida con **Java 21 + Spring Boot 4**, base 
 ```
 com.mentoredu/
 ├── auth/           → users, roles, sessions, password_reset_tokens
-├── profile/        → student_profiles, teacher_profiles, academy_profiles, moderator_profiles, admin_profiles
+├── profile/        → student_profiles, teacher_profiles, academy_profiles,
+│                     moderator_profiles, admin_profiles, notification_preferences
 ├── content/        → academic_resources, resource_files, universities, subjects, tags
 ├── community/      → threads, answers, comments, reactions, follow_relations
 ├── gamification/   → coin_wallets, point_transactions, badges, user_badges, level_progress
 ├── report/         → reports, moderation_actions, audit_logs, appeals
 ├── verification/   → verification_requests, verification_documents
 ├── subscription/   → plans, subscriptions, payments, coin_packages, coin_purchases
-├── notification/   → notifications, notification_preferences
+├── notification/   → notifications
 └── config/         → configuración global (seguridad, beans, etc.)
 ```
+
+> **Nota**: `notification_preferences` vive en el paquete `profile` (alineado con ER y diagrama de clases),
+> no en `notification`.
 
 Migraciones Flyway en: `src/main/resources/db/migration/`
 Formato obligatorio: `V{n}__{descripcion_en_snake_case}.sql`
@@ -59,7 +63,7 @@ Formato obligatorio: `V{n}__{descripcion_en_snake_case}.sql`
     - Endpoint: `POST /api/v1/auth/forgot-password`, `POST /api/v1/auth/reset-password`
     - Lógica: generar token UUID, guardar hash, enviar email, validar expiración (1 hora), marcar `used = true`
 
-### ✅ REORGANIZACIÓN COMPLETADA (chore/reorganize-architecture)
+### ✅ ALINEACIÓN ESTRUCTURAL COMPLETADA (chore/reorganize-architecture)
 - [x] **Bloque A** — Migración V1 única y limpia (`db/migration/V1__initial_schema.sql`). `ddl-auto: validate`.
 - [x] **Bloque B** — `User` alineado al ER: sin `age`/`points`/`coins`, con `provider`/`status`/timestamps. `passwordHash` correcto.
 - [x] **Bloque C** — `Follow` → `community.FollowRelation` (tabla `follow_relations`, FKs `follower_user_id`/`followed_user_id`).
@@ -70,6 +74,10 @@ Formato obligatorio: `V{n}__{descripcion_en_snake_case}.sql`
 - [x] **Bloque H** — `register()` usa `RegisterRequest` DTO. `ThreadService.listRecent()` paginado. `ReportController` devuelve `ReportResponse`.
 - [x] **Bloque I** — `IGamificationService` e `IFollowService` creadas. `GamificationService` usa `CoinWallet`/`PointTransaction`.
 - [x] **Bloque J** — Seed corregido: 5 roles `STUDENT`, `TEACHER`, `ACADEMY`, `MODERATOR`, `ADMIN` (no `PREMIUM`).
+- [x] **Bloque K** — `Document` → `AcademicResource` (tabla `academic_resources`). V1 migration corregida. Campos ER añadidos (`resource_type`, `visibility`, `verification_status`, `exam_year`, etc.). `DocumentRepository` → `AcademicResourceRepository`.
+- [x] **Bloque L** — Entidades faltantes añadidas: `PasswordResetToken`, `Session` (auth); `Comment`, `Reaction` (community); `Badge`, `UserBadge` (gamification); `ModerationAction`, `AuditLog`, `Appeal` (report).
+- [x] **Bloque M** — Paquetes faltantes creados con entidades y repositorios: `profile/` (5 perfiles + NotificationPreference), `verification/`, `subscription/` (con enums SubscriptionStatus/PaymentStatus), `notification/`.
+- [x] **Bloque N** — `ReportStatus` corregido: `OPEN, IN_REVIEW, RESOLVED, REJECTED`. `TargetType` ampliado: `THREAD, ANSWER, COMMENT, RESOURCE`. `download_logs.document_id` → `resource_id` FK → `academic_resources`. FK de `resource_tags.resource_id` → `academic_resources` añadida.
 
 ### 📋 PENDIENTES (TODO)
 

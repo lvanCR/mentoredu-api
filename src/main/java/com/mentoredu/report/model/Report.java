@@ -51,6 +51,6 @@ public class Report {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
-        if (status == null) status = ReportStatus.PENDING;
+        if (status == null) status = ReportStatus.OPEN;
     }
 }

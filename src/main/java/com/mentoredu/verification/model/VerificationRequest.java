@@ -1,4 +1,4 @@
-package com.mentoredu.content.model;
+package com.mentoredu.verification.model;
 
 import com.mentoredu.auth.model.User;
 import jakarta.persistence.*;
@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "download_logs")
+@Table(name = "verification_requests")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class DownloadLog {
+public class VerificationRequest {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -25,15 +25,25 @@ public class DownloadLog {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resource_id", nullable = false)
-    private AcademicResource resource;
+    @Column(name = "entity_type", length = 20)
+    private String entityType;
 
-    @Column(name = "downloaded_at", nullable = false)
-    private LocalDateTime downloadedAt;
+    @Column(nullable = false, length = 20)
+    private String status = "PENDING";
+
+    @Column(name = "submitted_at")
+    private LocalDateTime submittedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private User reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
 
     @PrePersist
     protected void onCreate() {
-        if (downloadedAt == null) downloadedAt = LocalDateTime.now();
+        if (submittedAt == null) submittedAt = LocalDateTime.now();
+        if (status == null) status = "PENDING";
     }
 }

@@ -1,4 +1,4 @@
-package com.mentoredu.content.model;
+package com.mentoredu.community.model;
 
 import com.mentoredu.auth.model.User;
 import jakarta.persistence.*;
@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "download_logs")
+@Table(name = "reactions")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class DownloadLog {
+public class Reaction {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -26,14 +26,25 @@ public class DownloadLog {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resource_id", nullable = false)
-    private AcademicResource resource;
+    @JoinColumn(name = "thread_id")
+    private Thread thread;
 
-    @Column(name = "downloaded_at", nullable = false)
-    private LocalDateTime downloadedAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "answer_id")
+    private Answer answer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
+
+    @Column(name = "reaction_type", nullable = false, length = 20)
+    private String reactionType;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        if (downloadedAt == null) downloadedAt = LocalDateTime.now();
+        if (createdAt == null) createdAt = LocalDateTime.now();
     }
 }

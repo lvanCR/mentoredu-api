@@ -1,4 +1,4 @@
-package com.mentoredu.content.model;
+package com.mentoredu.notification.model;
 
 import com.mentoredu.auth.model.User;
 import jakarta.persistence.*;
@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "download_logs")
+@Table(name = "notifications")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class DownloadLog {
+public class Notification {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -25,15 +25,23 @@ public class DownloadLog {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resource_id", nullable = false)
-    private AcademicResource resource;
+    @Column(length = 30)
+    private String type;
 
-    @Column(name = "downloaded_at", nullable = false)
-    private LocalDateTime downloadedAt;
+    @Column(length = 120)
+    private String title;
+
+    @Column(columnDefinition = "text")
+    private String message;
+
+    @Column(name = "read_at")
+    private LocalDateTime readAt;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        if (downloadedAt == null) downloadedAt = LocalDateTime.now();
+        if (createdAt == null) createdAt = LocalDateTime.now();
     }
 }

@@ -125,27 +125,41 @@ CREATE TABLE IF NOT EXISTS resource_files (
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- documents: tabla operativa del context content (EP03).
--- Mapea a com.mentoredu.content.model.Document.
-CREATE TABLE IF NOT EXISTS documents (
+-- academic_resources: entidad principal del bounded context content.
+-- Mapea a com.mentoredu.content.model.AcademicResource.
+-- Campos ER: resource_type, visibility, verification_status, verified_by, subject_id,
+--            university_id, exam_year, exam_cycle.
+-- Campos operativos (backward compat, a migrar en US06): file_url, file_name, content_type,
+--            file_size, file_hash, version, university, area, category, anonymous.
+CREATE TABLE IF NOT EXISTS academic_resources (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     author_user_id uuid NOT NULL,
+    subject_id uuid,
+    university_id uuid,
     title varchar(160) NOT NULL,
-    type varchar(30) NOT NULL,
-    category varchar(120) NOT NULL,
-    file_url text NOT NULL,
+    description text,
+    resource_type varchar(30) NOT NULL DEFAULT 'PDF',
+    visibility varchar(20) NOT NULL DEFAULT 'PUBLIC',
+    verification_status varchar(20),
+    verified_by uuid,
+    exam_year integer,
+    exam_cycle varchar(30),
+    file_url text,
     file_name varchar(255),
     content_type varchar(80),
     file_size bigint,
     file_hash varchar(64),
     version integer NOT NULL DEFAULT 1,
-    university varchar(120) NOT NULL,
-    year integer NOT NULL,
-    area varchar(80) NOT NULL,
-    verified boolean NOT NULL DEFAULT false,
+    university varchar(120),
+    area varchar(80),
+    category varchar(120),
     anonymous boolean NOT NULL DEFAULT false,
     created_at timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT fk_documents_author FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE CASCADE
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT fk_resources_author FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_resources_subject FOREIGN KEY (subject_id) REFERENCES subjects(id),
+    CONSTRAINT fk_resources_university FOREIGN KEY (university_id) REFERENCES universities(id),
+    CONSTRAINT fk_resources_verified_by FOREIGN KEY (verified_by) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS resource_tags (
@@ -153,16 +167,17 @@ CREATE TABLE IF NOT EXISTS resource_tags (
     tag_id uuid NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (resource_id, tag_id),
+    CONSTRAINT fk_resource_tags_resource FOREIGN KEY (resource_id) REFERENCES academic_resources(id) ON DELETE CASCADE,
     CONSTRAINT fk_resource_tags_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS download_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL,
-    document_id uuid NOT NULL,
+    resource_id uuid NOT NULL,
     downloaded_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT fk_download_logs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_download_logs_document FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
+    CONSTRAINT fk_download_logs_resource FOREIGN KEY (resource_id) REFERENCES academic_resources(id) ON DELETE CASCADE
 );
 
 -- COMMUNITY
@@ -419,7 +434,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- INDEXES
 
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_documents_author ON documents(author_user_id);
+CREATE INDEX idx_resources_author ON academic_resources(author_user_id);
 CREATE INDEX idx_threads_author ON threads(author_user_id);
 CREATE INDEX idx_point_transactions_user ON point_transactions(user_id);
 

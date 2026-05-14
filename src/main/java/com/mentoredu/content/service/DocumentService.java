@@ -10,9 +10,9 @@ import com.mentoredu.content.dto.PublishDocumentRequest;
 import com.mentoredu.content.exception.DailyDownloadLimitExceededException;
 import com.mentoredu.content.exception.DuplicateDocumentException;
 import com.mentoredu.content.exception.PdfPreviewException;
-import com.mentoredu.content.model.Document;
+import com.mentoredu.content.model.AcademicResource;
 import com.mentoredu.content.model.DownloadLog;
-import com.mentoredu.content.repository.DocumentRepository;
+import com.mentoredu.content.repository.AcademicResourceRepository;
 import com.mentoredu.content.repository.DownloadLogRepository;
 import com.mentoredu.gamification.model.CoinWallet;
 import com.mentoredu.gamification.repository.CoinWalletRepository;
@@ -42,7 +42,7 @@ public class DocumentService implements IDocumentService {
     private static final long MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
     private static final Path DOCUMENT_STORAGE_PATH = Path.of("uploads", "documents");
 
-    private final DocumentRepository documentRepository;
+    private final AcademicResourceRepository resourceRepository;
     private final DownloadLogRepository downloadLogRepository;
     private final UserRepository userRepository;
     private final CoinWalletRepository coinWalletRepository;
@@ -51,7 +51,7 @@ public class DocumentService implements IDocumentService {
     public DocumentResponse publish(PublishDocumentRequest request, String authorEmail) {
         User author = userRepository.findByEmail(authorEmail)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        Document document = Document.builder()
+        AcademicResource resource = AcademicResource.builder()
                 .title(request.getTitle())
                 .type(request.getType())
                 .category(request.getCategory())
@@ -62,7 +62,7 @@ public class DocumentService implements IDocumentService {
                 .area(request.getArea() != null ? request.getArea() : "")
                 .author(author)
                 .build();
-        return new DocumentResponse(documentRepository.save(document));
+        return new DocumentResponse(resourceRepository.save(resource));
     }
 
     @Override
@@ -77,7 +77,7 @@ public class DocumentService implements IDocumentService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         String fileHash = calculateSha256(file);
-        List<Document> duplicates = documentRepository.findDuplicates(
+        List<AcademicResource> duplicates = resourceRepository.findDuplicates(
                 fileHash, title.trim(), university.trim(), year, area.trim());
 
         if (!duplicates.isEmpty() && !Boolean.TRUE.equals(confirmVersion)) {
@@ -87,9 +87,9 @@ public class DocumentService implements IDocumentService {
         String storedFileName = storeFile(file);
         int nextVersion = duplicates.isEmpty()
                 ? 1
-                : documentRepository.findMaxVersionForMetadata(title.trim(), university.trim(), year, area.trim()) + 1;
+                : resourceRepository.findMaxVersionForMetadata(title.trim(), university.trim(), year, area.trim()) + 1;
 
-        Document document = Document.builder()
+        AcademicResource resource = AcademicResource.builder()
                 .title(title.trim())
                 .type(hasText(type) ? type.trim() : "PDF")
                 .category(hasText(category) ? category.trim() : area.trim())
@@ -105,35 +105,35 @@ public class DocumentService implements IDocumentService {
                 .author(author)
                 .build();
 
-        return new DocumentResponse(documentRepository.save(document));
+        return new DocumentResponse(resourceRepository.save(resource));
     }
 
     @Override
     public DocumentSearchResponse search(String university, Integer year, String area, String query) {
-        List<DocumentResponse> documents = documentRepository
+        List<DocumentResponse> results = resourceRepository
                 .search(clean(university), year, clean(area), clean(query))
                 .stream()
                 .map(DocumentResponse::new)
                 .toList();
 
-        String message = documents.isEmpty()
+        String message = results.isEmpty()
                 ? "No se encontraron documentos con esos criterios. Prueba con otros filtros."
                 : "Documentos encontrados";
 
-        return new DocumentSearchResponse(message, documents);
+        return new DocumentSearchResponse(message, results);
     }
 
     @Override
     public DocumentViewerResponse getViewer(UUID documentId) {
-        Document document = documentRepository.findById(documentId)
+        AcademicResource resource = resourceRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
-        validatePdfPreview(document);
+        validatePdfPreview(resource);
 
-        String previewUrl = "/api/v1/resources/" + document.getId() + "/preview";
+        String previewUrl = "/api/v1/resources/" + resource.getId() + "/preview";
         return new DocumentViewerResponse(
-                document.getId(), document.getTitle(),
+                resource.getId(), resource.getTitle(),
                 previewUrl,
-                "/api/v1/resources/" + document.getId() + "/download",
+                "/api/v1/resources/" + resource.getId() + "/download",
                 previewUrl + "?quality=low",
                 true, true, true, true, true, "RANGE_REQUESTS"
         );
@@ -141,10 +141,10 @@ public class DocumentService implements IDocumentService {
 
     @Override
     public Path getPreviewPath(UUID documentId) {
-        Document document = documentRepository.findById(documentId)
+        AcademicResource resource = resourceRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
-        validatePdfPreview(document);
-        return resolvePreviewPath(document);
+        validatePdfPreview(resource);
+        return resolvePreviewPath(resource);
     }
 
     @Override
@@ -152,7 +152,7 @@ public class DocumentService implements IDocumentService {
     public DownloadDocumentResponse download(UUID documentId, String email, boolean useCoins) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        Document document = documentRepository.findById(documentId)
+        AcademicResource resource = resourceRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
 
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
@@ -171,11 +171,11 @@ public class DocumentService implements IDocumentService {
             remainingDailyDownloads = (int) (DAILY_DOWNLOAD_LIMIT - todayDownloads - 1);
         }
 
-        downloadLogRepository.save(DownloadLog.builder().user(user).document(document).build());
+        downloadLogRepository.save(DownloadLog.builder().user(user).resource(resource).build());
 
         return new DownloadDocumentResponse(
                 "Descarga iniciada",
-                new DocumentResponse(document),
+                new DocumentResponse(resource),
                 remainingDailyDownloads,
                 !unlimitedByRole && !paidWithCoins,
                 paidWithCoins
@@ -187,15 +187,15 @@ public class DocumentService implements IDocumentService {
     public DocumentResponse toggleAnonymous(UUID documentId, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        Document document = documentRepository.findById(documentId)
+        AcademicResource resource = resourceRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
 
-        if (!document.getAuthor().getId().equals(user.getId())) {
+        if (!resource.getAuthor().getId().equals(user.getId())) {
             throw new RuntimeException("No tienes permiso para modificar este documento");
         }
 
-        document.setAnonymous(!Boolean.TRUE.equals(document.getAnonymous()));
-        return new DocumentResponse(documentRepository.save(document));
+        resource.setAnonymous(!Boolean.TRUE.equals(resource.getAnonymous()));
+        return new DocumentResponse(resourceRepository.save(resource));
     }
 
     private void validateRequiredUploadFields(MultipartFile file, String title, String university,
@@ -242,20 +242,20 @@ public class DocumentService implements IDocumentService {
         }
     }
 
-    private void validatePdfPreview(Document document) {
-        if (!isPdf(document) || !hasValidPdfHeader(resolvePreviewPath(document))) {
+    private void validatePdfPreview(AcademicResource resource) {
+        if (!isPdf(resource) || !hasValidPdfHeader(resolvePreviewPath(resource))) {
             throw new PdfPreviewException();
         }
     }
 
-    private boolean isPdf(Document document) {
-        return ("PDF".equalsIgnoreCase(document.getType()))
-                || ("application/pdf".equalsIgnoreCase(document.getContentType()))
-                || (document.getFileUrl() != null && document.getFileUrl().toLowerCase().endsWith(".pdf"));
+    private boolean isPdf(AcademicResource resource) {
+        return ("PDF".equalsIgnoreCase(resource.getType()))
+                || ("application/pdf".equalsIgnoreCase(resource.getContentType()))
+                || (resource.getFileUrl() != null && resource.getFileUrl().toLowerCase().endsWith(".pdf"));
     }
 
-    private Path resolvePreviewPath(Document document) {
-        String fileUrl = document.getFileUrl();
+    private Path resolvePreviewPath(AcademicResource resource) {
+        String fileUrl = resource.getFileUrl();
         if (fileUrl == null || fileUrl.trim().isEmpty()
                 || fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
             throw new PdfPreviewException();
