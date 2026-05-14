@@ -165,6 +165,14 @@ package "content" {
     *tag_id : UUID <<PK, FK>>
     created_at : TIMESTAMP
   }
+
+  entity "download_logs" as download_logs {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    *resource_id : UUID <<FK>>
+    *downloaded_at : TIMESTAMP
+  }
 }
 
 ' =========================
@@ -444,6 +452,8 @@ users ||--o{ academic_resources : verified_by
 academic_resources ||--|| resource_files : id
 academic_resources ||--o{ resource_tags : resource_id
 tags ||--o{ resource_tags : tag_id
+users ||--o{ download_logs : user_id
+academic_resources ||--o{ download_logs : resource_id
 
 users ||--o{ threads : author_user_id
 subjects ||--o{ threads : subject_id

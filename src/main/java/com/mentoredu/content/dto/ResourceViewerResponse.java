@@ -2,8 +2,8 @@ package com.mentoredu.content.dto;
 
 import java.util.UUID;
 
-public record DocumentViewerResponse(
-        UUID documentId,
+public record ResourceViewerResponse(
+        UUID resourceId,
         String title,
         String previewUrl,
         String downloadUrl,

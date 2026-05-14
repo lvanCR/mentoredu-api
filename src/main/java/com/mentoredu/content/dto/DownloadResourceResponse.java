@@ -1,8 +1,8 @@
 package com.mentoredu.content.dto;
 
-public record DownloadDocumentResponse(
+public record DownloadResourceResponse(
         String message,
-        DocumentResponse document,
+        ResourceResponse resource,
         Integer remainingDailyDownloads,
         boolean dailyLimitApplied,
         boolean paidWithCoins

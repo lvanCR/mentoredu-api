@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
-public class DocumentResponse {
+public class ResourceResponse {
 
     private final UUID id;
     private final String title;
@@ -26,7 +26,7 @@ public class DocumentResponse {
     private final LocalDateTime createdAt;
     private final String authorName;
 
-    public DocumentResponse(AcademicResource resource) {
+    public ResourceResponse(AcademicResource resource) {
         this.id = resource.getId();
         this.title = resource.getTitle();
         this.type = resource.getType();

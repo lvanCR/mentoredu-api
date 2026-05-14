@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class PublishDocumentRequest {
+public class PublishResourceRequest {
     @NotBlank private String title;
     @NotBlank private String type;
     @NotBlank private String category;

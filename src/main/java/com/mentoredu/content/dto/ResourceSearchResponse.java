@@ -2,7 +2,7 @@ package com.mentoredu.content.dto;
 
 import java.util.List;
 
-public record DuplicateDocumentResponse(
+public record ResourceSearchResponse(
         String message,
-        List<DocumentResponse> duplicates
+        List<ResourceResponse> resources
 ) {}

@@ -78,6 +78,9 @@ Formato obligatorio: `V{n}__{descripcion_en_snake_case}.sql`
 - [x] **Bloque L** — Entidades faltantes añadidas: `PasswordResetToken`, `Session` (auth); `Comment`, `Reaction` (community); `Badge`, `UserBadge` (gamification); `ModerationAction`, `AuditLog`, `Appeal` (report).
 - [x] **Bloque M** — Paquetes faltantes creados con entidades y repositorios: `profile/` (5 perfiles + NotificationPreference), `verification/`, `subscription/` (con enums SubscriptionStatus/PaymentStatus), `notification/`.
 - [x] **Bloque N** — `ReportStatus` corregido: `OPEN, IN_REVIEW, RESOLVED, REJECTED`. `TargetType` ampliado: `THREAD, ANSWER, COMMENT, RESOURCE`. `download_logs.document_id` → `resource_id` FK → `academic_resources`. FK de `resource_tags.resource_id` → `academic_resources` añadida.
+- [x] **Bloque O** — Renombrado `Document*` → `Resource*` en el bounded context `content`: `DocumentController` → `ResourceController`, `DocumentService` → `ResourceService`, `IDocumentService` → `IResourceService`, todos los DTOs y `DuplicateDocumentException` → `DuplicateResourceException`. Sin cambios en rutas ni en la capa de persistencia.
+- [x] **Bloque P** — Capas service/controller creadas para los 4 bounded contexts que solo tenían model/repository: `profile` (US03/US04), `verification` (US21), `subscription` (US18), `notification` (US14). Cada uno con interface, implementación, controller y DTOs mínimos.
+- [x] **Bloque Q** — `download_logs` añadida al `docs/diagrama-er.txt` (tabla operativa presente en V1 y en `DownloadLog.java`, alineada ahora con el ER). `ddl-auto: validate` no presenta bloqueante.
 
 ### 📋 PENDIENTES (TODO)
 

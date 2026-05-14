@@ -2,13 +2,13 @@ package com.mentoredu.content.service;
 
 import com.mentoredu.auth.model.User;
 import com.mentoredu.auth.repository.UserRepository;
-import com.mentoredu.content.dto.DocumentResponse;
-import com.mentoredu.content.dto.DocumentSearchResponse;
-import com.mentoredu.content.dto.DocumentViewerResponse;
-import com.mentoredu.content.dto.DownloadDocumentResponse;
-import com.mentoredu.content.dto.PublishDocumentRequest;
+import com.mentoredu.content.dto.DownloadResourceResponse;
+import com.mentoredu.content.dto.PublishResourceRequest;
+import com.mentoredu.content.dto.ResourceResponse;
+import com.mentoredu.content.dto.ResourceSearchResponse;
+import com.mentoredu.content.dto.ResourceViewerResponse;
 import com.mentoredu.content.exception.DailyDownloadLimitExceededException;
-import com.mentoredu.content.exception.DuplicateDocumentException;
+import com.mentoredu.content.exception.DuplicateResourceException;
 import com.mentoredu.content.exception.PdfPreviewException;
 import com.mentoredu.content.model.AcademicResource;
 import com.mentoredu.content.model.DownloadLog;
@@ -36,7 +36,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class DocumentService implements IDocumentService {
+public class ResourceService implements IResourceService {
 
     private static final int DAILY_DOWNLOAD_LIMIT = 5;
     private static final long MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
@@ -48,7 +48,7 @@ public class DocumentService implements IDocumentService {
     private final CoinWalletRepository coinWalletRepository;
 
     @Override
-    public DocumentResponse publish(PublishDocumentRequest request, String authorEmail) {
+    public ResourceResponse publish(PublishResourceRequest request, String authorEmail) {
         User author = userRepository.findByEmail(authorEmail)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         AcademicResource resource = AcademicResource.builder()
@@ -62,12 +62,12 @@ public class DocumentService implements IDocumentService {
                 .area(request.getArea() != null ? request.getArea() : "")
                 .author(author)
                 .build();
-        return new DocumentResponse(resourceRepository.save(resource));
+        return new ResourceResponse(resourceRepository.save(resource));
     }
 
     @Override
     @Transactional
-    public DocumentResponse uploadPdf(MultipartFile file, String title, String type, String category,
+    public ResourceResponse uploadPdf(MultipartFile file, String title, String type, String category,
                                       String university, Integer year, String area,
                                       Boolean confirmVersion, String email) {
         validateRequiredUploadFields(file, title, university, year, area);
@@ -81,7 +81,7 @@ public class DocumentService implements IDocumentService {
                 fileHash, title.trim(), university.trim(), year, area.trim());
 
         if (!duplicates.isEmpty() && !Boolean.TRUE.equals(confirmVersion)) {
-            throw new DuplicateDocumentException(duplicates);
+            throw new DuplicateResourceException(duplicates);
         }
 
         String storedFileName = storeFile(file);
@@ -105,32 +105,32 @@ public class DocumentService implements IDocumentService {
                 .author(author)
                 .build();
 
-        return new DocumentResponse(resourceRepository.save(resource));
+        return new ResourceResponse(resourceRepository.save(resource));
     }
 
     @Override
-    public DocumentSearchResponse search(String university, Integer year, String area, String query) {
-        List<DocumentResponse> results = resourceRepository
+    public ResourceSearchResponse search(String university, Integer year, String area, String query) {
+        List<ResourceResponse> results = resourceRepository
                 .search(clean(university), year, clean(area), clean(query))
                 .stream()
-                .map(DocumentResponse::new)
+                .map(ResourceResponse::new)
                 .toList();
 
         String message = results.isEmpty()
-                ? "No se encontraron documentos con esos criterios. Prueba con otros filtros."
-                : "Documentos encontrados";
+                ? "No se encontraron recursos con esos criterios. Prueba con otros filtros."
+                : "Recursos encontrados";
 
-        return new DocumentSearchResponse(message, results);
+        return new ResourceSearchResponse(message, results);
     }
 
     @Override
-    public DocumentViewerResponse getViewer(UUID documentId) {
-        AcademicResource resource = resourceRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+    public ResourceViewerResponse getViewer(UUID resourceId) {
+        AcademicResource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new RuntimeException("Recurso no encontrado"));
         validatePdfPreview(resource);
 
         String previewUrl = "/api/v1/resources/" + resource.getId() + "/preview";
-        return new DocumentViewerResponse(
+        return new ResourceViewerResponse(
                 resource.getId(), resource.getTitle(),
                 previewUrl,
                 "/api/v1/resources/" + resource.getId() + "/download",
@@ -140,20 +140,20 @@ public class DocumentService implements IDocumentService {
     }
 
     @Override
-    public Path getPreviewPath(UUID documentId) {
-        AcademicResource resource = resourceRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+    public Path getPreviewPath(UUID resourceId) {
+        AcademicResource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new RuntimeException("Recurso no encontrado"));
         validatePdfPreview(resource);
         return resolvePreviewPath(resource);
     }
 
     @Override
     @Transactional
-    public DownloadDocumentResponse download(UUID documentId, String email, boolean useCoins) {
+    public DownloadResourceResponse download(UUID resourceId, String email, boolean useCoins) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        AcademicResource resource = resourceRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        AcademicResource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new RuntimeException("Recurso no encontrado"));
 
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         long todayDownloads = downloadLogRepository.countTodayDownloads(user.getId(), startOfDay);
@@ -173,9 +173,9 @@ public class DocumentService implements IDocumentService {
 
         downloadLogRepository.save(DownloadLog.builder().user(user).resource(resource).build());
 
-        return new DownloadDocumentResponse(
+        return new DownloadResourceResponse(
                 "Descarga iniciada",
-                new DocumentResponse(resource),
+                new ResourceResponse(resource),
                 remainingDailyDownloads,
                 !unlimitedByRole && !paidWithCoins,
                 paidWithCoins
@@ -184,18 +184,18 @@ public class DocumentService implements IDocumentService {
 
     @Override
     @Transactional
-    public DocumentResponse toggleAnonymous(UUID documentId, String email) {
+    public ResourceResponse toggleAnonymous(UUID resourceId, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        AcademicResource resource = resourceRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        AcademicResource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new RuntimeException("Recurso no encontrado"));
 
         if (!resource.getAuthor().getId().equals(user.getId())) {
-            throw new RuntimeException("No tienes permiso para modificar este documento");
+            throw new RuntimeException("No tienes permiso para modificar este recurso");
         }
 
         resource.setAnonymous(!Boolean.TRUE.equals(resource.getAnonymous()));
-        return new DocumentResponse(resourceRepository.save(resource));
+        return new ResourceResponse(resourceRepository.save(resource));
     }
 
     private void validateRequiredUploadFields(MultipartFile file, String title, String university,
@@ -238,7 +238,7 @@ public class DocumentService implements IDocumentService {
                     StandardCopyOption.REPLACE_EXISTING);
             return storedFileName;
         } catch (IOException ex) {
-            throw new RuntimeException("No se pudo guardar el documento", ex);
+            throw new RuntimeException("No se pudo guardar el recurso", ex);
         }
     }
 
