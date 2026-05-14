@@ -23,7 +23,7 @@ com.mentoredu/
 ├── content/        → academic_resources, resource_files, universities, subjects, tags
 ├── community/      → threads, answers, comments, reactions, follow_relations
 ├── gamification/   → coin_wallets, point_transactions, badges, user_badges, level_progress
-├── report/         → reports, moderation_actions, audit_logs, appeals
+├── moderation/     → reports, moderation_actions, audit_logs, appeals
 ├── verification/   → verification_requests, verification_documents
 ├── subscription/   → plans, subscriptions, payments, coin_packages, coin_purchases
 ├── notification/   → notifications

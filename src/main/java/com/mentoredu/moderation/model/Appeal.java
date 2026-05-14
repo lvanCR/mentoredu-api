@@ -1,4 +1,4 @@
-package com.mentoredu.report.model;
+package com.mentoredu.moderation.model;
 
 import com.mentoredu.auth.model.User;
 import jakarta.persistence.*;
@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "moderation_actions")
+@Table(name = "appeals")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class ModerationAction {
+public class Appeal {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -26,20 +26,24 @@ public class ModerationAction {
     private Report report;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "moderator_user_id", nullable = false)
-    private User moderator;
-
-    @Column(name = "action_type", nullable = false, length = 30)
-    private String actionType;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(columnDefinition = "text")
-    private String notes;
+    private String reason;
+
+    @Column(nullable = false, length = 20)
+    private String status = "OPEN";
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
+        if (status == null) status = "OPEN";
     }
 }

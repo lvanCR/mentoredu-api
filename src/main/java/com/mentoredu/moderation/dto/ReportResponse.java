@@ -1,6 +1,6 @@
-package com.mentoredu.report.dto;
+package com.mentoredu.moderation.dto;
 
-import com.mentoredu.report.model.Report;
+import com.mentoredu.moderation.model.Report;
 import lombok.Getter;
 
 import java.time.LocalDateTime;

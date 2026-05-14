@@ -1,10 +1,12 @@
-package com.mentoredu.report.dto;
+package com.mentoredu.moderation.dto;
 
-import com.mentoredu.report.model.enums.TargetType;
+import com.mentoredu.moderation.model.enums.TargetType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.UUID;
 
 @Getter @Setter
 public class ReportRequest {
@@ -13,7 +15,7 @@ public class ReportRequest {
     private TargetType targetType;
 
     @NotNull
-    private java.util.UUID targetId;
+    private UUID targetId;
 
     @NotBlank
     private String reason;

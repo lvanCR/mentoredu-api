@@ -1,8 +1,8 @@
-package com.mentoredu.report.model;
+package com.mentoredu.moderation.model;
 
 import com.mentoredu.auth.model.User;
-import com.mentoredu.report.model.enums.ReportStatus;
-import com.mentoredu.report.model.enums.TargetType;
+import com.mentoredu.moderation.model.enums.ReportStatus;
+import com.mentoredu.moderation.model.enums.TargetType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

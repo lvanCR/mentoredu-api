@@ -6,7 +6,8 @@
       "Bash(Write-Output \"Eliminados: Document.java y DocumentRepository.java\")",
       "Bash(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\src\\\\main\\\\java\\\\com\\\\mentoredu\" -Recurse -Filter \"*.java\")",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Sort-Object)"
+      "Bash(Sort-Object)",
+      "PowerShell(Remove-Item *)"
     ]
   }
 }

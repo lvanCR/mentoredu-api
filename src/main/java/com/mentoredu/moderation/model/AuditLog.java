@@ -1,4 +1,4 @@
-package com.mentoredu.report.model;
+package com.mentoredu.moderation.model;
 
 import com.mentoredu.auth.model.User;
 import jakarta.persistence.*;

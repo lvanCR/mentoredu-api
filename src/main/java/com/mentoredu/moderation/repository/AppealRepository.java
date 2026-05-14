@@ -1,6 +1,6 @@
-package com.mentoredu.report.repository;
+package com.mentoredu.moderation.repository;
 
-import com.mentoredu.report.model.Appeal;
+import com.mentoredu.moderation.model.Appeal;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

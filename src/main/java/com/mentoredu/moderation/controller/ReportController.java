@@ -1,8 +1,8 @@
-package com.mentoredu.report.controller;
+package com.mentoredu.moderation.controller;
 
-import com.mentoredu.report.dto.ReportRequest;
-import com.mentoredu.report.dto.ReportResponse;
-import com.mentoredu.report.service.IReportService;
+import com.mentoredu.moderation.dto.ReportRequest;
+import com.mentoredu.moderation.dto.ReportResponse;
+import com.mentoredu.moderation.service.IReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
