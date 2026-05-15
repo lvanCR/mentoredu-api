@@ -22,8 +22,8 @@ public class NotificationPreference {
     @Column(name = "in_app_enabled")
     private Boolean inAppEnabled = true;
 
-    @Column(name = "community_enabled")
-    private Boolean communityEnabled = true;
+    @Column(name = "forum_enabled")
+    private Boolean forumEnabled = true;
 
     @Column(name = "moderation_enabled")
     private Boolean moderationEnabled = true;

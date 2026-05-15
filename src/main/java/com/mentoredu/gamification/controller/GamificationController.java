@@ -2,7 +2,6 @@ package com.mentoredu.gamification.controller;
 
 import com.mentoredu.gamification.dto.CoinsRequest;
 import com.mentoredu.gamification.dto.CoinsResponse;
-import com.mentoredu.gamification.dto.PointsRequest;
 import com.mentoredu.gamification.dto.PointsResponse;
 import com.mentoredu.gamification.service.IGamificationService;
 import lombok.RequiredArgsConstructor;
@@ -23,23 +22,12 @@ public class GamificationController {
         return ResponseEntity.ok(gamificationService.getPoints(userId));
     }
 
-    @PostMapping("/points/add")
-    public ResponseEntity<PointsResponse> addPoints(@PathVariable UUID userId,
-                                                     @RequestBody PointsRequest request) {
-        return ResponseEntity.ok(gamificationService.addPoints(userId, request));
-    }
-
     @GetMapping("/coins")
     public ResponseEntity<CoinsResponse> getCoins(@PathVariable UUID userId) {
         return ResponseEntity.ok(gamificationService.getCoins(userId));
     }
 
-    @PostMapping("/coins/add")
-    public ResponseEntity<CoinsResponse> addCoins(@PathVariable UUID userId,
-                                                   @RequestBody CoinsRequest request) {
-        return ResponseEntity.ok(gamificationService.addCoins(userId, request));
-    }
-
+    // coins/redeem es acción legítima del usuario (canjear monedas para descargar recursos)
     @PostMapping("/coins/redeem")
     public ResponseEntity<CoinsResponse> redeemCoins(@PathVariable UUID userId,
                                                       @RequestBody CoinsRequest request) {

@@ -103,7 +103,7 @@ package "profile" {
     --
     email_enabled : BOOLEAN
     in_app_enabled : BOOLEAN
-    community_enabled : BOOLEAN
+    forum_enabled : BOOLEAN
     moderation_enabled : BOOLEAN
   }
 }

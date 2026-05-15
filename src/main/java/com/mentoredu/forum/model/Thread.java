@@ -39,6 +39,9 @@ public class Thread {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "subject_id", columnDefinition = "uuid")
+    private UUID subjectId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_user_id", nullable = false)
     private User author;

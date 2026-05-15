@@ -202,7 +202,7 @@ package "profile" {
   class NotificationPreference {
     +emailEnabled: Boolean
     +inAppEnabled: Boolean
-    +communityEnabled: Boolean
+    +forumEnabled: Boolean
     +moderationEnabled: Boolean
 
     +updatePreferences(): void
@@ -327,6 +327,8 @@ package "library" {
 package "forum" {
   class Thread {
     +id: UUID
+    +authorUserId: UUID
+    +subjectId: UUID
     +title: String
     +body: String
     +isAnonymous: Boolean
@@ -615,6 +617,7 @@ User "1" -- "0..*" DownloadLog : generates >
 AcademicResource "1" -- "0..*" DownloadLog : logged in >
 
 ' Forum
+Subject "1" -- "0..*" Thread : categorizes >
 User "1" -- "0..*" Thread : creates >
 Thread "1" *-- "0..*" Answer : contains >
 Thread "1" *-- "0..*" Comment : contains >

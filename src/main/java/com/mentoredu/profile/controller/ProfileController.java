@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/profile")
+@RequestMapping("/api/v1/profiles")
 @RequiredArgsConstructor
 @Tag(name = "Perfil", description = "Gestión de perfiles de usuario (US03, US04).")
 @SecurityRequirement(name = "bearerAuth")
