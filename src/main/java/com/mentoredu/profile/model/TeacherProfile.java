@@ -13,15 +13,15 @@ import java.util.UUID;
 public class TeacherProfile {
 
     @Id
-    @Column(name = "user_id", columnDefinition = "uuid")
-    private UUID userId;
+    @Column(name = "profile_id", columnDefinition = "uuid")
+    private UUID profileId;
 
     @Column(length = 120)
     private String specialty;
 
-    @Column(name = "verification_status", length = 20)
-    private String verificationStatus;
+    @Column(name = "institution_name", length = 120)
+    private String institutionName;
 
-    @Column(columnDefinition = "text")
-    private String bio;
+    @Column(name = "bio_professional", columnDefinition = "text")
+    private String bioProfessional;
 }

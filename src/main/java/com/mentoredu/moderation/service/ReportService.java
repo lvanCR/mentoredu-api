@@ -2,8 +2,8 @@ package com.mentoredu.moderation.service;
 
 import com.mentoredu.auth.model.User;
 import com.mentoredu.auth.repository.UserRepository;
-import com.mentoredu.content.model.AcademicResource;
-import com.mentoredu.content.repository.AcademicResourceRepository;
+import com.mentoredu.library.model.AcademicResource;
+import com.mentoredu.library.repository.AcademicResourceRepository;
 import com.mentoredu.moderation.dto.ReportRequest;
 import com.mentoredu.moderation.dto.ReportResponse;
 import com.mentoredu.moderation.model.Report;

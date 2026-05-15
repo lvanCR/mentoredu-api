@@ -1,347 +1,531 @@
-# Especificación de Requisitos y Diseño — MentorEdu
+# 📘 Resumen Ejecutivo: Edu Enterprise & MentorEdu
 
+## 🚀 Startup
+
+| Campo | Descripción |
+|---|---|
+| Nombre | Edu Enterprise |
+| Producto | MentorEdu |
+| Fundación | 2026 |
+| Origen | Universidad Peruana de Ciencias Aplicadas (UPC) |
+| Propósito | Democratizar el acceso a materiales de preparación universitaria mediante una plataforma colaborativa, gamificada y móvil. |
+| ODS asociado | ODS 4: Educación de calidad (metas 4.4, 4.5 y 4.a) |
+
+## 🎯 Segmentos objetivo
+
+| Segmento | Perfil | Principales necesidades |
+|---|---|---|
+| Estudiantes preuniversitarios | Jóvenes de 15 a 20 años, de 4.º/5.º de secundaria o egresados, aspirantes a universidades competitivas. | Repositorio de materiales, foros colaborativos, clasificación por institución y curso, gamificación. |
+| Docentes | Profesores particulares o de academias que comparten materiales y resuelven dudas. | Verificación, visibilidad, publicación de recursos y participación en foros. |
+| Organizaciones | Academias, centros de preparación y entidades educativas. | Perfil institucional, sedes, oferta académica, verificación y administración de recursos. |
+
+## 🧭 Objetivos estratégicos
+
+| Perspectiva | Objetivo |
+|---|---|
+| Para estudiantes | Acceso equitativo a materiales, espacio seguro para resolver dudas y motivación mediante puntos y niveles. |
+| Para docentes | Publicación confiable, reputación profesional y participación ordenada en la comunidad. |
+| Para organizaciones | Perfil institucional claro, gestión de oferta académica y presencia verificada dentro de la plataforma. |
+| Impacto social | Disminuir barreras de acceso a recursos de preparación universitaria y fortalecer el aprendizaje colaborativo. |
+
+## Especificación de Requisitos y Diseño — MentorEdu
 ## 1. Épicas (Epics)
-
-| Épica | Título | Descripción |
-|-------|--------|-------------|
-| EP01 | Autenticación y gestión de cuenta | Registro, inicio de sesión, recuperación de contraseña y seguridad de cuenta. |
-| EP02 | Perfil y progreso personal | Gestión del perfil, visualización de actividad, puntos, niveles y documentos aportados. |
-| EP03 | Repositorio de documentos | Subida, búsqueda, visualización, descarga y gestión de exámenes y materiales. |
-| EP04 | Foros y colaboración | Preguntas ancladas a exámenes, respuestas, reportes, anonimato y notificaciones. |
-| EP05 | Gamificación y recompensas | Puntos, niveles, monedas virtuales y ventajas para incentivar la participación. |
-| EP06 | Monetización y modelo freemium | Suscripciones premium, compra de monedas y gestión de límites de descarga. |
-| EP07 | Interacción social | Seguir a otros usuarios, ver actividad de colaboradores destacados. |
-| EP08 | Moderación y verificación | Orden, verificación de usuarios y contenidos publicados. |
-
----
+| ID | Titulo | Descripcion |
+|---|---|---|
+| EP-01 | Auth | Gestiona el registro, inicio de sesion y recuperacion de acceso de los usuarios. |
+| EP-02 | Profile | Gestiona el perfil base y los perfiles especificos de cada tipo de usuario. |
+| EP-03 | Academy | Gestiona las academias de preparacion, sus sedes, programas y ciclos de estudio. |
+| EP-04 | Library | Gestiona la publicacion, clasificacion, busqueda y descarga de recursos academicos. |
+| EP-05 | Forum | Gestiona los hilos de discusion y las respuestas de la comunidad. |
+| EP-06 | Moderation | Gestiona reportes, revisiones y resolucion de incidencias de contenido. |
+| EP-07 | Verification | Gestiona la solicitud y aprobacion de verificacion de docentes y organizaciones. |
+| EP-08 | Billing | Gestiona suscripciones, pagos y compra de beneficios premium. |
+| EP-09 | Notifications | Gestiona las notificaciones generadas por eventos del sistema. |
+| EP-10 | Gamification | Gestiona la acumulacion de puntos de experiencia, niveles, insignias y monedas del usuario. |
 
 ## 2. User Stories
 
-### US01 – Registro de usuario
-- **Épica**: EP01
-- **Descripción**: Como estudiante preuniversitario, quiero registrarme con mi correo electrónico o cuenta de Google de forma sencilla y segura para acceder rápidamente a la plataforma.
-- **Criterios de Aceptación**:
+### US01 — Register account with email and password
+- **Epic**: EP-01
+- **Descripcion**: Como visitante, quiero registrarme con correo y contraseña para crear mi cuenta.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que soy un estudiante nuevo, CUANDO ingreso mi correo y contraseña (o acepto usar Google) y completo los campos obligatorios, ENTONCES se crea mi cuenta y se me redirige al dashboard. |
-| Error | DADO que intento registrarme, CUANDO ingreso un correo ya registrado o contraseña débil, ENTONCES el sistema muestra un mensaje de error claro y no crea la cuenta. |
-| Alternativo | DADO que uso registro con Google, CUANDO otorgo permisos, ENTONCES el sistema crea automáticamente mi perfil con los datos públicos de Google. |
+|---|---|
+| Exitoso | Dado que ingreso un correo valido y una contrasena valida, cuando envio el formulario, entonces el sistema crea la cuenta. |
+| Error | Dado que el correo ya existe o la contrasena no cumple la politica, cuando envio el formulario, entonces el sistema rechaza el registro. |
+| Alternativo exitoso | Dado que completo todos los campos obligatorios correctamente, cuando confirmo el registro, entonces el sistema crea la cuenta y la deja lista para autenticacion. |
+| Alternativo error | Dado que no completo un campo obligatorio, cuando intento registrar la cuenta, entonces el sistema devuelve un error de validacion y no guarda datos. |
 
----
-
-### US02 – Inicio de sesión
-- **Épica**: EP01
-- **Descripción**: Como usuario registrado, quiero iniciar sesión con mis credenciales para acceder a mi cuenta y mis datos.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que tengo una cuenta activa, CUANDO ingreso mi correo y contraseña correctos, ENTONCES el sistema me autentica y muestra mi perfil. |
-| Error | DADO que ingreso credenciales incorrectas, CUANDO presiono "Iniciar sesión", ENTONCES el sistema muestra "Correo o contraseña inválidos" sin bloquear la cuenta. |
-| Alternativo | DADO que olvidé mi contraseña, CUANDO hago clic en "¿Olvidaste tu contraseña?", ENTONCES el sistema me permite iniciar el flujo de recuperación (US20). |
-
----
-
-### US03 – Edición del perfil básico
-- **Épica**: EP02
-- **Descripción**: Como usuario, quiero editar mi perfil (nombre, universidad deseada, carrera, etc.) para personalizar mi experiencia.
-- **Criterios de Aceptación**:
+### US02 — Sign in with email and password
+- **Epic**: EP-01
+- **Descripcion**: Como usuario registrado, quiero iniciar sesion con mi correo y contraseña para acceder a la plataforma.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que estoy en mi perfil, CUANDO modifico mis datos y guardo cambios, ENTONCES la información se actualiza y se muestra correctamente. |
-| Error | DADO que intento guardar un nombre vacío o con caracteres no permitidos, CUANDO presiono guardar, ENTONCES el sistema muestra "Campo inválido" y no actualiza el perfil. |
-| Alternativo | DADO que deseo cambiar mi foto de perfil, CUANDO subo una imagen válida (JPG, PNG, <2MB), ENTONCES la imagen se actualiza y se muestra en mi perfil y en mis aportes. |
+|---|---|
+| Exitoso | Dado que ingreso credenciales validas, cuando envio la solicitud, entonces el sistema autentica la sesion. |
+| Error | Dado que las credenciales son incorrectas, cuando intento acceder, entonces el sistema responde con error de autenticacion. |
+| Alternativo exitoso | Dado que mi cuenta esta activa y mis credenciales son correctas, cuando inicio sesion, entonces el sistema retorna el token o sesion activa. |
+| Alternativo error | Dado que mi cuenta esta bloqueada o inactiva, cuando intento iniciar sesion, entonces el sistema rechaza el acceso. |
 
----
-
-### US04 – Visualización del progreso personal
-- **Épica**: EP02
-- **Descripción**: Como estudiante, quiero ver en mi perfil los documentos compartidos, puntos acumulados, nivel y participación en foros para hacer seguimiento de mi actividad.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que tengo actividad en la plataforma, CUANDO accedo a "Mi Progreso", ENTONCES veo: número de documentos subidos, puntos totales, nivel actual, lista de preguntas y respuestas recientes. |
-| Error | DADO que no tengo actividad, CUANDO accedo a "Mi Progreso", ENTONCES veo un mensaje amigable y todos los contadores en cero. |
-| Alternativo | DADO que quiero ver detalle de mis documentos, CUANDO hago clic en el contador, ENTONCES se abre una lista paginada con títulos y fechas. |
-
----
-
-### US05 – Anonimato en foros y documentos
-- **Épica**: EP04
-- **Descripción**: Como usuario que valora su privacidad, quiero publicar preguntas, respuestas o documentos de forma anónima para evitar sentirme juzgado.
-- **Criterios de Aceptación**:
+### US03 — Request password recovery
+- **Epic**: EP-01
+- **Descripcion**: Como usuario, quiero solicitar recuperacion de contraseña con mi correo para restablecer mi acceso.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que estoy creando una pregunta, CUANDO marco "Publicar anónimamente", ENTONCES la pregunta aparece como "Usuario Anónimo" para la comunidad. |
-| Error | DADO que subo un documento anónimo y es reportado como spam, ENTONCES el sistema asocia el reporte al usuario real internamente, pero para la comunidad sigue siendo anónimo. |
-| Alternativo | DADO que publiqué sin anonimato, CUANDO quiero editarla para hacerla anónima, ENTONCES tengo la opción de ocultar mi identidad retroactivamente. |
+|---|---|
+| Exitoso | Dado que ingreso un correo registrado, cuando envio la solicitud, entonces el sistema genera el enlace de recuperacion. |
+| Error | Dado que el correo no existe, cuando envio la solicitud, entonces el sistema no crea la peticion. |
+| Alternativo exitoso | Dado que el correo pertenece a una cuenta valida, cuando confirmo la solicitud, entonces el sistema envia el enlace al correo registrado. |
+| Alternativo error | Dado que el correo tiene formato invalido, cuando intento enviar la solicitud, entonces el sistema rechaza el pedido por validacion. |
 
----
-
-### US06 – Subida de documentos con metadatos
-- **Épica**: EP03
-- **Descripción**: Como estudiante, quiero subir exámenes o prácticas en PDF con campos obligatorios (universidad, año, área) para mantener el orden en el repositorio.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que tengo un PDF válido (<10MB), CUANDO selecciono el archivo, completo metadatos y presiono "Subir", ENTONCES el documento se guarda y se me notifica que está disponible. |
-| Error | DADO que omito un campo obligatorio (ej. año), CUANDO intento subir, ENTONCES el sistema muestra "Completa todos los campos obligatorios" y no permite la subida. |
-| Alternativo | DADO que subo un documento duplicado, CUANDO el sistema lo detecta, ENTONCES me advierte y pide confirmar si quiero subirlo igualmente. |
-
----
-
-### US07 – Límites de descarga para acceso equitativo
-- **Épica**: EP03
-- **Descripción**: Como usuario gratuito, quiero descargar documentos hasta un límite diario para que todos tengan acceso justo.
-- **Criterios de Aceptación**:
+### US04 — Select account type
+- **Epic**: EP-02
+- **Descripcion**: Como usuario autenticado, quiero seleccionar mi tipo de cuenta para definir mi ruta de uso.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que no superé el límite de 5 descargas diarias, CUANDO hago clic en "Descargar", ENTONCES se inicia la descarga y mi contador disminuye en 1. |
-| Error | DADO que agotré las 5 descargas, CUANDO intento descargar otro documento, ENTONCES el sistema muestra "Has alcanzado tu límite diario. Espera a mañana o canjea monedas virtuales." |
-| Alternativo | DADO que soy usuario premium o canjeo monedas, CUANDO intento descargar, ENTONCES no se aplican los límites diarios. |
+|---|---|
+| Exitoso | Dado que mi cuenta aun no tiene tipo asignado, cuando selecciono un tipo permitido, entonces el sistema guarda la eleccion. |
+| Error | Dado que la cuenta ya tiene perfil definido, cuando intento cambiarlo, entonces el sistema rechaza la operacion. |
+| Alternativo exitoso | Dado que selecciono un tipo de cuenta valido, cuando confirmo el cambio, entonces el sistema asocia mi cuenta al tipo elegido. |
+| Alternativo error | Dado que intento seleccionar un tipo no permitido por el sistema, cuando envio la solicitud, entonces el sistema devuelve un error de validacion. |
 
----
-
-### US08 – Búsqueda con filtros avanzados
-- **Épica**: EP03
-- **Descripción**: Como estudiante, quiero buscar documentos usando filtros claros (universidad, año, área) para encontrar rápidamente lo que necesito.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que estoy en el repositorio, CUANDO selecciono universidad "UNMSM", año "2025" y área "Química", ENTONCES se muestran solo los exámenes que coinciden. |
-| Error | DADO que no hay resultados para los filtros, CUANDO presiono buscar, ENTONCES el sistema muestra "No se encontraron documentos con esos criterios." |
-| Alternativo | DADO que busco una palabra clave, CUANDO escribo en el buscador libre, ENTONCES se muestran documentos que contienen esa palabra en título o metadatos. |
-
----
-
-### US09 – Visor integrado de PDF (mobile-first)
-- **Épica**: EP03
-- **Descripción**: Como usuario, quiero visualizar documentos PDF directamente en la web, sin descargarlos, para ahorrar tiempo y datos.
-- **Criterios de Aceptación**:
+### US05 — Update common profile data
+- **Epic**: EP-02
+- **Descripcion**: Como usuario, quiero editar mis datos comunes de perfil para mantener mi informacion actualizada.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que hago clic en un documento PDF, CUANDO se abre el visor, ENTONCES puedo desplazarme por páginas, hacer zoom y rotar pantalla en móviles. |
-| Error | DADO que el archivo está dañado, CUANDO intento visualizarlo, ENTONCES el sistema muestra "No se puede previsualizar este archivo. Intenta descargarlo." |
-| Alternativo | DADO que mi conexión es lenta, CUANDO el visor carga el PDF, ENTONCES muestra primero vista previa de baja resolución y carga páginas bajo demanda. |
+|---|---|
+| Exitoso | Dado que estoy autenticado y completo los datos permitidos, cuando guardo los cambios, entonces el sistema actualiza mi perfil. |
+| Error | Dado que dejo un campo obligatorio vacio, cuando intento guardar, entonces el sistema rechaza la actualizacion. |
+| Alternativo exitoso | Dado que modifico solo datos comunes como nombre o ciudad, cuando confirmo la edicion, entonces el sistema guarda los cambios sin afectar el tipo de cuenta. |
+| Alternativo error | Dado que intento cambiar un campo restringido, cuando envio la actualizacion, entonces el sistema devuelve error de permiso o validacion. |
 
----
-
-### US10 – Reporte de contenido inapropiado
-- **Épica**: EP04
-- **Descripción**: Como estudiante o actuador, quiero reportar material o comentarios que infrinjan normas de la comunidad para mantener la calidad.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que visualizo contenido inapropiado, CUANDO selecciono "Reportar", elijo motivo y envío, ENTONCES el sistema confirma y marca el contenido para revisión. |
-| Error | DADO que intento enviar sin seleccionar categoría, CUANDO presiono enviar, ENTONCES el sistema resalta el campo obligatorio y no permite el envío. |
-| Alternativo | DADO que ya reporté ese contenido antes, CUANDO intento reportarlo de nuevo, ENTONCES el sistema informa que el reporte ya está en proceso. |
-
----
-
-### US11 – Reputación de contenido (votos y ordenamiento)
-- **Épica**: EP04
-- **Descripción**: Como estudiante, quiero votar si un documento o respuesta fue útil y que los más votados aparezcan primero.
-- **Criterios de Aceptación**:
+### US06 — Create student profile
+- **Epic**: EP-02
+- **Descripcion**: Como estudiante preuniversitario, quiero crear mi perfil academico para registrar mi situacion de preparacion.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que leo una respuesta útil, CUANDO hago clic en 👍, ENTONCES el contador aumenta en 1 y se registra mi voto. |
-| Error | DADO que intento votar dos veces, CUANDO ya voté, ENTONCES el sistema no permite duplicar el voto pero sí cambiar de positivo a negativo. |
-| Alternativo | DADO que ordeno respuestas por "Más votadas", CUANDO aplico el filtro, ENTONCES las respuestas con mayor puntaje neto (👍 - 👎) aparecen primero. |
+|---|---|
+| Exitoso | Dado que mi cuenta fue clasificada como estudiante, cuando ingreso grado, universidad objetivo y area de preparacion, entonces el sistema crea el perfil. |
+| Error | Dado que falta un campo obligatorio, cuando intento crear el perfil, entonces el sistema rechaza la operacion. |
+| Alternativo exitoso | Dado que completo la informacion academica requerida, cuando confirmo el formulario, entonces el sistema registra mi perfil de estudiante. |
+| Alternativo error | Dado que ingreso un valor no valido en el grado o universidad, cuando envio el formulario, entonces el sistema devuelve error de validacion. |
 
----
-
-### US12 – Foro anclado por pregunta de examen
-- **Épica**: EP04
-- **Descripción**: Como usuario, quiero crear una pregunta referenciada a un examen real para recibir ayuda contextualizada.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que estoy viendo un examen, CUANDO selecciono "Preguntar sobre esta pregunta" e ingreso texto, ENTONCES se crea un hilo etiquetado con la referencia exacta (universidad, año, número de pregunta). |
-| Error | DADO que no selecciono ningún examen, CUANDO creo una pregunta general, ENTONCES se permite pero sin referencia automática (se considera pregunta temática). |
-| Alternativo | DADO que otro usuario responde y yo marco su respuesta como "Mejor respuesta", ENTONCES esa respuesta se fija al inicio del hilo y el usuario gana puntos extra. |
-
----
-
-### US13 – Subir imágenes al responder
-- **Épica**: EP04
-- **Descripción**: Como estudiante, quiero adjuntar imágenes al responder una pregunta para explicar mejor mis soluciones.
-- **Criterios de Aceptación**:
+### US07 — Update student target university
+- **Epic**: EP-02
+- **Descripcion**: Como estudiante preuniversitario, quiero actualizar mi universidad objetivo para mantener mi meta academica vigente.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que escribo una respuesta, CUANDO adjunto una imagen (JPG, PNG, <5MB), ENTONCES la imagen se muestra embebida en el texto de la respuesta. |
-| Error | DADO que subo una imagen >5MB, CUANDO el sistema la rechaza, ENTONCES muestra "La imagen no debe superar los 5MB. Comprímela o usa un formato más liviano." |
-| Alternativo | DADO que subo varias imágenes, CUANDO el sistema las procesa, ENTONCES se muestran en orden y se puede hacer clic para ampliarlas. |
+|---|---|
+| Exitoso | Dado que mi perfil de estudiante existe, cuando cambio la universidad objetivo, entonces el sistema guarda la actualizacion. |
+| Error | Dado que el campo queda vacio, cuando intento guardar, entonces el sistema rechaza el cambio. |
+| Alternativo exitoso | Dado que ingreso una universidad valida, cuando confirmo la edicion, entonces el sistema actualiza el dato sin modificar los demas campos. |
+| Alternativo error | Dado que mi perfil de estudiante no existe, cuando intento editarlo, entonces el sistema responde que el recurso no fue encontrado. |
 
----
-
-### US14 – Notificaciones de actividad
-- **Épica**: EP04
-- **Descripción**: Como usuario, quiero recibir notificaciones (push o email) cuando alguien responda a mi pregunta o haya actividad relevante.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que tengo notificaciones por email activadas, CUANDO alguien responde mi pregunta, ENTONCES recibo un correo con extracto de la respuesta y enlace al hilo. |
-| Error | DADO que el servicio de email falla, CUANDO se genera una notificación, ENTONCES el sistema reintenta hasta 3 veces y al iniciar sesión se muestra indicador visual. |
-| Alternativo | DADO que no quiero email pero sí notificaciones web, CUANDO alguien responde, ENTONCES aparece un contador en el icono de campana. |
-
----
-
-### US15 – Sistema de puntos acumulables
-- **Épica**: EP05
-- **Descripción**: Como estudiante, quiero ganar puntos por subir documentos válidos y por responder preguntas para ver reflejada mi contribución.
-- **Criterios de Aceptación**:
+### US08 — Create teacher profile
+- **Epic**: EP-02
+- **Descripcion**: Como docente, quiero crear mi perfil profesional para mostrar mi especialidad y mi institucion.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que subo un documento válido y no duplicado, CUANDO es aprobado, ENTONCES recibo +10 puntos. |
-| Error | DADO que subo un documento reportado como spam y eliminado, CUANDO los moderadores actúan, ENTONCES se restan los puntos ganados y se aplica penalización (-5 puntos) si es reincidente. |
-| Alternativo | DADO que mi respuesta recibe 3 votos positivos, CUANDO el sistema actualiza, ENTONCES recibo +2 puntos adicionales por cada voto (hasta un límite diario). |
+|---|---|
+| Exitoso | Dado que mi cuenta fue clasificada como docente, cuando ingreso nombre profesional, especialidad e institucion, entonces el sistema crea el perfil. |
+| Error | Dado que falta un dato obligatorio, cuando intento crear el perfil, entonces el sistema rechaza la creacion. |
+| Alternativo exitoso | Dado que completo los datos profesionales validos, cuando confirmo el formulario, entonces el sistema registra mi perfil docente. |
+| Alternativo error | Dado que la especialidad ingresada no esta permitida, cuando envio el formulario, entonces el sistema devuelve error de validacion. |
 
----
-
-### US16 – Niveles que desbloquean ventajas
-- **Épica**: EP05
-- **Descripción**: Como usuario activo, quiero subir de nivel (Bronce, Plata, Oro, Platino) según mis puntos y obtener ventajas para motivarme a participar más.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que alcanzo 100 puntos, CUANDO cruzo el umbral, ENTONCES subo a "Bronce" y mi límite de descarga diaria aumenta de 5 a 7. |
-| Error | DADO que el sistema falla al actualizar el nivel, CUANDO el usuario sigue acumulando puntos, ENTONCES en el siguiente inicio de sesión se recalcula el nivel y se asignan ventajas retroactivamente. |
-| Alternativo | DADO que mi nivel es Plata, CUANDO entro a mi perfil, ENTONCES veo la barra de progreso hacia Oro y las ventajas que obtendré. |
-
----
-
-### US17 – Monedas virtuales (microtransacciones no monetarias)
-- **Épica**: EP05
-- **Descripción**: Como estudiante, quiero ganar monedas virtuales al participar y canjearlas por descargas adicionales o contenido exclusivo.
-- **Criterios de Aceptación**:
+### US09 — Update teacher specialty
+- **Epic**: EP-02
+- **Descripcion**: Como docente, quiero actualizar mi especialidad para reflejar mi area de enseñanza actual.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que mi respuesta es marcada como "Mejor respuesta", CUANDO el sistema otorga recompensa, ENTONCES recibo 5 monedas virtuales. |
-| Error | DADO que intento canjear monedas sin suficiente saldo (cuesta 3 y tengo 2), ENTONCES el sistema muestra "No tienes suficientes monedas. Gana más participando." |
-| Alternativo | DADO que tengo 10 monedas, CUANDO las canjeo por 2 descargas extra, ENTONCES se descuentan 6 monedas (3 por descarga) y mi límite diario se incrementa en 2. |
+|---|---|
+| Exitoso | Dado que mi perfil docente existe, cuando selecciono una especialidad valida, entonces el sistema guarda el cambio. |
+| Error | Dado que la especialidad no esta permitida, cuando intento actualizar, entonces el sistema rechaza la operacion. |
+| Alternativo exitoso | Dado que elijo una nueva especialidad valida, cuando confirmo la edicion, entonces el sistema actualiza el perfil. |
+| Alternativo error | Dado que mi perfil docente no existe, cuando intento modificarlo, entonces el sistema responde que el recurso no fue encontrado. |
 
----
-
-### US18 – Modelo freemium (suscripción y compra de monedas)
-- **Épica**: EP06
-- **Descripción**: Como usuario con alta demanda, quiero pagar una suscripción mensual para tener descargas ilimitadas y sin publicidad, o comprar monedas virtuales directamente.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que elijo la suscripción mensual (S/9.90), CUANDO completo el pago con tarjeta o Yape, ENTONCES mi cuenta se marca como premium por 30 días sin límites de descarga. |
-| Error | DADO que ingreso datos de pago incorrectos, CUANDO el procesador rechaza la transacción, ENTONCES el sistema muestra "Error en el pago. Verifica tus datos o intenta con otro método." |
-| Alternativo | DADO que no quiero suscribirme, CUANDO compro un paquete de monedas (ej. 50 monedas por S/10), ENTONCES las monedas se acreditan y puedo usarlas para descargas adicionales. |
-
----
-
-### US19 – Función social: seguir a otros usuarios
-- **Épica**: EP07
-- **Descripción**: Como estudiante, quiero seguir a otros usuarios colaboradores para ver su actividad reciente, respuestas y documentos.
-- **Criterios de Aceptación**:
+### US10 — Create organization profile
+- **Epic**: EP-02
+- **Descripcion**: Como organizacion, quiero crear mi perfil institucional para registrar mi academia.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que visito el perfil de otro usuario, CUANDO hago clic en "Seguir", ENTONCES se agrega a mis seguidos y recibo notificaciones de sus aportes (si lo configuro). |
-| Error | DADO que ya sigo a ese usuario, CUANDO vuelvo a su perfil, ENTONCES el botón muestra "Dejar de seguir" y puedo hacer clic para dejar de seguirlo. |
-| Alternativo | DADO que entro a mi feed de "Actividad de seguidos", ENTONCES veo los últimos documentos y respuestas de los usuarios que sigo, ordenados por fecha. |
+|---|---|
+| Exitoso | Dado que mi cuenta fue clasificada como organizacion, cuando ingreso nombre, sedes y descripcion institucional, entonces el sistema crea el perfil. |
+| Error | Dado que falta un dato obligatorio, cuando intento crear el perfil, entonces el sistema rechaza la creacion. |
+| Alternativo exitoso | Dado que completo los datos institucionales validos, cuando confirmo el formulario, entonces el sistema registra mi perfil de organizacion. |
+| Alternativo error | Dado que el nombre institucional ya existe, cuando intento registrarlo, entonces el sistema devuelve un error de duplicidad. |
 
----
-
-### US20 – Recuperación de contraseña
-- **Épica**: EP01
-- **Descripción**: Como usuario que olvidó su contraseña, quiero restablecerla mediante un enlace enviado a mi correo para recuperar el acceso.
-- **Criterios de Aceptación**:
-
-| Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que olvidé mi contraseña, CUANDO ingreso mi correo en "¿Olvidaste tu contraseña?" y solicito el enlace, ENTONCES recibo un correo con un enlace único válido por 1 hora para crear nueva contraseña. |
-| Error | DADO que ingreso un correo no registrado, CUANDO solicito recuperación, ENTONCES el sistema muestra "No existe una cuenta con ese correo electrónico." |
-| Alternativo | DADO que hago clic en el enlace vencido, CUANDO intento restablecer, ENTONCES el sistema muestra "El enlace ha expirado. Solicita uno nuevo." y no permite el cambio. |
-
----
-
-### US21 – Verificar identidad (docente o academia)
-- **Épica**: EP08
-- **Descripción**: Como actuador (docente o academia), quiero verificar mi identidad mediante documentos oficiales para obtener una insignia de confianza.
-- **Criterios de Aceptación**:
+### US11 — Register academic offering
+- **Epic**: EP-03
+- **Descripcion**: Como organizacion, quiero registrar mi oferta academica para mostrar mis ciclos de preparacion.
+- **Criterios de aceptacion**:
 
 | Escenario | Dado / Cuando / Entonces |
-|-----------|--------------------------|
-| Exitoso | DADO que estoy en mi perfil de actuador, CUANDO subo mi DNI o credencial institucional y solicito verificación, ENTONCES mi estado cambia a "En proceso de verificación" y se me notifica al aprobar. |
-| Error | DADO que intento subir el documento, CUANDO excede 5MB o formato no válido (ej. .txt), ENTONCES el sistema muestra un error con las restricciones de formato y peso. |
-| Alternativo | DADO que mi solicitud es rechazada, CUANDO accedo a la sección de identidad, ENTONCES veo el motivo del rechazo y puedo cargar un nuevo archivo para reintentar. |
+|---|---|
+| Exitoso | Dado que mi perfil institucional existe, cuando agrego ciclo, modalidad e intensidad, entonces el sistema guarda la oferta. |
+| Error | Dado que el contenido esta incompleto o no cumple formato, cuando envio el registro, entonces el sistema lo rechaza. |
+| Alternativo exitoso | Dado que ingreso un nuevo ciclo academico valido, cuando confirmo el registro, entonces el sistema publica la oferta. |
+| Alternativo error | Dado que intento registrar una oferta duplicada, cuando envio la solicitud, entonces el sistema la rechaza por duplicidad. |
 
----
+### US12 — Upload academic PDF resource
+- **Epic**: EP-04
+- **Descripcion**: Como usuario autenticado, quiero subir un PDF academico para compartir material de estudio.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que el archivo es PDF y cumple el tamaño permitido, cuando lo subo, entonces el sistema registra el recurso. |
+| Error | Dado que el archivo no es PDF o excede el tamano permitido, cuando intento subirlo, entonces el sistema lo rechaza. |
+| Alternativo exitoso | Dado que selecciono un PDF valido, cuando confirmo la carga, entonces el sistema almacena el archivo y genera su referencia. |
+| Alternativo error | Dado que el archivo esta corrupto, cuando intento subirlo, entonces el sistema devuelve un error de carga. |
+
+### US13 — Register resource metadata
+- **Epic**: EP-04
+- **Descripcion**: Como usuario autenticado, quiero registrar los metadatos de un recurso para que sea buscable.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces                                                                                                              |
+|---|---------------------------------------------------------------------------------------------------------------------------------------|
+| Exitoso | Dado que completo titulo, institucion, curso, anio y categoria, cuando guardo el recurso, entonces el sistema registra los metadatos. |
+| Error | Dado que falta un metadato obligatorio, cuando intento guardar, entonces el sistema no crea el registro.                              |
+| Alternativo exitoso | Dado que ingreso metadatos validos, cuando confirmo el formulario, entonces el sistema deja el recurso listo para busqueda.           |
+| Alternativo error | Dado que el curso o el año no cumplen formato, cuando envio el formulario, entonces el sistema devuelve error de validacion.          |
+
+### US14 — Search resources by filters
+- **Epic**: EP-04
+- **Descripcion**: Como usuario, quiero buscar recursos por filtros para encontrar material especifico.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que aplico filtros validos, cuando ejecuto la busqueda, entonces el sistema devuelve coincidencias. |
+| Error | Dado que ingreso un parametro de busqueda con formato invalido, cuando ejecuto la busqueda, entonces el sistema devuelve un error de validacion. |
+| Alternativo exitoso | Dado que aplico filtros validos pero no existen recursos que coincidan, cuando ejecuto la busqueda, entonces el sistema devuelve una lista vacia sin error. |
+| Alternativo error | Dado que ingreso filtros inconsistentes, cuando busco, entonces el sistema devuelve un error de validacion. |
+
+### US15 — Download academic resource
+- **Epic**: EP-04
+- **Descripcion**: Como usuario, quiero descargar un recurso academico para estudiarlo sin conexion.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces                                                                                                                |
+|---|-----------------------------------------------------------------------------------------------------------------------------------------|
+| Exitoso | Dado que el recurso existe y tengo puntos suficientes, cuando solicito la descarga, entonces el sistema entrega el archivo.             |
+| Error | Dado que el recurso no existe o no tengo puntos suficientes, cuando intento descargarlo, entonces el sistema rechaza la operacion.      |
+| Alternativo exitoso | Dado que el archivo esta disponible, cuando confirmo la descarga, entonces el sistema inicia la transferencia correctamente.            |
+| Alternativo error | Dado que el archivo no esta disponible temporalmente, cuando intento descargarlo, entonces el sistema devuelve error de disponibilidad. |
+
+### US16 — Create forum thread
+- **Epic**: EP-05
+- **Descripcion**: Como usuario autenticado, quiero crear un hilo de foro sobre una duda concreta para iniciar una discusion.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que el texto del hilo es valido, cuando envio la publicacion, entonces el sistema crea el foro. |
+| Error | Dado que el texto esta vacio, cuando intento publicarlo, entonces el sistema rechaza la accion. |
+| Alternativo exitoso | Dado que escribo una duda concreta, cuando confirmo la publicacion, entonces el sistema registra el hilo correctamente. |
+| Alternativo error | Dado que no estoy autenticado, cuando intento crear el hilo, entonces el sistema rechaza el acceso. |
+
+### US17 — Reply to forum thread
+- **Epic**: EP-05
+- **Descripcion**: Como usuario autenticado, quiero responder un hilo para aportar una solucion.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que el hilo existe y mi respuesta es valida, cuando la envio, entonces el sistema la publica. |
+| Error | Dado que la respuesta esta vacia, cuando intento responder, entonces el sistema rechaza la accion. |
+| Alternativo exitoso | Dado que redacto una respuesta clara, cuando confirmo el envio, entonces el sistema la agrega al hilo. |
+| Alternativo error | Dado que el hilo esta cerrado, cuando intento responder, entonces el sistema devuelve un error de estado. |
+
+### US18 — Close forum thread
+- **Epic**: EP-05
+- **Descripcion**: Como autor del hilo, quiero cerrar el foro para dar por terminada la discusion.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que soy el autor del hilo, cuando marco el foro como cerrado, entonces el sistema cambia su estado. |
+| Error | Dado que el hilo no es mio, cuando intento cerrarlo, entonces el sistema rechaza la operacion. |
+| Alternativo exitoso | Dado que la discusion ya no requiere mas aportes, cuando confirmo el cierre, entonces el sistema bloquea nuevas respuestas. |
+| Alternativo error | Dado que el hilo no existe, cuando intento cerrarlo, entonces el sistema responde que el recurso no fue encontrado. |
+
+### US19 — Report content
+- **Epic**: EP-06
+- **Descripcion**: Como usuario autenticado, quiero reportar contenido para que sea revisado por moderacion.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que ingreso un motivo valido, cuando envio el reporte, entonces el sistema lo registra. |
+| Error | Dado que no indico motivo, cuando intento reportar, entonces el sistema rechaza la solicitud. |
+| Alternativo exitoso | Dado que selecciono una categoria de reporte correcta, cuando confirmo el envio, entonces el sistema guarda el caso para revision. |
+| Alternativo error | Dado que intento reportar contenido inexistente, cuando envio la solicitud, entonces el sistema responde que el recurso no fue encontrado. |
+
+### US20 — Resolve report
+- **Epic**: EP-06
+- **Descripcion**: Como moderador autorizado, quiero resolver un reporte para cerrar el caso.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que tengo permisos de moderacion, cuando selecciono una resolucion, entonces el sistema cambia el estado del reporte. |
+| Error | Dado que no tengo permisos, cuando intento resolverlo, entonces el sistema rechaza la accion. |
+| Alternativo exitoso | Dado que reviso el caso y selecciono una decision valida, cuando confirmo la resolucion, entonces el sistema cierra el reporte. |
+| Alternativo error | Dado que el reporte ya fue resuelto, cuando intento modificarlo, entonces el sistema rechaza el cambio por estado invalido. |
+
+### US21 — Request teacher verification
+- **Epic**: EP-07
+- **Descripcion**: Como docente, quiero solicitar verificacion para obtener un cheque de usuario verificado.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que subo una credencial valida, cuando envio la solicitud, entonces el sistema la deja en revision. |
+| Error | Dado que el archivo no cumple formato o peso, cuando intento enviarlo, entonces el sistema rechaza la solicitud. |
+| Alternativo exitoso | Dado que adjunto mi documento profesional valido, cuando confirmo la peticion, entonces el sistema registra el estado pendiente. |
+| Alternativo error | Dado que mi solicitud ya existe, cuando intento enviar otra, entonces el sistema la rechaza por duplicidad. |
+
+### US22 — Request organization verification
+- **Epic**: EP-07
+- **Descripcion**: Como organizacion, quiero solicitar verificacion para obtener un logo institucional personalizado.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que subo la documentacion valida, cuando envio la solicitud, entonces el sistema la deja en revision. |
+| Error | Dado que la documentacion es invalida o incompleta, cuando intento enviarla, entonces el sistema rechaza la solicitud. |
+| Alternativo exitoso | Dado que completo los documentos requeridos, cuando confirmo la peticion, entonces el sistema registra la verificacion pendiente. |
+| Alternativo error | Dado que ya existe una solicitud activa, cuando intento crear otra, entonces el sistema la rechaza por duplicidad. |
+
+### US23 — Activate premium subscription
+- **Epic**: EP-08
+- **Descripcion**: Como usuario, quiero activar una suscripcion premium para acceder a beneficios adicionales.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que completo el pago, cuando se procesa correctamente, entonces el sistema activa la suscripcion. |
+| Error | Dado que el pago falla, cuando intento activar el plan, entonces el sistema no lo habilita. |
+| Alternativo exitoso | Dado que selecciono un plan premium valido, cuando confirmo el cobro, entonces el sistema deja mi cuenta con acceso premium. |
+| Alternativo error | Dado que mi cuenta ya tiene una suscripcion activa, cuando intento contratar otra, entonces el sistema rechaza la operacion. |
+
+### US24 — Buy coin package
+- **Epic**: EP-08
+- **Descripcion**: Como usuario, quiero comprar un paquete de monedas para usar beneficios de la plataforma.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que el pago se confirma, cuando compro el paquete, entonces el sistema acredita las monedas. |
+| Error | Dado que el pago falla, cuando intento comprar, entonces el sistema no acredita saldo. |
+| Alternativo exitoso | Dado que elijo un paquete disponible, cuando confirmo la compra, entonces el sistema aumenta mi saldo de monedas. |
+| Alternativo error | Dado que el paquete no existe, cuando intento comprarlo, entonces el sistema rechaza la operacion. |
+
+### US25 — View pending notifications
+- **Epic**: EP-09
+- **Descripcion**: Como usuario autenticado, quiero consultar mis notificaciones pendientes para revisar actividad reciente.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que tengo notificaciones pendientes, cuando abro la bandeja, entonces el sistema muestra las notificaciones no leidas ordenadas por fecha. |
+| Error | Dado que no estoy autenticado, cuando intento consultar mis notificaciones, entonces el sistema responde con error de acceso. |
+| Alternativo exitoso | Dado que no tengo notificaciones pendientes, cuando consulto la bandeja, entonces el sistema devuelve la lista vacia sin error. |
+| Alternativo error | Dado que el servicio de notificaciones no esta disponible, cuando intento consultar, entonces el sistema devuelve un error de disponibilidad. |
+
+### US26 — Reset password with token
+- **Epic**: EP-01
+- **Descripcion**: Como usuario, quiero usar el enlace de recuperacion para establecer una nueva contrasena y recuperar el acceso.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que tengo un token de recuperacion valido y vigente, cuando establezco una nueva contrasena valida, entonces el sistema actualiza la credencial y marca el token como usado. |
+| Error | Dado que el token ha expirado o ya fue utilizado, cuando intento acceder al formulario de restablecimiento, entonces el sistema rechaza la operacion. |
+| Alternativo exitoso | Dado que ingreso una contrasena que cumple la politica de seguridad, cuando confirmo el cambio, entonces el sistema guarda la nueva credencial y cierra cualquier sesion activa anterior. |
+| Alternativo error | Dado que la nueva contrasena no cumple la politica de seguridad, cuando intento confirmar el cambio, entonces el sistema devuelve un error de validacion. |
+
+### US27 — React to forum content
+- **Epic**: EP-05
+- **Descripcion**: Como usuario autenticado, quiero reaccionar a un hilo, respuesta o comentario para expresar mi opinion sobre el contenido.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que el contenido existe y estoy autenticado, cuando selecciono una reaccion valida, entonces el sistema registra mi reaccion. |
+| Error | Dado que el contenido no existe, cuando intento reaccionar, entonces el sistema responde que el recurso no fue encontrado. |
+| Alternativo exitoso | Dado que ya registre una reaccion al mismo contenido, cuando selecciono la misma reaccion nuevamente, entonces el sistema elimina mi reaccion anterior. |
+| Alternativo error | Dado que no estoy autenticado, cuando intento reaccionar a un contenido, entonces el sistema rechaza el acceso. |
+
+### US28 — Comment on forum answer
+- **Epic**: EP-05
+- **Descripcion**: Como usuario autenticado, quiero comentar una respuesta del foro para agregar contexto o aclaracion.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que la respuesta existe y mi comentario tiene contenido valido, cuando lo envio, entonces el sistema lo publica. |
+| Error | Dado que el comentario esta vacio, cuando intento enviarlo, entonces el sistema rechaza la accion. |
+| Alternativo exitoso | Dado que redacto un comentario con informacion adicional valida, cuando confirmo el envio, entonces el sistema lo agrega correctamente a la respuesta. |
+| Alternativo error | Dado que la respuesta ya no existe, cuando intento comentarla, entonces el sistema responde que el recurso no fue encontrado. |
+
+### US29 — Follow a user
+- **Epic**: EP-05
+- **Descripcion**: Como usuario autenticado, quiero seguir a otro usuario para ver su actividad en la comunidad.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que el usuario objetivo existe y aun no lo sigo, cuando envio la solicitud de seguimiento, entonces el sistema registra la relacion. |
+| Error | Dado que intento seguirme a mi mismo, cuando envio la solicitud, entonces el sistema rechaza la operacion. |
+| Alternativo exitoso | Dado que ya sigo al usuario, cuando cancelo el seguimiento, entonces el sistema elimina la relacion de seguimiento. |
+| Alternativo error | Dado que el usuario objetivo no existe, cuando intento seguirlo, entonces el sistema responde que el recurso no fue encontrado. |
+
+### US30 — Earn experience points
+- **Epic**: EP-10
+- **Descripcion**: Como usuario autenticado, quiero acumular puntos de experiencia al contribuir en la plataforma para aumentar mi nivel.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que realizo una accion recompensada como publicar un recurso o responder un hilo, cuando el sistema procesa la accion, entonces registra los puntos correspondientes en mi historial. |
+| Error | Dado que la accion fuente no existe o fue eliminada, cuando el sistema intenta registrar puntos, entonces descarta la operacion sin generar inconsistencia. |
+| Alternativo exitoso | Dado que acumulo puntos suficientes para subir de nivel, cuando el sistema recalcula mi progreso, entonces actualiza mi nivel actual. |
+| Alternativo error | Dado que la misma accion ya genero puntos anteriormente, cuando el sistema evalua nuevamente, entonces no registra duplicados. |
+
+### US31 — View personal level and progress
+- **Epic**: EP-10
+- **Descripcion**: Como usuario autenticado, quiero consultar mi nivel actual y progreso de experiencia para conocer mi avance en la plataforma.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que tengo un registro de progreso activo, cuando consulto mi perfil de gamificacion, entonces el sistema muestra mi nivel, experiencia acumulada y porcentaje de avance. |
+| Error | Dado que no estoy autenticado, cuando intento consultar el progreso, entonces el sistema rechaza el acceso. |
+| Alternativo exitoso | Dado que soy un usuario nuevo sin experiencia acumulada, cuando consulto mi progreso, entonces el sistema muestra el nivel inicial con cero puntos. |
+| Alternativo error | Dado que el registro de progreso aun no existe, cuando lo consulto, entonces el sistema lo inicializa y devuelve el estado base. |
+
+### US32 — Earn and view badges
+- **Epic**: EP-10
+- **Descripcion**: Como usuario autenticado, quiero ganar insignias por hitos de participacion y visualizarlas en mi perfil.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que alcanzo el hito requerido por una insignia, cuando el sistema evalua mi actividad, entonces acredita la insignia en mi perfil. |
+| Error | Dado que una insignia ya fue acreditada a mi cuenta, cuando el sistema intenta asignarla nuevamente, entonces descarta la operacion por duplicidad. |
+| Alternativo exitoso | Dado que consulto mis insignias ganadas, cuando reviso el listado, entonces el sistema muestra cada insignia con su nombre y fecha de obtencion. |
+| Alternativo error | Dado que el hito requerido aun no fue alcanzado, cuando el sistema evalua mi actividad, entonces no acredita la insignia y no genera error. |
+
+### US33 — Create academy
+- **Epic**: EP-03
+- **Descripcion**: Como organizacion, quiero registrar mi academia en la plataforma para publicar oferta educativa.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que tengo un perfil de organizacion activo, cuando ingreso nombre, descripcion y datos de contacto de la academia, entonces el sistema crea el registro y lo deja activo. |
+| Error | Dado que falta el nombre de la academia, cuando intento registrarla, entonces el sistema rechaza la creacion. |
+| Alternativo exitoso | Dado que completo todos los datos requeridos, cuando confirmo el registro, entonces el sistema deja la academia lista para publicar sedes y oferta academica. |
+| Alternativo error | Dado que ya existe una academia registrada con ese nombre por la misma organizacion, cuando intento crearla, entonces el sistema la rechaza por duplicidad. |
 
 ## 3. Reglas de Negocio
 
-| Código | Regla | Tipo |
-|--------|-------|------|
-| RN-01 | No puede existir más de un usuario con el mismo correo. | Restricción |
-| RN-02 | Todo usuario debe tener exactamente un rol principal activo. | Restricción |
-| RN-03 | Un usuario solo puede tener un perfil base por cuenta. | Restricción |
-| RN-04 | La contraseña debe almacenarse cifrada (BCrypt); nunca en texto plano. | Seguridad |
-| RN-05 | Un usuario puede registrarse con correo o Google, pero ambos canales deben resolver al mismo identificador de cuenta. | Integridad |
-| RN-06 | Solo usuarios autenticados pueden crear preguntas, respuestas o subir documentos. | Restricción |
-| RN-07 | Las publicaciones anónimas deben conservar trazabilidad interna para moderación, aunque no muestren autor público. | Trazabilidad |
-| RN-08 | Un usuario puede seguir a otros usuarios, pero no duplicar la misma relación de seguimiento. | Restricción |
-| RN-09 | Un recurso académico debe registrar título, tipo, categoría/curso y autor o entidad responsable. | Validación |
-| RN-10 | Los documentos con sello de verificación solo pueden ser publicados por usuarios, docentes o academias verificadas. | Gobernanza |
-| RN-11 | Una pregunta puede tener múltiples respuestas, pero solo una puede ser marcada como aceptada. | Estado |
-| RN-12 | Las acciones de moderación deben generar un registro de auditoría. | Auditoría |
-| RN-13 | Toda suscripción o compra de monedas debe registrar fecha, estado y origen de la transacción. | Trazabilidad |
-| RN-14 | El contenido premium solo puede ser consumido por usuarios con suscripción activa o monedas suficientes. | Acceso |
-| RN-15 | Un reporte solo puede resolverse por un moderador o administrador autorizado. | Permisos |
-| RN-16 | Los usuarios suspendidos no pueden publicar, responder ni seguir usuarios hasta que su estado sea restituido. | Estado |
-| RN-17 | Los puntos, niveles, monedas e insignias solo pueden generarse por eventos válidos del sistema. | Integridad |
-| RN-18 | Toda verificación de academia o docente debe pasar por revisión y aprobación manual o semimanual. | Control |
-| RN-19 | El perfil del usuario debe permitir visualizar documentos compartidos, puntos acumulados, nivel y actividad en foros. | Funcional |
-| RN-20 | Las notificaciones deben generarse por eventos relevantes: respuestas, seguimiento, moderación, recuperación de cuenta y verificación. | Evento |
+### Auth
+- RN-01: No puede existir mas de una cuenta con el mismo correo.
+- RN-02: Cada usuario debe tener exactamente un rol activo.
+- RN-03: La contrasena debe almacenarse cifrada.
+- RN-04: Los enlaces de recuperacion deben expirar.
 
----
+### Profile
+- RN-05: Un usuario solo puede tener un perfil base.
+- RN-06: Los campos comunes obligatorios no pueden quedar vacios.
+- RN-07: Un cambio de tipo de cuenta debe ser consistente con el perfil creado.
+
+### Academy
+- RN-08: Un estudiante solo puede tener un perfil academico principal.
+- RN-09: Un docente solo puede tener un perfil profesional.
+- RN-10: Una organizacion solo puede tener un perfil institucional activo.
+- RN-11: Cada perfil debe registrar solo los campos que le corresponden.
+
+### Library
+- RN-12: Todo recurso debe registrar titulo, institucion, curso, anio y categoria.
+- RN-13: Solo se aceptan archivos con formatos permitidos.
+- RN-14: No se permite publicar un recurso duplicado identico.
+- RN-15: La descarga depende del permiso del usuario y del estado del recurso.
+
+### Forum
+- RN-16: Un hilo debe estar asociado a un tema concreto.
+- RN-17: Un hilo solo puede tener un estado abierto o cerrado.
+- RN-18: Solo el autor del hilo puede cerrarlo.
+- RN-19: Toda respuesta debe pertenecer a un hilo existente.
+
+### Moderation
+- RN-20: Todo reporte debe incluir un motivo.
+- RN-21: Solo moderadores autorizados pueden resolver reportes.
+- RN-22: Toda accion de moderacion debe generar auditoria.
+
+### Verification
+- RN-23: Toda solicitud de verificacion requiere documento valido.
+- RN-24: Solo una solicitud de verificacion puede estar activa por entidad.
+- RN-25: La verificacion del docente y de la organizacion se resuelven por flujos distintos.
+
+### Billing
+- RN-26: Un usuario solo puede tener una suscripcion premium activa a la vez.
+- RN-27: El acceso premium depende de una suscripcion vigente o de una compra validada.
+- RN-28: Las compras fallidas no deben modificar el saldo ni el estado del plan.
+
+### Notifications
+- RN-29: Las notificaciones solo se generan por eventos definidos por el negocio.
+- RN-30: Toda notificacion debe tener estado leido o no leido.
+
+### Gamification
+- RN-31: Los puntos de experiencia se generan unicamente por acciones definidas por el sistema.
+- RN-32: El nivel del usuario se recalcula automaticamente al acumular experiencia suficiente.
+- RN-33: Una insignia no puede asignarse mas de una vez al mismo usuario.
+- RN-34: El historial de puntos de experiencia es de solo lectura y no puede modificarse manualmente.
+- RN-35: Los puntos de experiencia y las monedas virtuales son sistemas independientes.
 
 ## 4. Bounded Contexts
 
-| Bounded Context | Responsabilidad | Entidades principales |
-|----------------|-----------------|----------------------|
-| Auth | Registro, login, recuperación de contraseña y control de acceso. | User, Credential, Role, Session, PasswordResetToken |
-| Profile | Perfil público y académico, estado, datos personales y preferencias. | StudentProfile, ModeratorProfile, AdminProfile, TeacherProfile, AcademyProfile |
-| Content Repository | Exámenes, solucionarios, materiales y metadatos de búsqueda. | AcademicResource, University, Subject, Tag, ResourceFile |
-| Community | Publicaciones, preguntas, respuestas, comentarios y seguimiento social. | Thread, Answer, Comment, FollowRelation, Reaction |
-| Gamification | Puntos, niveles, monedas, insignias y progreso. | PointTransaction, CoinWallet, Badge, UserBadge, LevelProgress |
-| Moderation & Governance | Reportes, acciones de moderación, suspensión, apelaciones y auditoría. | Report, ModerationAction, AuditLog, Appeal |
-| Verification & Partnerships | Validación de academias y docentes, badge de verificación. | VerificationRequest, VerificationDocument |
-| Subscription & Monetization | Suscripciones, monedas virtuales, pagos y acceso premium. | Subscription, Plan, Payment, PremiumAccess, CoinPackage |
-| Notification | Notificaciones internas y por correo. | Notification, NotificationPreference |
+| Bounded Context | Descripcion |
+|---|---|
+| auth | Gestiona el registro, inicio de sesion y recuperacion de acceso de los usuarios. |
+| profile | Gestiona el perfil base y los perfiles especificos de cada tipo de usuario. |
+| academy | Gestiona las academias de preparacion, sus sedes, programas y ciclos de estudio. |
+| library | Gestiona la publicacion, clasificacion, busqueda y descarga de recursos academicos. |
+| forum | Gestiona los hilos de discusion y las respuestas de la comunidad. |
+| moderation | Gestiona reportes, revisiones y resolucion de incidencias de contenido. |
+| verification | Gestiona la solicitud y aprobacion de verificacion de docentes y organizaciones. |
+| billing | Gestiona suscripciones, pagos y compra de beneficios premium. |
+| notifications | Gestiona las notificaciones generadas por eventos del sistema. |
+| gamification | Gestiona la acumulacion de puntos de experiencia, niveles, insignias y monedas del usuario. |
 
----
+## 5. Relacion Epics → Bounded Contexts
 
-## 5. Relación Épicas → Bounded Contexts
+Cada Epic agrupa funcionalidades de una sola capacidad de negocio. Ese mismo limite define el modulo en el codigo y la estructura de la API.
 
-| Épica | Bounded Contexts involucrados |
-|-------|-------------------------------|
-| EP01 Autenticación y seguridad | Auth, Notification |
-| EP02 Perfil y personalización | Profile, Auth, Notification |
-| EP03 Repositorio académico | Content Repository, Notification |
-| EP04 Comunidad y participación | Community, Profile, Notification |
-| EP05 Gamificación y progreso | Gamification, Profile, Notification |
-| EP06 Moderación y confianza | Moderation & Governance, Verification & Partnerships, Notification |
-| EP07 Monetización y acceso premium | Subscription & Monetization, Content Repository, Auth |
-| EP08 Administración del sistema | Moderation & Governance, Auth, Profile, Notification |
+| Epic | Título | Bounded Context | Paquete en código |
+|---|---|---|---|
+| EP-01 | Auth | auth | `auth/` |
+| EP-02 | Profile | profile | `profile/` |
+| EP-03 | Academy | academy | `academy/` |
+| EP-04 | Library | library | `library/` |
+| EP-05 | Forum | forum | `forum/` |
+| EP-06 | Moderation | moderation | `moderation/` |
+| EP-07 | Verification | verification | `verification/` |
+| EP-08 | Billing | billing | `billing/` |
+| EP-09 | Notifications | notifications | `notifications/` |
+| EP-10 | Gamification | gamification | `gamification/` |

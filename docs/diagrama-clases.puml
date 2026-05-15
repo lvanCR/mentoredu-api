@@ -1,0 +1,671 @@
+@startuml
+title Diagrama de Clases UML\nMentorEdu — Actualizado por Bounded Context
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #444444
+skinparam DefaultFontName Arial
+
+' =========================
+' ENUMS
+' =========================
+package "auth" {
+  enum UserStatus {
+    ACTIVE
+    PENDING
+    SUSPENDED
+    DELETED
+  }
+
+  enum AuthProvider {
+    EMAIL
+    GOOGLE
+  }
+}
+
+package "profile" {
+  enum ProfileType {
+    STUDENT
+    TEACHER
+    ORGANIZATION
+  }
+}
+
+package "library" {
+  enum ResourceType {
+    EXAM
+    SOLUTION
+    NOTES
+    PRACTICE
+    VIDEO
+    OTHER
+  }
+
+  enum ResourceVisibility {
+    PUBLIC
+    PREMIUM
+    PRIVATE
+  }
+}
+
+package "forum" {
+  enum ThreadStatus {
+    OPEN
+    CLOSED
+    ARCHIVED
+  }
+}
+
+package "moderation" {
+  enum ReportStatus {
+    OPEN
+    IN_REVIEW
+    RESOLVED
+    REJECTED
+  }
+
+  enum ModerationActionType {
+    HIDE
+    DELETE
+    WARN
+    SUSPEND
+    RESTORE
+  }
+}
+
+package "verification" {
+  enum EntityType {
+    TEACHER
+    ACADEMY
+  }
+
+  enum VerificationStatus {
+    PENDING
+    VERIFIED
+    REJECTED
+  }
+}
+
+package "billing" {
+  enum SubscriptionStatus {
+    ACTIVE
+    EXPIRED
+    CANCELED
+    PENDING
+  }
+
+  enum PaymentStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    REFUNDED
+  }
+}
+
+' =========================
+' AUTH
+' =========================
+package "auth" {
+  class User {
+    +id: UUID
+    +firstName: String
+    +lastName: String
+    +email: String
+    +passwordHash: String
+    +provider: AuthProvider
+    +status: UserStatus
+    +createdAt: LocalDateTime
+    +updatedAt: LocalDateTime
+
+    +register(): void
+    +login(): void
+    +logout(): void
+    +resetPassword(): void
+    +changeStatus(status: UserStatus): void
+  }
+
+  class Role {
+    +id: UUID
+    +name: String
+    +description: String
+
+    +assignTo(userId: UUID): void
+  }
+
+  class PasswordResetToken {
+    +id: UUID
+    +token: String
+    +expiresAt: LocalDateTime
+    +used: Boolean
+
+    +isValid(): Boolean
+    +markAsUsed(): void
+  }
+
+  class Session {
+    +id: UUID
+    +refreshToken: String
+    +expiresAt: LocalDateTime
+    +revokedAt: LocalDateTime
+
+    +revoke(): void
+  }
+}
+
+' =========================
+' PROFILE
+' =========================
+package "profile" {
+  class Profile {
+    +id: UUID
+    +displayName: String
+    +avatarUrl: String
+    +city: String
+    +bio: String
+    +profileType: ProfileType
+    +createdAt: LocalDateTime
+    +updatedAt: LocalDateTime
+
+    +updateBasicInfo(): void
+  }
+
+  class StudentProfile {
+    +schoolName: String
+    +gradeLevel: String
+    +targetUniversity: String
+    +targetCareer: String
+    +studyShift: String
+
+    +updateAcademicGoals(): void
+  }
+
+  class TeacherProfile {
+    +specialty: String
+    +institutionName: String
+    +bioProfessional: String
+
+    +updateSpecialty(): void
+  }
+
+  class OrganizationProfile {
+    +organizationName: String
+    +ruc: String
+    +website: String
+    +contactEmail: String
+
+    +updateInstitutionalData(): void
+  }
+
+  class NotificationPreference {
+    +emailEnabled: Boolean
+    +inAppEnabled: Boolean
+    +communityEnabled: Boolean
+    +moderationEnabled: Boolean
+
+    +updatePreferences(): void
+  }
+}
+
+' =========================
+' ACADEMY
+' =========================
+package "academy" {
+  class Academy {
+    +id: UUID
+    +name: String
+    +description: String
+    +website: String
+    +email: String
+    +active: Boolean
+
+    +create(): void
+    +update(): void
+    +deactivate(): void
+  }
+
+  class Campus {
+    +id: UUID
+    +name: String
+    +address: String
+    +city: String
+
+    +create(): void
+    +update(): void
+  }
+
+  class Program {
+    +id: UUID
+    +name: String
+    +modality: String
+    +intensity: String
+    +targetUniversity: String
+
+    +publish(): void
+    +update(): void
+  }
+
+  class Cycle {
+    +id: UUID
+    +name: String
+    +cycleType: String
+    +startDate: LocalDate
+    +endDate: LocalDate
+
+    +schedule(): void
+    +update(): void
+  }
+}
+
+' =========================
+' LIBRARY
+' =========================
+package "library" {
+  class Institution {
+    +id: UUID
+    +name: String
+    +city: String
+
+    +updateData(): void
+  }
+
+  class Subject {
+    +id: UUID
+    +name: String
+
+    +rename(name: String): void
+  }
+
+  class ResourceFile {
+    +id: UUID
+    +fileUrl: String
+    +fileName: String
+    +mimeType: String
+    +sizeBytes: Long
+
+    +upload(): void
+    +delete(): void
+  }
+
+  class AcademicResource {
+    +id: UUID
+    +title: String
+    +description: String
+    +resourceType: ResourceType
+    +visibility: ResourceVisibility
+    +examYear: Integer
+    +examCycle: String
+    +createdAt: LocalDateTime
+    +updatedAt: LocalDateTime
+
+    +publish(): void
+    +editMetadata(): void
+    +archive(): void
+    +download(): void
+  }
+
+  class Tag {
+    +id: UUID
+    +name: String
+
+    +rename(): void
+  }
+
+  class DownloadLog {
+    +id: UUID
+    +downloadedAt: LocalDateTime
+
+    +record(): void
+  }
+}
+
+' =========================
+' FORUM
+' =========================
+package "forum" {
+  class Thread {
+    +id: UUID
+    +title: String
+    +body: String
+    +isAnonymous: Boolean
+    +status: ThreadStatus
+    +createdAt: LocalDateTime
+    +updatedAt: LocalDateTime
+
+    +publish(): void
+    +edit(): void
+    +close(): void
+    +reopen(): void
+  }
+
+  class Answer {
+    +id: UUID
+    +body: String
+    +isAccepted: Boolean
+    +createdAt: LocalDateTime
+    +updatedAt: LocalDateTime
+
+    +post(): void
+    +edit(): void
+    +markAsAccepted(): void
+  }
+
+  class Comment {
+    +id: UUID
+    +body: String
+    +createdAt: LocalDateTime
+    +updatedAt: LocalDateTime
+
+    +post(): void
+    +edit(): void
+    +delete(): void
+  }
+
+  class FollowRelation {
+    +id: UUID
+    +createdAt: LocalDateTime
+
+    +follow(): void
+    +unfollow(): void
+  }
+
+  class Reaction {
+    +id: UUID
+    +reactionType: String
+    +createdAt: LocalDateTime
+
+    +react(): void
+    +remove(): void
+  }
+}
+
+' =========================
+' GAMIFICATION
+' =========================
+package "gamification" {
+  class PointTransaction {
+    +id: UUID
+    +pointsDelta: Integer
+    +reason: String
+    +createdAt: LocalDateTime
+
+    +register(): void
+  }
+
+  class CoinWallet {
+    +balance: Integer
+    +updatedAt: LocalDateTime
+
+    +addCoins(amount: Integer): void
+    +spendCoins(amount: Integer): void
+  }
+
+  class Badge {
+    +id: UUID
+    +code: String
+    +name: String
+    +description: String
+
+    +assignTo(userId: UUID): void
+  }
+
+  class UserBadge {
+    +earnedAt: LocalDateTime
+  }
+
+  class LevelProgress {
+    +currentLevel: Integer
+    +experience: Integer
+    +progressPercentage: Double
+
+    +addExperience(amount: Integer): void
+    +recalculateLevel(): void
+  }
+}
+
+' =========================
+' MODERATION
+' =========================
+package "moderation" {
+  class Report {
+    +id: UUID
+    +targetType: String
+    +targetId: UUID
+    +reason: String
+    +status: ReportStatus
+    +createdAt: LocalDateTime
+    +resolvedAt: LocalDateTime
+
+    +open(): void
+    +assign(): void
+    +resolve(): void
+    +reject(): void
+  }
+
+  class ModerationAction {
+    +id: UUID
+    +actionType: ModerationActionType
+    +notes: String
+    +createdAt: LocalDateTime
+
+    +execute(): void
+  }
+
+  class AuditLog {
+    +id: UUID
+    +actorUserId: UUID
+    +actionType: String
+    +entityType: String
+    +entityId: UUID
+    +detail: String
+    +createdAt: LocalDateTime
+
+    +register(): void
+  }
+
+  class Appeal {
+    +id: UUID
+    +reason: String
+    +status: String
+    +createdAt: LocalDateTime
+
+    +submit(): void
+    +approve(): void
+    +reject(): void
+  }
+}
+
+' =========================
+' VERIFICATION
+' =========================
+package "verification" {
+  class VerificationRequest {
+    +id: UUID
+    +entityType: EntityType
+    +status: VerificationStatus
+    +submittedAt: LocalDateTime
+    +reviewedAt: LocalDateTime
+
+    +submit(): void
+    +approve(): void
+    +reject(): void
+  }
+
+  class VerificationDocument {
+    +id: UUID
+    +documentType: String
+    +fileUrl: String
+
+    +upload(): void
+  }
+}
+
+' =========================
+' BILLING
+' =========================
+package "billing" {
+  class Plan {
+    +id: UUID
+    +name: String
+    +price: BigDecimal
+    +durationDays: Integer
+
+    +activate(): void
+  }
+
+  class Subscription {
+    +id: UUID
+    +status: SubscriptionStatus
+    +startsAt: LocalDateTime
+    +endsAt: LocalDateTime
+
+    +activate(): void
+    +renew(): void
+    +cancel(): void
+    +isActive(): Boolean
+  }
+
+  class Payment {
+    +id: UUID
+    +amount: BigDecimal
+    +currency: String
+    +status: PaymentStatus
+    +paymentMethod: String
+    +createdAt: LocalDateTime
+
+    +pay(): void
+    +refund(): void
+  }
+
+  class CoinPackage {
+    +id: UUID
+    +name: String
+    +coins: Integer
+    +price: BigDecimal
+
+    +purchase(): void
+  }
+
+  class CoinPurchase {
+    +id: UUID
+    +quantity: Integer
+    +totalAmount: BigDecimal
+    +status: String
+    +createdAt: LocalDateTime
+
+    +confirm(): void
+  }
+
+  class PremiumAccess {
+    +id: UUID
+    +grantedAt: LocalDateTime
+    +expiresAt: LocalDateTime
+
+    +grant(): void
+    +revoke(): void
+  }
+}
+
+' =========================
+' NOTIFICATIONS
+' =========================
+package "notifications" {
+  class Notification {
+    +id: UUID
+    +type: String
+    +title: String
+    +message: String
+    +readAt: LocalDateTime
+    +createdAt: LocalDateTime
+
+    +send(): void
+    +markAsRead(): void
+  }
+}
+
+' =========================
+' RELATIONSHIPS
+' =========================
+
+' Auth / Profile
+User "1" -- "1" Role : has >
+User "1" *-- "0..1" PasswordResetToken : generates >
+User "1" *-- "0..*" Session : opens >
+User "1" *-- "0..1" Profile : owns >
+Profile <|-- StudentProfile
+Profile <|-- TeacherProfile
+Profile <|-- OrganizationProfile
+
+' Academy
+OrganizationProfile "1" -- "0..*" Academy : manages >
+Academy "1" *-- "0..*" Campus : contains >
+Academy "1" *-- "0..*" Program : offers >
+Academy "1" *-- "0..*" Cycle : schedules >
+TeacherProfile "0..*" -- "0..*" Academy : teaches in >
+
+' Library
+User "1" -- "0..*" AcademicResource : publishes >
+AcademicResource "1" -- "1" Subject : belongs to >
+AcademicResource "0..1" -- "1" Institution : associated to >
+AcademicResource "1" *-- "1" ResourceFile : contains >
+AcademicResource "0..*" -- "0..*" Tag : classified by >
+User "1" -- "0..*" DownloadLog : generates >
+AcademicResource "1" -- "0..*" DownloadLog : logged in >
+
+' Forum
+User "1" -- "0..*" Thread : creates >
+Thread "1" *-- "0..*" Answer : contains >
+Thread "1" *-- "0..*" Comment : contains >
+Answer "1" *-- "0..*" Comment : receives >
+User "1" -- "0..*" Answer : answers >
+User "1" -- "0..*" Comment : comments >
+User "1" -- "0..*" FollowRelation : follows >
+FollowRelation "*" --> "1" User : follower >
+FollowRelation "*" --> "1" User : followed >
+User "1" -- "0..*" Reaction : reacts >
+Thread "1" -- "0..*" Reaction : receives >
+Answer "1" -- "0..*" Reaction : receives >
+Comment "1" -- "0..*" Reaction : receives >
+
+' Gamification
+User "1" *-- "1" CoinWallet
+User "1" -- "0..*" PointTransaction : generates >
+User "1" -- "0..*" UserBadge
+Badge "1" -- "0..*" UserBadge
+User "1" -- "0..1" LevelProgress
+
+' Moderation
+User "1" -- "0..*" Report : reports >
+Report "1" *-- "0..*" ModerationAction : actions >
+User "1" -- "0..*" ModerationAction : executed by >
+User "1" -- "0..*" AuditLog : originates >
+Report "1" -- "0..*" Appeal : may generate >
+User "1" -- "0..*" Appeal : submits >
+
+' Verification
+User "1" -- "0..*" VerificationRequest : requests >
+VerificationRequest "1" *-- "0..*" VerificationDocument : attaches >
+
+' Billing
+User "1" -- "0..*" Subscription : owns >
+Plan "1" -- "0..*" Subscription : defines >
+Subscription "1" *-- "0..*" Payment : records >
+User "1" -- "0..*" PremiumAccess : receives >
+User "1" -- "0..*" CoinPurchase : buys >
+CoinPackage "1" -- "0..*" CoinPurchase : packages >
+CoinPurchase "1" *-- "0..*" Payment : paid by >
+
+' Notifications
+User "1" -- "0..*" Notification : receives >
+User "1" *-- "0..1" NotificationPreference
+
+' Cross-context useful links
+Notification ..> Report : notifies about
+Notification ..> VerificationRequest : notifies about
+Notification ..> Subscription : notifies about
+Notification ..> Thread : notifies about
+Notification ..> Answer : notifies about
+
+@enduml

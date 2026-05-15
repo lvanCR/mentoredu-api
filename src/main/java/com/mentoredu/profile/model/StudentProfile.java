@@ -13,8 +13,8 @@ import java.util.UUID;
 public class StudentProfile {
 
     @Id
-    @Column(name = "user_id", columnDefinition = "uuid")
-    private UUID userId;
+    @Column(name = "profile_id", columnDefinition = "uuid")
+    private UUID profileId;
 
     @Column(name = "school_name", length = 120)
     private String schoolName;
@@ -30,7 +30,4 @@ public class StudentProfile {
 
     @Column(name = "study_shift", length = 30)
     private String studyShift;
-
-    @Column(name = "is_anonymous_allowed")
-    private Boolean isAnonymousAllowed = true;
 }

@@ -8,7 +8,8 @@
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(Sort-Object)",
       "PowerShell(Remove-Item *)",
-      "Bash(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\src\\\\main\\\\java\\\\com\\\\mentoredu\" -Recurse -Directory)"
+      "Bash(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\src\\\\main\\\\java\\\\com\\\\mentoredu\" -Recurse -Directory)",
+      "Bash(git checkout *)"
     ]
   }
 }

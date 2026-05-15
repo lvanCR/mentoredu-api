@@ -2,164 +2,188 @@
 
 ## Contexto del Proyecto
 
-Backend de MentorEdu: API REST construida con **Java 21 + Spring Boot 4**, base de datos **PostgreSQL**, migraciones con **Flyway**, organizada en **Bounded Contexts** siguiendo **Clean Architecture**.
+Backend de MentorEdu: API REST construida con **Java 21 + Spring Boot 4.0.3**, base de datos **PostgreSQL**, migraciones con **Flyway**, organizada en **Bounded Contexts** siguiendo **Clean Architecture**.
 
 - **Package base**: `com.mentoredu`
 - **Branch actual**: ver rama activa en Git
 - **Documentación de referencia**:
     - `docs/historias-usuario.md` → User Stories con criterios de aceptación (Gherkin)
-    - `docs/diagrama-er.txt` → Diagrama ER Físico (fuente de verdad para BD)
-    - `docs/diagrama-clases.txt` → Diagrama de Clases UML (fuente de verdad para entidades Java)
+    - `docs/diagrama-er.puml` → Diagrama ER Físico (fuente de verdad para BD)
+    - `docs/diagrama-clases.puml` → Diagrama de Clases UML (fuente de verdad para entidades Java)
 
 ---
 
 ## Estructura del Proyecto
 
-```
-com.mentoredu/
-├── auth/           → users, roles, sessions, password_reset_tokens
-├── profile/        → student_profiles, teacher_profiles, academy_profiles,
-│                     moderator_profiles, admin_profiles, notification_preferences
-├── content/        → academic_resources, resource_files, universities, subjects, tags
-├── community/      → threads, answers, comments, reactions, follow_relations
-├── gamification/   → coin_wallets, point_transactions, badges, user_badges, level_progress
-├── moderation/     → reports, moderation_actions, audit_logs, appeals
-├── verification/   → verification_requests, verification_documents
-├── subscription/   → plans, subscriptions, payments, coin_packages, coin_purchases
-├── notification/   → notifications
-└── config/         → configuración global (seguridad, beans, etc.)
-```
+### Bounded Contexts definitivos
 
-> **Nota**: `notification_preferences` vive en el paquete `profile` (alineado con ER y diagrama de clases),
-> no en `notification`.
+| Bounded Context | Epic | Paquete objetivo | Tablas principales |
+|---|---|---|---|
+| auth | EP-01 | `auth/` | users, roles, sessions, password_reset_tokens |
+| profile | EP-02 | `profile/` | profiles, student_profiles, teacher_profiles, organization_profiles, notification_preferences |
+| academy | EP-03 | `academy/` | academies, campuses, programs, cycles, teacher_academies |
+| library | EP-04 | `library/` | academic_resources, resource_files, institutions, subjects, tags, resource_tags, download_logs |
+| forum | EP-05 | `forum/` | threads, answers, comments, reactions, follow_relations |
+| moderation | EP-06 | `moderation/` | reports, moderation_actions, audit_logs, appeals |
+| verification | EP-07 | `verification/` | verification_requests, verification_documents |
+| billing | EP-08 | `billing/` | plans, subscriptions, payments, coin_packages, coin_purchases, premium_access |
+| notifications | EP-09 | `notifications/` | notifications |
+| gamification | EP-10 | `gamification/` | coin_wallets, point_transactions, badges, user_badges, level_progress |
+| config | — | `config/` | SecurityConfig, BeanConfig, OpenApiConfig |
 
-Migraciones Flyway en: `src/main/resources/db/migration/`
-Formato obligatorio: `V{n}__{descripcion_en_snake_case}.sql`
+### Paquetes Java definitivos (rama chore/restructuracion-y-mejora)
+
+Todos los paquetes han sido migrados y están alineados con los Bounded Contexts:
+
+| Paquete | BC | Estado |
+|---|---|---|
+| `com.mentoredu.auth` | auth | ✅ Alineado |
+| `com.mentoredu.profile` | profile | ✅ Reestructurado (base `Profile` + subtipos por `profile_id`) |
+| `com.mentoredu.academy` | academy | ✅ Creado desde cero |
+| `com.mentoredu.library` | library | ✅ Migrado desde `content` (`University` → `Institution`) |
+| `com.mentoredu.forum` | forum | ✅ Migrado desde `community` |
+| `com.mentoredu.billing` | billing | ✅ Migrado desde `subscription` |
+| `com.mentoredu.notifications` | notifications | ✅ Migrado desde `notification` |
+| `com.mentoredu.gamification` | gamification | ✅ Sin cambio |
+| `com.mentoredu.moderation` | moderation | ✅ Sin cambio |
+| `com.mentoredu.verification` | verification | ✅ Sin cambio |
+
+Migraciones Flyway: `src/main/resources/db/migration/`
+Formato: `V{n}__{descripcion_en_snake_case}.sql`
 
 ---
 
 ## Reglas de Oro (OBLIGATORIAS)
 
 1. **UUID siempre**: Todas las PKs son `UUID`. Nunca usar `Long` o `Integer` como identificador.
-2. **Convención de nombres**: `snake_case` en base de datos, `camelCase` en Java.
-3. **Contraseñas cifradas**: Usar `BCryptPasswordEncoder`. Nunca almacenar en texto plano (RN-04).
-4. **Trazabilidad anónima**: Las publicaciones anónimas deben mantener `author_user_id` interno para moderación, aunque no se exponga públicamente (RN-07).
-5. **Verificar ER antes de crear entidades**: Consultar `docs/diagrama-er.txt` para tipos de datos, longitudes de campo y restricciones antes de escribir cualquier entidad o migración.
+2. **Convención de nombres**: `snake_case` en BD, `camelCase` en Java.
+3. **Contraseñas cifradas**: `BCryptPasswordEncoder`. Nunca texto plano (RN-03).
+4. **Trazabilidad anónima**: Las publicaciones anónimas mantienen `author_user_id` interno para moderación (RN-16).
+5. **ER como fuente de verdad**: Consultar `docs/diagrama-er.puml` antes de crear cualquier entidad o migración.
 6. **Estructura de capas**: `Controller → Service → Repository → Entity`. No saltar capas.
-7. **Criterios de aceptación**: No dar una US por terminada sin verificar todos los escenarios Gherkin del `docs/historias-usuario.md`.
-8. **Auditoría en moderación**: Toda acción de moderación debe registrar entrada en `audit_logs` (RN-12).
-9. **Un rol activo por usuario**: Un usuario tiene exactamente un rol principal activo (RN-02).
-10. **Restricciones de negocio**: Respetar todas las RN definidas en `docs/historias-usuario.md` (RN-01 a RN-20).
+7. **Criterios de aceptación**: No dar una US por terminada sin verificar todos los escenarios Gherkin de `docs/historias-usuario.md`.
+8. **Auditoría en moderación**: Toda acción de moderación registra entrada en `audit_logs` (RN-22).
+9. **Un rol activo por usuario**: Exactamente un rol principal activo por usuario (RN-02).
+10. **Restricciones de negocio**: Respetar RN-01 a RN-35 definidas en `docs/historias-usuario.md`.
+11. **Gamificación inmutable**: `point_transactions` es de solo lectura. No modificar ni eliminar registros (RN-34).
+12. **`notification_preferences` en `profile`**: Este entity pertenece al BC `profile`, no a `notifications`.
+13. **`AuditLog.actorUserId`**: El campo es `actorUserId: UUID` (FK a `users`). No usar `actorType/actorId` genérico.
 
 ---
 
 ## Estado de Épicas
 
-> Actualiza este bloque cada vez que completes una tarea. Mueve el ítem a COMPLETADO y crea una nueva rama en Git.
+> Actualiza este bloque cada vez que completes una US. Mueve el ítem a COMPLETADO con la fecha.
 
-### 🔄 EN PROGRESO
-- [ ] **feature/password-reset** → US20: Recuperación de contraseña (EP01)
-    - Tablas involucradas: `password_reset_tokens`, `users`
-    - Endpoint: `POST /api/v1/auth/forgot-password`, `POST /api/v1/auth/reset-password`
-    - Lógica: generar token UUID, guardar hash, enviar email, validar expiración (1 hora), marcar `used = true`
+### ✅ REESTRUCTURACIÓN ARQUITECTURAL COMPLETADA
 
-### ✅ ALINEACIÓN ESTRUCTURAL COMPLETADA (chore/reorganize-architecture)
-- [x] **Bloque A** — Migración V1 única y limpia (`db/migration/V1__initial_schema.sql`). `ddl-auto: validate`.
-- [x] **Bloque B** — `User` alineado al ER: sin `age`/`points`/`coins`, con `provider`/`status`/timestamps. `passwordHash` correcto.
-- [x] **Bloque C** — `Follow` → `community.FollowRelation` (tabla `follow_relations`, FKs `follower_user_id`/`followed_user_id`).
-- [x] **Bloque D** — `SecurityConfig` movido a `config`. `BCryptPasswordEncoder` como `@Bean`. `JwtUtil` usa firma real (jjwt parser).
-- [x] **Bloque E** — Paquete `document` → `content`. `AuthenticationProvider` registrado.
-- [x] **Bloque F** — `ThreadEntity` → `Thread`, `AnswerEntity` → `Answer`. FKs corregidas a `author_user_id`.
-- [x] **Bloque G** — Todos los endpoints con prefijo `/api/v1/`. Documentos en `/api/v1/resources/**`. Reports en `/api/v1/moderation/reports`.
-- [x] **Bloque H** — `register()` usa `RegisterRequest` DTO. `ThreadService.listRecent()` paginado. `ReportController` devuelve `ReportResponse`.
-- [x] **Bloque I** — `IGamificationService` e `IFollowService` creadas. `GamificationService` usa `CoinWallet`/`PointTransaction`.
-- [x] **Bloque J** — Seed corregido: 5 roles `STUDENT`, `TEACHER`, `ACADEMY`, `MODERATOR`, `ADMIN` (no `PREMIUM`).
-- [x] **Bloque K** — `Document` → `AcademicResource` (tabla `academic_resources`). V1 migration corregida. Campos ER añadidos (`resource_type`, `visibility`, `verification_status`, `exam_year`, etc.). `DocumentRepository` → `AcademicResourceRepository`.
-- [x] **Bloque L** — Entidades faltantes añadidas: `PasswordResetToken`, `Session` (auth); `Comment`, `Reaction` (community); `Badge`, `UserBadge` (gamification); `ModerationAction`, `AuditLog`, `Appeal` (report).
-- [x] **Bloque M** — Paquetes faltantes creados con entidades y repositorios: `profile/` (5 perfiles + NotificationPreference), `verification/`, `subscription/` (con enums SubscriptionStatus/PaymentStatus), `notification/`.
-- [x] **Bloque N** — `ReportStatus` corregido: `OPEN, IN_REVIEW, RESOLVED, REJECTED`. `TargetType` ampliado: `THREAD, ANSWER, COMMENT, RESOURCE`. `download_logs.document_id` → `resource_id` FK → `academic_resources`. FK de `resource_tags.resource_id` → `academic_resources` añadida.
-- [x] **Bloque O** — Renombrado `Document*` → `Resource*` en el bounded context `content`: `DocumentController` → `ResourceController`, `DocumentService` → `ResourceService`, `IDocumentService` → `IResourceService`, todos los DTOs y `DuplicateDocumentException` → `DuplicateResourceException`. Sin cambios en rutas ni en la capa de persistencia.
-- [x] **Bloque P** — Capas service/controller creadas para los 4 bounded contexts que solo tenían model/repository: `profile` (US03/US04), `verification` (US21), `subscription` (US18), `notification` (US14). Cada uno con interface, implementación, controller y DTOs mínimos.
-- [x] **Bloque Q** — `download_logs` añadida al `docs/diagrama-er.txt` (tabla operativa presente en V1 y en `DownloadLog.java`, alineada ahora con el ER). `ddl-auto: validate` no presenta bloqueante.
+**V1** (`chore/reorganize-architecture`): Migración inicial, entidades, seeds, endpoints `/api/v1/`.
+
+**V2** (`chore/restructuracion-y-mejora`): Renombrado de todos los paquetes Java a nombres definitivos de BC. Reestructuración de `profile` con tabla base `profiles`. BC `academy` creado desde cero. `University` → `Institution`. `academic_resources` limpio (sin columnas legacy, con `file_id` + `institution_id`). `premium_access` añadido al BC `billing`.
 
 ### 📋 PENDIENTES (TODO)
 
-#### EP01 – Autenticación y gestión de cuenta
-- [ ] US01: Registro de usuario (email + Google OAuth2)
-- [ ] US02: Inicio de sesión + generación de JWT + refresh token
-- [ ] US20: ~~Recuperación de contraseña~~ → EN PROGRESO
+#### EP-01 Auth
+- [ ] US01: Register account with email and password
+- [ ] US02: Sign in with email and password
+- [ ] US03: Request password recovery
+- [ ] US26: Reset password with token
 
-#### EP02 – Perfil y progreso personal
-- [ ] US03: Edición del perfil básico
-- [ ] US04: Visualización del progreso personal
+#### EP-02 Profile
+- [ ] US04: Select account type
+- [ ] US05: Update common profile data
+- [ ] US06: Create student profile
+- [ ] US07: Update student target university
+- [ ] US08: Create teacher profile
+- [ ] US09: Update teacher specialty
+- [ ] US10: Create organization profile
 
-#### EP03 – Repositorio de documentos
-- [ ] US06: Subida de documentos con metadatos
-- [ ] US07: Límites de descarga para usuarios gratuitos
-- [ ] US08: Búsqueda con filtros avanzados
-- [ ] US09: Visor integrado de PDF (mobile-first)
+#### EP-03 Academy
+- [ ] US33: Create academy
+- [ ] US11: Register academic offering
 
-#### EP04 – Foros y colaboración
-- [ ] US05: Anonimato en foros y documentos
-- [ ] US10: Reporte de contenido inapropiado
-- [ ] US11: Reputación de contenido (votos y ordenamiento)
-- [ ] US12: Foro anclado por pregunta de examen
-- [ ] US13: Subir imágenes al responder
-- [ ] US14: Notificaciones de actividad
+#### EP-04 Library
+- [ ] US12: Upload academic PDF resource
+- [ ] US13: Register resource metadata
+- [ ] US14: Search resources by filters
+- [ ] US15: Download academic resource
 
-#### EP05 – Gamificación y recompensas
-- [ ] US15: Sistema de puntos acumulables
-- [ ] US16: Niveles que desbloquean ventajas
-- [ ] US17: Monedas virtuales
+#### EP-05 Forum
+- [ ] US16: Create forum thread
+- [ ] US17: Reply to forum thread
+- [ ] US18: Close forum thread
+- [ ] US27: React to forum content
+- [ ] US28: Comment on forum answer
+- [ ] US29: Follow a user
 
-#### EP06 – Monetización y modelo freemium
-- [ ] US18: Modelo freemium (suscripción y compra de monedas)
+#### EP-06 Moderation
+- [ ] US19: Report content
+- [ ] US20: Resolve report
 
-#### EP07 – Interacción social
-- [ ] US19: Seguir a otros usuarios
+#### EP-07 Verification
+- [ ] US21: Request teacher verification
+- [ ] US22: Request organization verification
 
-#### EP08 – Moderación y verificación
-- [ ] US21: Verificar identidad (docente o academia)
+#### EP-08 Billing
+- [ ] US23: Activate premium subscription
+- [ ] US24: Buy coin package
+
+#### EP-09 Notifications
+- [ ] US25: View pending notifications
+
+#### EP-10 Gamification
+- [ ] US30: Earn experience points
+- [ ] US31: View personal level and progress
+- [ ] US32: Earn and view badges
 
 ### ✅ COMPLETADO (DONE)
-- (Mover aquí los ítems terminados con fecha de completado)
+_(Mover aquí cada US terminada con fecha de completado)_
 
 ---
 
 ## Flujo de Trabajo Recomendado
 
-Para cada User Story, seguir este orden:
+Para cada User Story:
 
-1. **Migración SQL**: Crear `V{n}__descripcion.sql` con la tabla o alteración necesaria
-2. **Entity**: Clase Java con anotaciones JPA, mapeo exacto al ER
-3. **Repository**: Interface `JpaRepository` + queries custom si se necesitan
-4. **Service**: Lógica de negocio, validaciones, reglas de negocio (RN-XX)
-5. **DTOs**: Request/Response separados de la entidad
-6. **Controller**: Endpoints REST, validaciones de entrada con `@Valid`
-7. **Tests**: Al menos test de integración del endpoint principal
+1. **Migración SQL** → `V{n}__descripcion.sql` con la tabla o alteración necesaria
+2. **Entity** → Clase Java con anotaciones JPA, mapeo exacto al ER
+3. **Repository** → Interface `JpaRepository` + queries custom si se necesitan
+4. **Service** → Lógica de negocio, validaciones, RN-XX
+5. **DTOs** → Request/Response separados de la entidad
+6. **Controller** → Endpoints REST con `@Valid`
+7. **Tests** → Al menos un test de integración del endpoint principal
 
 ---
 
 ## Convenciones de Endpoints
 
 ```
-Base path: /api/v1/
-Auth:         /api/v1/auth/**
-Usuarios:     /api/v1/users/**
-Recursos:     /api/v1/resources/**
-Comunidad:    /api/v1/threads/**
-Gamificación: /api/v1/gamification/**
-Moderación:   /api/v1/moderation/**
-Suscripciones:/api/v1/subscriptions/**
+Base path:      /api/v1/
+Auth:           /api/v1/auth/**
+Perfil:         /api/v1/profiles/**
+Academy:        /api/v1/academies/**
+Recursos:       /api/v1/resources/**
+Foro:           /api/v1/threads/**
+Moderación:     /api/v1/moderation/**
+Verificación:   /api/v1/verification/**
+Billing:        /api/v1/billing/**
+Notificaciones: /api/v1/notifications/**
+Gamificación:   /api/v1/gamification/**
 ```
 
 ---
 
 ## Notas Técnicas Importantes
 
-- **Sesiones**: La tabla `sessions` maneja refresh tokens. JWT de acceso es stateless (sin guardar en BD).
-- **Roles disponibles**: STUDENT, TEACHER, ACADEMY, MODERATOR, ADMIN (tabla `roles`).
-- **Perfiles**: Cada rol tiene su propia tabla de perfil. Un usuario puede tener perfil de alumno Y ser moderador (tablas separadas).
+- **Sesiones**: `sessions` maneja refresh tokens. JWT de acceso es stateless (no se guarda en BD).
+- **Roles**: `STUDENT`, `TEACHER`, `ACADEMY`, `MODERATOR`, `ADMIN` (tabla `roles`).
+- **Perfiles**: Tabla base `profiles` + subtipos `student_profiles`, `teacher_profiles`, `organization_profiles` enlazados por `profile_id` (PK compartida).
 - **Visibilidad de recursos**: `PUBLIC` → todos, `PREMIUM` → suscripción activa o monedas, `PRIVATE` → solo el autor.
-- **Reacciones**: La tabla `reactions` cubre threads, answers y comments (polimórfica con FK nullable).
-- **Puntos vs Monedas**: Son sistemas separados. `point_transactions` para puntos de reputación. `coin_wallets` para monedas canjeables.
+- **Reacciones**: Tabla `reactions` cubre threads, answers y comments (FKs nullable para polimorfismo). Entidad `Reaction` en el BC `forum`.
+- **Puntos vs Monedas**: Sistemas independientes. `point_transactions` para puntos de reputación. `coin_wallets` para monedas canjeables (RN-35).
+- **`academic_resources` ↔ `resource_files`**: Relación 1:1 con FK explícita `file_id` en `academic_resources`.
+- **`notification_preferences`**: BC `profile`, tabla en el paquete `profile`, no en `notifications`.
+- **`AuditLog`**: Campo `actorUserId: UUID` (FK a `users`). No usar genérico `actorType/actorId`.
+- **Gamificación**: Disparada por eventos internos. No hay endpoints de escritura directa de puntos ni niveles.
+- **Flujo de organización**: US04 (tipo cuenta) → US10 (perfil org) → US33 (crear academia) → US11 (oferta académica).
+- **`subjects` compartido**: La tabla `subjects` (BC `library`) es usada también por `threads` (BC `forum`). Es referencia compartida aceptada entre contextos.

@@ -8,21 +8,19 @@ import java.util.UUID;
 @Getter
 public class StudentProfileResponse {
 
-    private final UUID userId;
+    private final UUID profileId;
     private final String schoolName;
     private final String gradeLevel;
     private final String targetUniversity;
     private final String targetCareer;
     private final String studyShift;
-    private final Boolean isAnonymousAllowed;
 
     public StudentProfileResponse(StudentProfile profile) {
-        this.userId = profile.getUserId();
+        this.profileId = profile.getProfileId();
         this.schoolName = profile.getSchoolName();
         this.gradeLevel = profile.getGradeLevel();
         this.targetUniversity = profile.getTargetUniversity();
         this.targetCareer = profile.getTargetCareer();
         this.studyShift = profile.getStudyShift();
-        this.isAnonymousAllowed = profile.getIsAnonymousAllowed();
     }
 }

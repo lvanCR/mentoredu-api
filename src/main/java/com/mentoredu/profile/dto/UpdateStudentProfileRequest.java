@@ -9,5 +9,4 @@ public class UpdateStudentProfileRequest {
     private String targetUniversity;
     private String targetCareer;
     private String studyShift;
-    private Boolean isAnonymousAllowed;
 }
