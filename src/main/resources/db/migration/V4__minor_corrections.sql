@@ -1,4 +1,4 @@
--- V3: Correcciones menores de nomenclatura y constraints
+-- V4: Correcciones menores de nomenclatura y constraints
 -- 1. notification_preferences: community_enabled → forum_enabled (alineado al BC forum)
 -- 2. academic_resources: UNIQUE en file_id (refuerza relación 1:1 con resource_files)
 

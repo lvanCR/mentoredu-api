@@ -50,7 +50,8 @@ auth/
     ├── caso-02-token-expirado.json
     ├── caso-03-token-ya-usado.json
     ├── caso-04-contrasena-debil.json
-    └── caso-05-campo-faltante.json
+    ├── caso-05-campo-faltante.json
+    └── caso-06-token-inexistente.json
 ```
 
 Cuando se implemente una nueva HU, crear su carpeta dentro de `auth/` con el mismo patrón y moverla de "Pendientes" a "Implementadas" en este README.

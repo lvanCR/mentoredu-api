@@ -56,6 +56,7 @@ No requiere autenticación previa. Requiere el token obtenido en HU03.
 | 3    | caso-03-token-ya-usado.json      | 400 Bad Request |
 | 4    | caso-04-contrasena-debil.json    | 400 Bad Request |
 | 5    | caso-05-campo-faltante.json      | 400 Bad Request |
+| 6    | caso-06-token-inexistente.json   | 400 Bad Request |
 
 ---
 

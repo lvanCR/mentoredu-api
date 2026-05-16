@@ -1,6 +1,6 @@
 package com.mentoredu.billing.service;
 
-import com.mentoredu.auth.model.User;
+import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.billing.dto.CreateSubscriptionRequest;
 import com.mentoredu.billing.dto.SubscriptionResponse;

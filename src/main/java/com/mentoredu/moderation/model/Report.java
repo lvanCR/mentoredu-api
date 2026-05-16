@@ -1,6 +1,6 @@
 package com.mentoredu.moderation.model;
 
-import com.mentoredu.auth.model.User;
+import com.mentoredu.auth.entity.User;
 import com.mentoredu.moderation.model.enums.ReportStatus;
 import com.mentoredu.moderation.model.enums.TargetType;
 import jakarta.persistence.*;

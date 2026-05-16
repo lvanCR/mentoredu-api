@@ -14,6 +14,7 @@ import com.mentoredu.auth.exception.EmailNotFoundException;
 import com.mentoredu.auth.exception.InvalidCredentialsException;
 import com.mentoredu.auth.exception.InvalidTokenException;
 import com.mentoredu.auth.service.AuthService;
+import com.mentoredu.auth.util.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
@@ -43,6 +44,12 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
 
     @Test
     void register_withValidData_returns201AndUserInfo() throws Exception {
@@ -380,6 +387,18 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.newPassword").exists());
+    }
+
+    @Test
+    void resetPassword_withNonExistentToken_returns400() throws Exception {
+        when(authService.resetPassword(any()))
+                .thenThrow(new InvalidTokenException("Token not found or invalid"));
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validResetPasswordRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Token not found or invalid"));
     }
 
     @Test

@@ -1,6 +1,6 @@
 package com.mentoredu.billing.model;
 
-import com.mentoredu.auth.model.User;
+import com.mentoredu.auth.entity.User;
 import com.mentoredu.billing.model.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;

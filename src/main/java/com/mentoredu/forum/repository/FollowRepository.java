@@ -1,6 +1,6 @@
 package com.mentoredu.forum.repository;
 
-import com.mentoredu.auth.model.User;
+import com.mentoredu.auth.entity.User;
 import com.mentoredu.forum.model.FollowRelation;
 import org.springframework.data.jpa.repository.JpaRepository;
 

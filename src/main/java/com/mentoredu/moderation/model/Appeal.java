@@ -1,6 +1,6 @@
 package com.mentoredu.moderation.model;
 
-import com.mentoredu.auth.model.User;
+import com.mentoredu.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;

@@ -1,6 +1,6 @@
 package com.mentoredu.verification.service;
 
-import com.mentoredu.auth.model.User;
+import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.verification.dto.SubmitVerificationRequest;
 import com.mentoredu.verification.dto.VerificationRequestResponse;

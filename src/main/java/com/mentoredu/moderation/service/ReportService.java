@@ -1,6 +1,6 @@
 package com.mentoredu.moderation.service;
 
-import com.mentoredu.auth.model.User;
+import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.library.model.AcademicResource;
 import com.mentoredu.library.repository.AcademicResourceRepository;

@@ -43,6 +43,19 @@ public class JwtUtil {
                 .getPayload();
     }
 
+    public boolean isTokenValid(String token) {
+        try {
+            extractClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String extractEmail(String token) {
+        return extractClaims(token).get("email", String.class);
+    }
+
     public long getAccessExpirationMs()  { return accessExpirationMs; }
     public long getRefreshExpirationMs() { return refreshExpirationMs; }
 

@@ -130,6 +130,9 @@ public class AuthService {
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new EmailNotFoundException("No account found for: " + normalizedEmail));
 
+        // Invalidate any previous active tokens for this user before issuing a new one
+        passwordResetTokenRepository.invalidateAllByUserId(user.getId());
+
         String rawToken = generateSecureToken();
 
         passwordResetTokenRepository.save(PasswordResetToken.builder()

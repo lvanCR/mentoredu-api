@@ -1,4 +1,4 @@
--- V2 — Datos semilla: roles del sistema
+-- V3 — Datos semilla: roles del sistema
 INSERT INTO roles (id, name, description) VALUES
     (gen_random_uuid(), 'STUDENT',   'Estudiante preuniversitario'),
     (gen_random_uuid(), 'TEACHER',   'Docente o tutor académico'),
