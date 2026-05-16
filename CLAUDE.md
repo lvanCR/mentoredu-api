@@ -77,7 +77,6 @@ Formato: `V{n}__{descripcion_en_snake_case}.sql`
 ### 📋 PENDIENTES (TODO)
 
 #### EP-01 Auth
-- [ ] US02: Sign in with email and password
 - [ ] US03: Request password recovery
 - [ ] US26: Reset password with token
 
@@ -133,6 +132,7 @@ Formato: `V{n}__{descripcion_en_snake_case}.sql`
 | US | Descripción | Fecha | Rama |
 |---|---|---|---|
 | US01 | Register account with email and password | 2026-05-15 | feat/HU01-registro |
+| US02 | Sign in with email and password | 2026-05-16 | feat/HU02-login |
 
 ---
 
@@ -147,6 +147,7 @@ Para cada User Story:
 5. **DTOs** → Request/Response separados de la entidad
 6. **Controller** → Endpoints REST con `@Valid`
 7. **Tests** → Al menos un test `@WebMvcTest` por endpoint
+8. **Documentación Postman** → crear `postman/<bc>/HU<XX>-<nombre>/README.md` y archivos `caso-XX.json` para cada escenario de aceptación. Actualizar `postman/<bc>/README.md` moviendo la HU de "Pendientes" a "Implementadas".
 
 ---
 
@@ -165,6 +166,66 @@ Billing:        /api/v1/billing/**
 Notificaciones: /api/v1/notifications/**
 Gamificación:   /api/v1/gamification/**
 ```
+
+---
+
+## Pruebas con Postman y Swagger
+
+### Carpeta `postman/`
+
+La carpeta `postman/` es el workspace de pruebas del proyecto. Está organizada por bounded context y contiene una subcarpeta por cada Historia de Usuario implementada.
+
+```
+postman/
+├── README.md                              ← guía completa del flujo de pruebas
+├── environments/
+│   └── local.postman_environment.json     ← variables {{base_url}}, {{api_v1}}, {{access_token}}
+├── <bc>/
+│   ├── README.md                          ← estado de HUs del bounded context
+│   └── HU<XX>-<nombre>/
+│       ├── README.md                      ← endpoint, headers, campos, reglas de negocio, escenarios
+│       ├── caso-01-exitoso.json
+│       └── caso-XX-<nombre>.json          ← un archivo por escenario de aceptación
+└── profile/ academy/ library/ ...        ← carpetas placeholder con .gitkeep
+```
+
+### Prerrequisito: Springdoc OpenAPI
+
+Para activar Swagger UI, agregar en `pom.xml` antes de documentar una nueva HU:
+
+```xml
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.8.8</version>
+</dependency>
+```
+
+Con el backend corriendo (`mvn spring-boot:run`), las URLs disponibles son:
+
+| Recurso | URL |
+|---|---|
+| Swagger UI | `http://localhost:8080/swagger-ui.html` |
+| OpenAPI JSON | `http://localhost:8080/v3/api-docs` |
+
+### Flujo de pruebas para cada Historia
+
+1. Levanta el backend: `mvn spring-boot:run`
+2. Importa en Postman desde **Import → Link**: `http://localhost:8080/v3/api-docs`
+3. Activa el ambiente **MentorEdu — Local** (`postman/environments/local.postman_environment.json`)
+4. Abre `postman/<bc>/HU<XX>-<nombre>/README.md` para ver los escenarios y campos
+5. Copia el `request.body` del archivo `caso-XX.json` en Postman → Body → raw → JSON
+6. Ejecuta y verifica que el `status` coincida con `expected_response.status`
+
+Ver `postman/README.md` para la guía detallada y `postman.md` para el flujo general.
+
+### Nombre de requests en Postman
+
+```
+MentorEdu<BC>HU<XX>-<AccionMétodoHTTP>
+```
+
+Ejemplos: `MentorEduAuthHU01-RegistroPOST`, `MentorEduAuthHU02-LoginPOST`, `MentorEduProfileHU04-SelectAccountTypePATCH`
 
 ---
 
@@ -214,3 +275,4 @@ Gamificación:   /api/v1/gamification/**
 | `spring-boot-webmvc-test` | `@WebMvcTest` en Spring Boot 4.x |
 | `spring-security-test` | `@WithMockUser` y utils de seguridad en tests |
 | `h2` (test) | BD en memoria para `MentoreduApiApplicationTests` |
+| `springdoc-openapi-starter-webmvc-ui 2.8.8` | Swagger UI + export OpenAPI para Postman (agregar al implementar cada HU) |

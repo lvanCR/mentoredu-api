@@ -1,6 +1,9 @@
 package com.mentoredu.auth.util;
 
+import com.mentoredu.auth.entity.User;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -11,43 +14,40 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+    @Value("${app.jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private long expiration;
+    @Value("${app.jwt.expiration-ms}")
+    private long accessExpirationMs;
 
-    private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
-    }
+    @Value("${app.jwt.refresh-expiration-ms}")
+    private long refreshExpirationMs;
 
-    public String generateToken(String email) {
+    public String generateAccessToken(User user) {
+        Date now = new Date();
         return Jwts.builder()
-                .subject(email)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getKey())
+                .subject(user.getId().toString())
+                .claim("email", user.getEmail())
+                .claim("role", user.getRole().getName())
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + accessExpirationMs))
+                .signWith(getSigningKey())
                 .compact();
     }
 
-    public String extractEmail(String token) {
+    public Claims extractClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getKey())
+                .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+                .getPayload();
     }
 
-    public boolean isTokenValid(String token) {
-        try {
-            Jwts.parser()
-                    .verifyWith(getKey())
-                    .build()
-                    .parseSignedClaims(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    public long getAccessExpirationMs()  { return accessExpirationMs; }
+    public long getRefreshExpirationMs() { return refreshExpirationMs; }
+
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
