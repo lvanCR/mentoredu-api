@@ -1,0 +1,64 @@
+# Bounded Context: Profile (EP-02)
+
+Gestiona el perfil base y los perfiles específicos de cada tipo de usuario.
+
+---
+
+## Historias implementadas
+
+| HU | Descripción | Endpoint | Nombre en Postman | Fecha |
+|---|---|---|---|---|
+| HU04 | Seleccionar tipo de cuenta | `POST /api/v1/profiles/account-type` | `MentorEduProfileHU04-SelectAccountTypePOST` | 2026-05-16 |
+| HU05 | Actualizar datos comunes del perfil | `PATCH /api/v1/profiles/me` | `MentorEduProfileHU05-UpdateProfilePATCH` | 2026-05-16 |
+| HU06 | Crear perfil de estudiante | `POST /api/v1/profiles/student` | `MentorEduProfileHU06-CreateStudentProfilePOST` | 2026-05-16 |
+
+## Historias pendientes
+
+| HU | Descripción |
+|---|---|
+| HU07 | Actualizar universidad objetivo del estudiante |
+| HU08 | Crear perfil de docente |
+| HU09 | Actualizar especialidad del docente |
+| HU10 | Crear perfil de organización |
+
+---
+
+## Estructura de carpetas
+
+```
+profile/
+├── README.md           ← este archivo
+├── HU04-select-account-type/
+│   ├── README.md
+│   ├── caso-01-exitoso-student.json
+│   ├── caso-02-exitoso-teacher.json
+│   ├── caso-03-exitoso-organization.json
+│   ├── caso-04-perfil-ya-existe.json
+│   └── caso-05-tipo-invalido.json
+├── HU05-update-profile/
+│   ├── README.md
+│   ├── caso-01-exitoso.json
+│   ├── caso-02-solo-nombre-ciudad.json
+│   ├── caso-03-displayname-vacio.json
+│   ├── caso-04-sin-displayname.json
+│   └── caso-05-sin-autenticacion.json
+└── HU06-create-student-profile/
+    ├── README.md
+    ├── caso-01-exitoso-campos-obligatorios.json
+    ├── caso-02-exitoso-todos-campos.json
+    ├── caso-03-gradelevel-vacio.json
+    ├── caso-04-targetuniversity-vacio.json
+    ├── caso-05-perfil-ya-existe.json
+    ├── caso-06-tipo-incorrecto.json
+    ├── caso-07-sin-perfil-base.json
+    └── caso-08-sin-autenticacion.json
+```
+
+---
+
+## Notas del bounded context
+
+- Todos los endpoints de `/api/v1/profiles/**` requieren `Authorization: Bearer <access_token>`.
+- El token se obtiene del endpoint `POST /api/v1/auth/login` (HU02).
+- `profileType` acepta exactamente: `STUDENT`, `TEACHER`, `ORGANIZATION`.
+- Una vez seleccionado el tipo de cuenta, no puede cambiarse (RN-07).

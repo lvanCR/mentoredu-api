@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduProfileHU06-CreateStudentProfilePOST-TipoIncorrecto",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "url": { "raw": "{{api_v1}}/profiles/student" },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversity\": \"UNMSM\"\n}"
+    }
+  },
+  "response": {
+    "status": 409,
+    "description": "El token corresponde a una cuenta cuyo profileType es TEACHER u ORGANIZATION. Mensaje incluye el tipo actual."
+  }
+}

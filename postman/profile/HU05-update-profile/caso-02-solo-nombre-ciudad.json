@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduProfileHU05-UpdateProfilePATCH-SoloNombreCiudad",
+  "request": {
+    "method": "PATCH",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "url": { "raw": "{{api_v1}}/profiles/me" },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"displayName\": \"Juan Pérez Actualizado\",\n  \"city\": \"Arequipa\"\n}"
+    }
+  },
+  "response": {
+    "status": 200,
+    "description": "Solo se actualizan displayName y city. avatarUrl y bio permanecen con sus valores previos. profileType no cambia."
+  }
+}

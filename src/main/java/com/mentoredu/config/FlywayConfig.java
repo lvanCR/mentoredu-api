@@ -4,6 +4,7 @@ import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,7 +14,9 @@ import java.util.Arrays;
 @Configuration
 public class FlywayConfig {
 
+    // matchIfMissing = true → activo por defecto; false cuando spring.flyway.enabled=false (tests H2)
     @Bean
+    @ConditionalOnProperty(name = "spring.flyway.enabled", havingValue = "true", matchIfMissing = true)
     public Flyway flyway(DataSource dataSource) {
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
@@ -23,12 +26,10 @@ public class FlywayConfig {
         return flyway;
     }
 
-    /**
-     * Garantiza que entityManagerFactory espere al bean "flyway" antes de inicializarse.
-     * En Spring Boot 4.x, el mecanismo automático de ordenación Flyway → JPA está roto;
-     * este post-processor lo restaura manualmente.
-     */
+    // En Spring Boot 4.x la ordenación automática Flyway → JPA está rota; este post-processor
+    // la restaura manualmente. Solo aplica cuando Flyway está habilitado.
     @Bean
+    @ConditionalOnProperty(name = "spring.flyway.enabled", havingValue = "true", matchIfMissing = true)
     public static BeanFactoryPostProcessor flywayJpaDependencyPostProcessor() {
         return (ConfigurableListableBeanFactory factory) -> {
             String emfBean = "entityManagerFactory";

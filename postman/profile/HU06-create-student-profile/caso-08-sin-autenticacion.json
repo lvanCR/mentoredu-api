@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduProfileHU06-CreateStudentProfilePOST-SinAuth",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "url": { "raw": "{{api_v1}}/profiles/student" },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversity\": \"UNMSM\"\n}"
+    }
+  },
+  "response": {
+    "status": 401,
+    "description": "Sin token de autorización. El filtro JWT rechaza la solicitud antes de llegar al controller."
+  }
+}
