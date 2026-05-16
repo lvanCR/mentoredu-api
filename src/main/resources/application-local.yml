@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:dotenv:.env
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/mentoredu}
     username: ${DB_USERNAME:mentoredu}

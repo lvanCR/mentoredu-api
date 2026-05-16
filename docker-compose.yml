@@ -1,0 +1,60 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: mentoredu_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mentoredu_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mentoredu_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mentoredu-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: mentoredu_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@mentoredu.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "8082:80"
+    depends_on:
+      - postgres
+    networks:
+      - mentoredu-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mentoredu_api
+    environment:
+      # La URL usa el nombre del servicio 'postgres', no localhost
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-mentoredu_db}
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mentoredu-network
+
+networks:
+  mentoredu-network:
+    driver: bridge
+
+volumes:
+  pgdata:
