@@ -1,0 +1,21 @@
+{
+  "description": "Caso 2: Correo no registrado en el sistema",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/forgot-password",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "email": "nobody@example.com"
+    }
+  },
+  "expected_response": {
+    "status": 404,
+    "body": {
+      "status": 404,
+      "error": "Not Found",
+      "message": "No account found for: nobody@example.com"
+    }
+  }
+}

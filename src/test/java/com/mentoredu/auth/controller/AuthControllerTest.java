@@ -1,12 +1,18 @@
 package com.mentoredu.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mentoredu.auth.dto.ForgotPasswordRequest;
+import com.mentoredu.auth.dto.ForgotPasswordResponse;
 import com.mentoredu.auth.dto.LoginRequest;
 import com.mentoredu.auth.dto.LoginResponse;
 import com.mentoredu.auth.dto.RegisterRequest;
 import com.mentoredu.auth.dto.RegisterResponse;
+import com.mentoredu.auth.dto.ResetPasswordRequest;
+import com.mentoredu.auth.dto.ResetPasswordResponse;
 import com.mentoredu.auth.exception.EmailAlreadyExistsException;
+import com.mentoredu.auth.exception.EmailNotFoundException;
 import com.mentoredu.auth.exception.InvalidCredentialsException;
+import com.mentoredu.auth.exception.InvalidTokenException;
 import com.mentoredu.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -253,6 +259,145 @@ class AuthControllerTest {
         var r = new LoginRequest();
         r.setEmail("juan@example.com");
         r.setPassword("Password123");
+        return r;
+    }
+
+    // -------------------------------------------------------------------------
+    // US03 — Request password recovery
+    // -------------------------------------------------------------------------
+
+    @Test
+    void forgotPassword_withRegisteredEmail_returns200WithToken() throws Exception {
+        var response = ForgotPasswordResponse.builder()
+                .message("Recovery token generated. In production this would be sent via email.")
+                .token("a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2")
+                .build();
+
+        when(authService.forgotPassword(any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validForgotPasswordRequest())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.token").exists());
+    }
+
+    @Test
+    void forgotPassword_withUnknownEmail_returns404() throws Exception {
+        when(authService.forgotPassword(any()))
+                .thenThrow(new EmailNotFoundException("No account found for: nobody@example.com"));
+
+        var req = validForgotPasswordRequest();
+        req.setEmail("nobody@example.com");
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    void forgotPassword_withInvalidEmailFormat_returns400() throws Exception {
+        var req = validForgotPasswordRequest();
+        req.setEmail("not-an-email");
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.email").exists());
+    }
+
+    @Test
+    void forgotPassword_withMissingEmail_returns400() throws Exception {
+        var req = new ForgotPasswordRequest();
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.email").exists());
+    }
+
+    private ForgotPasswordRequest validForgotPasswordRequest() {
+        var r = new ForgotPasswordRequest();
+        r.setEmail("juan@example.com");
+        return r;
+    }
+
+    // -------------------------------------------------------------------------
+    // US26 — Reset password with token
+    // -------------------------------------------------------------------------
+
+    @Test
+    void resetPassword_withValidToken_returns200() throws Exception {
+        var response = ResetPasswordResponse.builder()
+                .message("Password reset successfully. All active sessions have been closed.")
+                .build();
+
+        when(authService.resetPassword(any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validResetPasswordRequest())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void resetPassword_withExpiredToken_returns400() throws Exception {
+        when(authService.resetPassword(any()))
+                .thenThrow(new InvalidTokenException("Token has expired"));
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validResetPasswordRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Token has expired"));
+    }
+
+    @Test
+    void resetPassword_withAlreadyUsedToken_returns400() throws Exception {
+        when(authService.resetPassword(any()))
+                .thenThrow(new InvalidTokenException("Token has already been used"));
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validResetPasswordRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Token has already been used"));
+    }
+
+    @Test
+    void resetPassword_withWeakPassword_returns400() throws Exception {
+        var req = validResetPasswordRequest();
+        req.setNewPassword("weak");
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.newPassword").exists());
+    }
+
+    @Test
+    void resetPassword_withMissingToken_returns400() throws Exception {
+        var req = new ResetPasswordRequest();
+        req.setNewPassword("NewPassword123");
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.token").exists());
+    }
+
+    private ResetPasswordRequest validResetPasswordRequest() {
+        var r = new ResetPasswordRequest();
+        r.setToken("a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2");
+        r.setNewPassword("NewPassword123");
         return r;
     }
 }
