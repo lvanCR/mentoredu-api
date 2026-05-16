@@ -5,8 +5,10 @@ import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
+import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
+import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.StudentProfile;
 import com.mentoredu.profile.repository.ProfileRepository;
@@ -48,6 +50,28 @@ public class ProfileService implements IProfileService {
                 .displayName(displayName)
                 .profileType(request.getProfileType().name())
                 .build();
+
+        return new ProfileResponse(profileRepository.save(profile));
+    }
+
+    // -------------------------------------------------------------------------
+    // US05 — Update common profile data
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public ProfileResponse updateProfile(String email, UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Profile not found for user: " + email));
+
+        profile.setDisplayName(request.getDisplayName());
+        if (request.getAvatarUrl() != null) profile.setAvatarUrl(request.getAvatarUrl());
+        if (request.getCity()      != null) profile.setCity(request.getCity());
+        if (request.getBio()       != null) profile.setBio(request.getBio());
 
         return new ProfileResponse(profileRepository.save(profile));
     }

@@ -3,6 +3,7 @@ package com.mentoredu.profile.controller;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
+import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
 import com.mentoredu.profile.service.IProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +43,21 @@ public class ProfileController {
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(profileService.selectAccountType(auth.getName(), request));
+    }
+
+    // -------------------------------------------------------------------------
+    // US05 — Update common profile data
+    // -------------------------------------------------------------------------
+
+    @PatchMapping("/me")
+    @Operation(summary = "US05 - Actualizar datos comunes del perfil",
+               description = "Actualiza displayName, avatarUrl, city y/o bio del perfil del usuario autenticado. El tipo de cuenta (profileType) no puede modificarse por este endpoint.")
+    public ResponseEntity<ProfileResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(profileService.updateProfile(auth.getName(), request));
     }
 
     // -------------------------------------------------------------------------

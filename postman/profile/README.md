@@ -9,12 +9,12 @@ Gestiona el perfil base y los perfiles específicos de cada tipo de usuario.
 | HU | Descripción | Endpoint | Nombre en Postman | Fecha |
 |---|---|---|---|---|
 | HU04 | Seleccionar tipo de cuenta | `POST /api/v1/profiles/account-type` | `MentorEduProfileHU04-SelectAccountTypePOST` | 2026-05-16 |
+| HU05 | Actualizar datos comunes del perfil | `PATCH /api/v1/profiles/me` | `MentorEduProfileHU05-UpdateProfilePATCH` | 2026-05-16 |
 
 ## Historias pendientes
 
 | HU | Descripción |
 |---|---|
-| HU05 | Actualizar datos comunes del perfil |
 | HU06 | Crear perfil de estudiante |
 | HU07 | Actualizar universidad objetivo del estudiante |
 | HU08 | Crear perfil de docente |
@@ -28,13 +28,20 @@ Gestiona el perfil base y los perfiles específicos de cada tipo de usuario.
 ```
 profile/
 ├── README.md           ← este archivo
-└── HU04-select-account-type/
+├── HU04-select-account-type/
+│   ├── README.md
+│   ├── caso-01-exitoso-student.json
+│   ├── caso-02-exitoso-teacher.json
+│   ├── caso-03-exitoso-organization.json
+│   ├── caso-04-perfil-ya-existe.json
+│   └── caso-05-tipo-invalido.json
+└── HU05-update-profile/
     ├── README.md
-    ├── caso-01-exitoso-student.json
-    ├── caso-02-exitoso-teacher.json
-    ├── caso-03-exitoso-organization.json
-    ├── caso-04-perfil-ya-existe.json
-    └── caso-05-tipo-invalido.json
+    ├── caso-01-exitoso.json
+    ├── caso-02-solo-nombre-ciudad.json
+    ├── caso-03-displayname-vacio.json
+    ├── caso-04-sin-displayname.json
+    └── caso-05-sin-autenticacion.json
 ```
 
 ---

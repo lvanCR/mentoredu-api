@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
+import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
+import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.service.IProfileService;
@@ -22,6 +24,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -146,9 +149,115 @@ class ProfileControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    // =========================================================================
+    // US05 — Update common profile data
+    // =========================================================================
+
     // -------------------------------------------------------------------------
+    // Escenario 1 — Actualización exitosa → 200
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "juan@example.com")
+    void updateProfile_withValidData_returns200() throws Exception {
+        var request = updateProfileRequest("Juan Actualizado", "Lima", "Bio actualizada");
+        var response = buildUpdatedProfileResponse("Juan Actualizado", "Lima", "Bio actualizada");
+        when(profileService.updateProfile(eq("juan@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/profiles/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("Juan Actualizado"))
+                .andExpect(jsonPath("$.city").value("Lima"))
+                .andExpect(jsonPath("$.bio").value("Bio actualizada"))
+                .andExpect(jsonPath("$.profileType").value("STUDENT"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 1 alt — Solo nombre y ciudad → 200 (sin afectar profileType)
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "juan@example.com")
+    void updateProfile_withOnlyNameAndCity_returns200() throws Exception {
+        var request = updateProfileRequest("Solo Nombre", "Arequipa", null);
+        var response = buildUpdatedProfileResponse("Solo Nombre", "Arequipa", null);
+        when(profileService.updateProfile(eq("juan@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/profiles/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("Solo Nombre"))
+                .andExpect(jsonPath("$.city").value("Arequipa"))
+                .andExpect(jsonPath("$.profileType").value("STUDENT"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 2 — displayName vacío → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "juan@example.com")
+    void updateProfile_withBlankDisplayName_returns400() throws Exception {
+        var request = updateProfileRequest("", "Lima", null);
+
+        mockMvc.perform(patch("/api/v1/profiles/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.displayName").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "juan@example.com")
+    void updateProfile_withMissingDisplayName_returns400() throws Exception {
+        String body = "{\"city\": \"Lima\"}";
+
+        mockMvc.perform(patch("/api/v1/profiles/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.displayName").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Perfil no existe → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "sinperfil@example.com")
+    void updateProfile_whenProfileNotFound_returns404() throws Exception {
+        when(profileService.updateProfile(eq("sinperfil@example.com"), any()))
+                .thenThrow(new ProfileNotFoundException("Profile not found for user: sinperfil@example.com"));
+
+        var request = updateProfileRequest("Nombre", null, null);
+
+        mockMvc.perform(patch("/api/v1/profiles/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void updateProfile_withoutAuth_returns401() throws Exception {
+        var request = updateProfileRequest("Juan", null, null);
+
+        mockMvc.perform(patch("/api/v1/profiles/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
     // Helpers
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     private SelectAccountTypeRequest requestFor(ProfileType type) {
         var r = new SelectAccountTypeRequest();
@@ -163,6 +272,28 @@ class ProfileControllerTest {
                 .displayName("Juan Pérez")
                 .profileType(type.name())
                 .createdAt(LocalDateTime.now())
+                .build();
+        return new ProfileResponse(profile);
+    }
+
+    private UpdateProfileRequest updateProfileRequest(String displayName, String city, String bio) {
+        var r = new UpdateProfileRequest();
+        r.setDisplayName(displayName);
+        r.setCity(city);
+        r.setBio(bio);
+        return r;
+    }
+
+    private ProfileResponse buildUpdatedProfileResponse(String displayName, String city, String bio) {
+        Profile profile = Profile.builder()
+                .id(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .displayName(displayName)
+                .city(city)
+                .bio(bio)
+                .profileType(ProfileType.STUDENT.name())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
         return new ProfileResponse(profile);
     }
