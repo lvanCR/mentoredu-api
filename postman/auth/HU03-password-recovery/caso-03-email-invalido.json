@@ -1,0 +1,23 @@
+{
+  "description": "Caso 3: Formato de correo inválido",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/forgot-password",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "email": "not-an-email"
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Validation failed",
+      "details": {
+        "email": "Email must be a valid address"
+      }
+    }
+  }
+}

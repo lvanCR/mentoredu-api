@@ -35,7 +35,8 @@
       "Bash(Sort-Object FullName)",
       "PowerShell(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\postman\" -Recurse | ForEach-Object { $_.FullName })",
       "Bash(mvn compile *)",
-      "Bash(mvn test *)"
+      "Bash(mvn test *)",
+      "Bash(git stash *)"
     ]
   }
 }

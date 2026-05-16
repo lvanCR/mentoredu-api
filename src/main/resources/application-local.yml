@@ -23,3 +23,5 @@ app:
     secret: ${JWT_SECRET:bWVudG9yZWR1LWxvY2FsLWRldi1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHMtbG9uZy1mb3ItaHMyNTY=}
     expiration-ms: 900000          # 15 minutos
     refresh-expiration-ms: 604800000  # 7 días
+  password-reset:
+    expiration-minutes: 60         # 1 hora

@@ -77,8 +77,7 @@ Formato: `V{n}__{descripcion_en_snake_case}.sql`
 ### 📋 PENDIENTES (TODO)
 
 #### EP-01 Auth
-- [ ] US03: Request password recovery
-- [ ] US26: Reset password with token
+_(todas las US de EP-01 completadas)_
 
 #### EP-02 Profile
 - [ ] US04: Select account type
@@ -133,6 +132,8 @@ Formato: `V{n}__{descripcion_en_snake_case}.sql`
 |---|---|---|---|
 | US01 | Register account with email and password | 2026-05-15 | feat/HU01-registro |
 | US02 | Sign in with email and password | 2026-05-16 | feat/HU02-login |
+| US03 | Request password recovery | 2026-05-16 | feat/HU03-password-recovery |
+| US26 | Reset password with token | 2026-05-16 | feat/HU03-password-recovery |
 
 ---
 

@@ -1,0 +1,23 @@
+{
+  "description": "Caso 2: Token expirado (debe manipularse directamente en BD para prueba manual)",
+  "notes": "Para simular: actualizar 'expires_at' de un token existente a una fecha pasada en la tabla password_reset_tokens.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/reset-password",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "token": "<token_con_expires_at_en_el_pasado>",
+      "newPassword": "NewPassword456"
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Bad Request",
+      "message": "Token has expired"
+    }
+  }
+}
