@@ -1,7 +1,8 @@
 package com.mentoredu.auth.repository;
 
-import com.mentoredu.auth.model.Role;
+import com.mentoredu.auth.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.Optional;
 import java.util.UUID;
 

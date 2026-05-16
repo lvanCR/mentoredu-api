@@ -2,12 +2,12 @@ spring:
   config:
     import: optional:dotenv:.env
   datasource:
-    url: jdbc:postgresql://localhost:5432/mentoredu_db
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mentoredu}
+    username: ${DB_USERNAME:mentoredu}
+    password: ${DB_PASSWORD:mentoredu}
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
@@ -16,13 +16,5 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-  sql:
-    init:
-      mode: never
-
 server:
   port: 8080
-
-jwt:
-  secret: mentoredu-clave-secreta-super-larga-para-hs256-minimo-32-caracteres
-  expiration: 86400000

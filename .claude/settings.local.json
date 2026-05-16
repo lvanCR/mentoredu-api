@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Remove-Item \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\src\\\\main\\\\java\\\\com\\\\mentoredu\\\\content\\\\model\\\\Document.java\" -Force)",
+      "Bash(Remove-Item \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\src\\\\main\\\\java\\\\com\\\\mentoredu\\\\content\\\\repository\\\\DocumentRepository.java\" -Force)",
+      "Bash(Write-Output \"Eliminados: Document.java y DocumentRepository.java\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\src\\\\main\\\\java\\\\com\\\\mentoredu\" -Recurse -Filter \"*.java\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "PowerShell(Remove-Item *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\src\\\\main\\\\java\\\\com\\\\mentoredu\" -Recurse -Directory)",
+      "Bash(git checkout *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\" -Recurse -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 20)",
+      "Bash(xargs wc -l)",
+      "Bash(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\" -Recurse -Directory)",
+      "Bash(xargs grep -l \"^@Entity\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\src\" -Recurse -Directory)",
+      "PowerShell(Get-Item *)",
+      "Bash(./mvnw compile *)",
+      "Bash(./mvnw test *)",
+      "Bash(./mvnw dependency:resolve -q)",
+      "Bash(jar tf *)",
+      "Bash(xargs -I{} sh -c 'jar tf {} 2>/dev/null | grep -i \"SecurityAutoConfiguration\" | head -1 | sed \"s|^|{}: |\"')",
+      "Bash(grep -v \"^$\")",
+      "Bash(xargs -I{} echo {})",
+      "Read(//c/Users/Ivan/.m2/repository/org/springframework/**)",
+      "Bash(xargs -I{} sh -c 'jar tf {} 2>/dev/null | grep -i \"AutoConfigureMockMvc\\\\|autoconfiguremockmvc\" | head -1 | sed \"s|^|{}: |\"')",
+      "Bash(./mvnw clean *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}
