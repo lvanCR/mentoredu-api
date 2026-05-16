@@ -1,0 +1,438 @@
+{
+  "info": {
+    "_postman_id": "d4e5f6a7-b8c9-4d0e-a1b2-c3d4e5f6a7b8",
+    "name": "MentorEdu API",
+    "description": "Colección completa de endpoints para MentorEdu API /api/v1. Agrupada por Bounded Context.\n\nUso rápido:\n1. Ejecutar 'POST Login' — guarda el JWT automáticamente en la variable `token`.\n2. Reemplazar las variables `document_id`, `thread_id`, `user_id` con IDs reales.\n3. Todos los demás requests usan `{{token}}` automáticamente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "base_url",    "value": "http://localhost:8080", "type": "string" },
+    { "key": "token",       "value": "",                      "type": "string" },
+    { "key": "document_id", "value": "",                      "type": "string" },
+    { "key": "thread_id",   "value": "",                      "type": "string" },
+    { "key": "user_id",     "value": "",                      "type": "string" },
+    { "key": "follower_id", "value": "",                      "type": "string" },
+    { "key": "followed_id", "value": "",                      "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "EP01 — Autenticación",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    pm.collectionVariables.set('user_id', json.id);",
+                  "    pm.test('Token guardado', () => pm.expect(json.token).to.be.a('string'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Juan\",\n  \"lastName\": \"Pérez\",\n  \"email\": \"juan.perez@example.com\",\n  \"password\": \"SecurePass123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login ← guarda JWT en {{token}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    pm.collectionVariables.set('user_id', json.id);",
+                  "    pm.test('JWT guardado correctamente', () => pm.expect(json.token).to.be.a('string'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"juan.perez@example.com\",\n  \"password\": \"SecurePass123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "EP03 — Repositorio de Documentos",
+      "item": [
+        {
+          "name": "Publicar documento (por URL)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Examen de Química UNMSM 2023-I\",\n  \"type\": \"PDF\",\n  \"category\": \"Química\",\n  \"fileUrl\": \"https://example.com/examen-quimica-2023.pdf\",\n  \"fileName\": \"examen-quimica-2023.pdf\",\n  \"university\": \"UNMSM\",\n  \"year\": 2023,\n  \"area\": \"Química\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources"]
+            }
+          }
+        },
+        {
+          "name": "Subir PDF (US06)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file",           "type": "file",   "src": "",                    "description": "Archivo PDF < 10MB" },
+                { "key": "title",          "type": "text",   "value": "Examen Física UNI 2024-I" },
+                { "key": "type",           "type": "text",   "value": "PDF" },
+                { "key": "category",       "type": "text",   "value": "Física" },
+                { "key": "university",     "type": "text",   "value": "UNI" },
+                { "key": "year",           "type": "text",   "value": "2024" },
+                { "key": "area",           "type": "text",   "value": "Física" },
+                { "key": "confirmVersion", "type": "text",   "value": "false" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Buscar documentos (US08)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/search?university=UNMSM&year=2023&area=Química&q=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "search"],
+              "query": [
+                { "key": "university", "value": "UNMSM",   "description": "Nombre exacto de la universidad" },
+                { "key": "year",       "value": "2023",    "description": "Año del examen" },
+                { "key": "area",       "value": "Química", "description": "Área académica" },
+                { "key": "q",          "value": "",        "description": "Búsqueda de texto libre" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Configuración del visor PDF (US09)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/{{document_id}}/viewer",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "{{document_id}}", "viewer"]
+            }
+          }
+        },
+        {
+          "name": "Preview PDF inline (US09)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/{{document_id}}/preview",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "{{document_id}}", "preview"]
+            }
+          }
+        },
+        {
+          "name": "Descargar documento (US07)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/{{document_id}}/download?useCoins=false",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "{{document_id}}", "download"],
+              "query": [
+                { "key": "useCoins", "value": "false", "description": "true para usar monedas y saltarse el límite diario" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Alternar anonimato del documento (US05)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/resources/{{document_id}}/anonymous",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "resources", "{{document_id}}", "anonymous"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "EP04 — Community",
+      "item": [
+        {
+          "name": "Threads",
+          "item": [
+            {
+              "name": "Crear hilo",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const json = pm.response.json();",
+                      "    pm.collectionVariables.set('thread_id', json.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"¿Cómo se resuelve la integral de x²?\",\n  \"body\": \"Estoy intentando calcular la integral de x² dx pero no entiendo los pasos. ¿Alguien puede explicar con detalle?\",\n  \"anonymous\": false\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/threads",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "threads"]
+                }
+              }
+            },
+            {
+              "name": "Listar hilos recientes",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/threads?page=0&size=10",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "threads"],
+                  "query": [
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Obtener hilo por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/threads/{{thread_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "threads", "{{thread_id}}"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Follows",
+          "item": [
+            {
+              "name": "Seguir usuario",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/follows/{{follower_id}}/follow/{{followed_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "follows", "{{follower_id}}", "follow", "{{followed_id}}"]
+                }
+              }
+            },
+            {
+              "name": "Dejar de seguir",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/follows/{{follower_id}}/unfollow/{{followed_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "follows", "{{follower_id}}", "unfollow", "{{followed_id}}"]
+                }
+              }
+            },
+            {
+              "name": "Usuarios que sigo",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/follows/{{user_id}}/following",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "follows", "{{user_id}}", "following"]
+                }
+              }
+            },
+            {
+              "name": "Mis seguidores",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/follows/{{user_id}}/followers",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "follows", "{{user_id}}", "followers"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EP05 — Gamificación",
+      "item": [
+        {
+          "name": "Consultar puntos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/gamification/users/{{user_id}}/points",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "gamification", "users", "{{user_id}}", "points"]
+            }
+          }
+        },
+        {
+          "name": "Agregar puntos",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 10\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/gamification/users/{{user_id}}/points/add",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "gamification", "users", "{{user_id}}", "points", "add"]
+            }
+          }
+        },
+        {
+          "name": "Consultar monedas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/gamification/users/{{user_id}}/coins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "gamification", "users", "{{user_id}}", "coins"]
+            }
+          }
+        },
+        {
+          "name": "Agregar monedas",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/gamification/users/{{user_id}}/coins/add",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "gamification", "users", "{{user_id}}", "coins", "add"]
+            }
+          }
+        },
+        {
+          "name": "Canjear monedas",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/gamification/users/{{user_id}}/coins/redeem",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "gamification", "users", "{{user_id}}", "coins", "redeem"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "EP08 — Moderación",
+      "item": [
+        {
+          "name": "Reportar contenido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"DOCUMENT\",\n  \"targetId\": \"{{document_id}}\",\n  \"reason\": \"El documento contiene información incorrecta que puede inducir a error a otros estudiantes.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/moderation/reports",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "moderation", "reports"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
