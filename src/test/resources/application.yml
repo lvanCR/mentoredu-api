@@ -11,3 +11,9 @@ spring:
     show-sql: false
   flyway:
     enabled: false
+
+app:
+  jwt:
+    secret: bWVudG9yZWR1LWxvY2FsLWRldi1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHMtbG9uZy1mb3ItaHMyNTY=
+    expiration-ms: 900000
+    refresh-expiration-ms: 604800000

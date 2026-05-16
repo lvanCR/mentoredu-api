@@ -1,0 +1,33 @@
+{
+  "escenario": "Caso 5 — Campo obligatorio vacío",
+  "gherkin": "Dado que no completo un campo obligatorio, cuando intento registrar la cuenta, entonces el sistema devuelve un error de validación y no guarda datos.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/auth/register",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "firstName": "",
+      "lastName": "Torres",
+      "email": "pedro.torres@example.com",
+      "password": "Segura2024"
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "campo_fallido": "firstName",
+    "notas": "El campo 'firstName' vacío no supera la validación @NotBlank. La validación aplica igual para 'lastName'. No se guarda ningún dato en la base de datos cuando falla la validación."
+  },
+  "variantes": [
+    {
+      "descripcion": "lastName vacío",
+      "body": {
+        "firstName": "Pedro",
+        "lastName": "",
+        "email": "pedro.torres@example.com",
+        "password": "Segura2024"
+      }
+    }
+  ]
+}

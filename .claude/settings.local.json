@@ -28,7 +28,14 @@
       "Bash(xargs -I{} sh -c 'jar tf {} 2>/dev/null | grep -i \"AutoConfigureMockMvc\\\\|autoconfiguremockmvc\" | head -1 | sed \"s|^|{}: |\"')",
       "Bash(./mvnw clean *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(docker volume ls *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\MentorEdu-API\\\\mentoredu-api\\\\postman\" -Recurse | ForEach-Object { $_.FullName })",
+      "Bash(mvn compile *)",
+      "Bash(mvn test *)"
     ]
   }
 }

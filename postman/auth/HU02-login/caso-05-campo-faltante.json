@@ -1,0 +1,23 @@
+{
+  "name": "MentorEduAuthHU02-LoginPOST — Caso 5: Campo requerido faltante (password)",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/login",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "email": "juan@example.com"
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Validation failed",
+      "details": {
+        "password": "Password is required"
+      }
+    }
+  }
+}
