@@ -1,0 +1,30 @@
+{
+  "escenario": "Caso 1 — Selección exitosa como STUDENT",
+  "gherkin": "Dado que mi cuenta aún no tiene tipo asignado, cuando selecciono STUDENT, entonces el sistema guarda la elección y devuelve el perfil creado.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/profiles/account-type",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "profileType": "STUDENT"
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "id": "<uuid-generado-por-el-sistema>",
+      "userId": "<uuid-del-usuario-autenticado>",
+      "displayName": "<nombre-del-usuario>",
+      "profileType": "STUDENT",
+      "createdAt": "<timestamp>"
+    }
+  },
+  "notas": [
+    "Requiere token de acceso válido (Bearer token de HU02 login).",
+    "El displayName se construye automáticamente con firstName + lastName del usuario.",
+    "Solo puede ejecutarse UNA VEZ por usuario (RN-05, RN-07)."
+  ]
+}

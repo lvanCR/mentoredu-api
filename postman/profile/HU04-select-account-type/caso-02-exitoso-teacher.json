@@ -1,0 +1,29 @@
+{
+  "escenario": "Caso 2 — Selección exitosa como TEACHER",
+  "gherkin": "Dado que mi cuenta aún no tiene tipo asignado, cuando selecciono TEACHER, entonces el sistema guarda la elección y devuelve el perfil creado.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/profiles/account-type",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "profileType": "TEACHER"
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "id": "<uuid-generado-por-el-sistema>",
+      "userId": "<uuid-del-usuario-autenticado>",
+      "displayName": "<nombre-del-usuario>",
+      "profileType": "TEACHER",
+      "createdAt": "<timestamp>"
+    }
+  },
+  "notas": [
+    "Usar un usuario diferente al del Caso 1 (o un usuario nuevo sin perfil).",
+    "El tipo TEACHER habilita la creación de perfil docente en HU08."
+  ]
+}

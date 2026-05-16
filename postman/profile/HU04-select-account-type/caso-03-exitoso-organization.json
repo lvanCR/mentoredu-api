@@ -1,0 +1,29 @@
+{
+  "escenario": "Caso 3 — Selección exitosa como ORGANIZATION",
+  "gherkin": "Dado que mi cuenta aún no tiene tipo asignado, cuando selecciono ORGANIZATION, entonces el sistema guarda la elección y devuelve el perfil creado.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/profiles/account-type",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "profileType": "ORGANIZATION"
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "id": "<uuid-generado-por-el-sistema>",
+      "userId": "<uuid-del-usuario-autenticado>",
+      "displayName": "<nombre-del-usuario>",
+      "profileType": "ORGANIZATION",
+      "createdAt": "<timestamp>"
+    }
+  },
+  "notas": [
+    "Usar un usuario diferente al de los Casos 1 y 2.",
+    "El tipo ORGANIZATION habilita la creación de perfil institucional en HU10 y luego academias en HU33."
+  ]
+}
