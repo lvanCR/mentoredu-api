@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduProfileHU06-CreateStudentProfilePOST-TodosCampos",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "url": { "raw": "{{api_v1}}/profiles/student" },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"gradeLevel\": \"4TO_SECUNDARIA\",\n  \"targetUniversity\": \"Pontificia Universidad Católica del Perú\",\n  \"schoolName\": \"Colegio Nacional Nuestra Señora de Guadalupe\",\n  \"targetCareer\": \"Ingeniería de Sistemas e Informática\",\n  \"studyShift\": \"MAÑANA\"\n}"
+    }
+  },
+  "response": {
+    "status": 201,
+    "description": "Todos los campos registrados correctamente. profileType permanece STUDENT en el perfil base."
+  }
+}

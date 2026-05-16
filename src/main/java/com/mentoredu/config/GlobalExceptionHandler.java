@@ -6,6 +6,8 @@ import com.mentoredu.auth.exception.InvalidCredentialsException;
 import com.mentoredu.auth.exception.InvalidTokenException;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
+import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
+import com.mentoredu.profile.exception.WrongProfileTypeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -113,6 +115,28 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(StudentProfileAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleStudentProfileAlreadyExists(StudentProfileAlreadyExistsException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(WrongProfileTypeException.class)
+    public ResponseEntity<Map<String, Object>> handleWrongProfileType(WrongProfileTypeException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

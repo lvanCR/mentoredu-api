@@ -2,13 +2,18 @@ package com.mentoredu.profile.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.profile.dto.CreateStudentProfileRequest;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
+import com.mentoredu.profile.dto.StudentProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
+import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
+import com.mentoredu.profile.exception.WrongProfileTypeException;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
+import com.mentoredu.profile.model.StudentProfile;
 import com.mentoredu.profile.service.IProfileService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -296,5 +301,176 @@ class ProfileControllerTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
         return new ProfileResponse(profile);
+    }
+
+    // =========================================================================
+    // US06 — Create student profile
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario 1 — Creación exitosa con campos obligatorios → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void createStudentProfile_withRequiredFields_returns201() throws Exception {
+        var request = studentProfileRequest("5TO_SECUNDARIA", "Universidad Nacional Mayor de San Marcos", null, null, null);
+        var response = buildStudentProfileResponse("5TO_SECUNDARIA", "Universidad Nacional Mayor de San Marcos");
+        when(profileService.createStudentProfile(eq("student@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/profiles/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.gradeLevel").value("5TO_SECUNDARIA"))
+                .andExpect(jsonPath("$.targetUniversity").value("Universidad Nacional Mayor de San Marcos"))
+                .andExpect(jsonPath("$.profileId").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 1 alt — Creación exitosa con todos los campos → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void createStudentProfile_withAllFields_returns201() throws Exception {
+        var request = studentProfileRequest("4TO_SECUNDARIA", "Pontificia Universidad Católica del Perú",
+                "Colegio Nacional", "Ingeniería de Sistemas", "MAÑANA");
+        var response = buildStudentProfileResponse("4TO_SECUNDARIA", "Pontificia Universidad Católica del Perú");
+        when(profileService.createStudentProfile(eq("student@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/profiles/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.gradeLevel").value("4TO_SECUNDARIA"))
+                .andExpect(jsonPath("$.targetUniversity").value("Pontificia Universidad Católica del Perú"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 2 — gradeLevel vacío → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void createStudentProfile_withBlankGradeLevel_returns400() throws Exception {
+        var request = studentProfileRequest("", "UNMSM", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.gradeLevel").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 2 alt — targetUniversity vacío → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void createStudentProfile_withBlankTargetUniversity_returns400() throws Exception {
+        var request = studentProfileRequest("5TO_SECUNDARIA", "", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.targetUniversity").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Perfil de estudiante ya existe (RN-08) → 409
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void createStudentProfile_whenAlreadyExists_returns409() throws Exception {
+        when(profileService.createStudentProfile(eq("student@example.com"), any()))
+                .thenThrow(new StudentProfileAlreadyExistsException(
+                        "Student profile already exists for this account."));
+
+        var request = studentProfileRequest("5TO_SECUNDARIA", "UNMSM", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Student profile already exists for this account."));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Tipo de cuenta incorrecto (no STUDENT) → 409
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void createStudentProfile_whenWrongProfileType_returns409() throws Exception {
+        when(profileService.createStudentProfile(eq("teacher@example.com"), any()))
+                .thenThrow(new WrongProfileTypeException(
+                        "Account type is not STUDENT. Current type: TEACHER"));
+
+        var request = studentProfileRequest("5TO_SECUNDARIA", "UNMSM", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Sin perfil base (US04 no ejecutada) → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "nuevo@example.com")
+    void createStudentProfile_whenBaseProfileNotFound_returns404() throws Exception {
+        when(profileService.createStudentProfile(eq("nuevo@example.com"), any()))
+                .thenThrow(new ProfileNotFoundException("Profile not found for user: nuevo@example.com"));
+
+        var request = studentProfileRequest("5TO_SECUNDARIA", "UNMSM", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void createStudentProfile_withoutAuth_returns401() throws Exception {
+        var request = studentProfileRequest("5TO_SECUNDARIA", "UNMSM", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/student")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private CreateStudentProfileRequest studentProfileRequest(
+            String gradeLevel, String targetUniversity,
+            String schoolName, String targetCareer, String studyShift) {
+        var r = new CreateStudentProfileRequest();
+        r.setGradeLevel(gradeLevel);
+        r.setTargetUniversity(targetUniversity);
+        r.setSchoolName(schoolName);
+        r.setTargetCareer(targetCareer);
+        r.setStudyShift(studyShift);
+        return r;
+    }
+
+    private StudentProfileResponse buildStudentProfileResponse(String gradeLevel, String targetUniversity) {
+        StudentProfile sp = StudentProfile.builder()
+                .profileId(UUID.randomUUID())
+                .gradeLevel(gradeLevel)
+                .targetUniversity(targetUniversity)
+                .build();
+        return new StudentProfileResponse(sp);
     }
 }

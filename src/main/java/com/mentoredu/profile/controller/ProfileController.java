@@ -1,5 +1,6 @@
 package com.mentoredu.profile.controller;
 
+import com.mentoredu.profile.dto.CreateStudentProfileRequest;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
@@ -61,17 +62,34 @@ public class ProfileController {
     }
 
     // -------------------------------------------------------------------------
-    // Pre-existing skeleton endpoints (not yet implementing a US)
+    // US06 — Create student profile
+    // -------------------------------------------------------------------------
+
+    @PostMapping("/student")
+    @Operation(summary = "US06 - Crear perfil de estudiante",
+               description = "Crea el perfil académico del usuario autenticado. Requiere que la cuenta sea de tipo STUDENT (seleccionada previamente en US04). Solo puede ejecutarse una vez por usuario (RN-08).")
+    public ResponseEntity<StudentProfileResponse> createStudentProfile(
+            @Valid @RequestBody CreateStudentProfileRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(profileService.createStudentProfile(auth.getName(), request));
+    }
+
+    // -------------------------------------------------------------------------
+    // Skeleton endpoints — pendientes de implementar en próximas US
     // -------------------------------------------------------------------------
 
     @GetMapping("/student/{userId}")
-    @Operation(summary = "Obtener perfil de estudiante")
+    @Operation(summary = "Obtener perfil de estudiante (skeleton — US pendiente)")
     public ResponseEntity<StudentProfileResponse> getStudentProfile(@PathVariable UUID userId) {
         return ResponseEntity.ok(profileService.getStudentProfile(userId));
     }
 
     @PutMapping("/student/{userId}")
-    @Operation(summary = "Actualizar perfil de estudiante")
+    @Operation(summary = "Actualizar perfil de estudiante (skeleton — US07)")
     public ResponseEntity<StudentProfileResponse> updateStudentProfile(
             @PathVariable UUID userId,
             @RequestBody UpdateStudentProfileRequest request) {

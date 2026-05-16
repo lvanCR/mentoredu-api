@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduProfileHU06-CreateStudentProfilePOST-SinPerfilBase",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "url": { "raw": "{{api_v1}}/profiles/student" },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversity\": \"UNMSM\"\n}"
+    }
+  },
+  "response": {
+    "status": 404,
+    "description": "El usuario autenticado no ejecutó HU04. El perfil base (profiles) no existe. Mensaje: 'Profile not found for user: ...'."
+  }
+}

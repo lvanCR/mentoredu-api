@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduProfileHU06-CreateStudentProfilePOST-TargetUniversityVacio",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "url": { "raw": "{{api_v1}}/profiles/student" },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversity\": \"\"\n}"
+    }
+  },
+  "response": {
+    "status": 400,
+    "description": "targetUniversity vacío. La respuesta incluye 'details.targetUniversity' con mensaje de validación."
+  }
+}

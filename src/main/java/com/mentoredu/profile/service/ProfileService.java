@@ -2,6 +2,7 @@ package com.mentoredu.profile.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.profile.dto.CreateStudentProfileRequest;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
@@ -9,7 +10,10 @@ import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
+import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
+import com.mentoredu.profile.exception.WrongProfileTypeException;
 import com.mentoredu.profile.model.Profile;
+import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.model.StudentProfile;
 import com.mentoredu.profile.repository.ProfileRepository;
 import com.mentoredu.profile.repository.StudentProfileRepository;
@@ -74,6 +78,42 @@ public class ProfileService implements IProfileService {
         if (request.getBio()       != null) profile.setBio(request.getBio());
 
         return new ProfileResponse(profileRepository.save(profile));
+    }
+
+    // -------------------------------------------------------------------------
+    // US06 — Create student profile
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public StudentProfileResponse createStudentProfile(String email, CreateStudentProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Profile not found for user: " + email));
+
+        if (!ProfileType.STUDENT.name().equals(profile.getProfileType())) {
+            throw new WrongProfileTypeException(
+                    "Account type is not STUDENT. Current type: " + profile.getProfileType());
+        }
+
+        if (studentProfileRepository.existsById(profile.getId())) {
+            throw new StudentProfileAlreadyExistsException(
+                    "Student profile already exists for this account.");
+        }
+
+        StudentProfile studentProfile = StudentProfile.builder()
+                .profileId(profile.getId())
+                .gradeLevel(request.getGradeLevel())
+                .targetUniversity(request.getTargetUniversity())
+                .schoolName(request.getSchoolName())
+                .targetCareer(request.getTargetCareer())
+                .studyShift(request.getStudyShift())
+                .build();
+
+        return new StudentProfileResponse(studentProfileRepository.save(studentProfile));
     }
 
     // -------------------------------------------------------------------------
