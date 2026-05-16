@@ -1,0 +1,24 @@
+{
+  "description": "Caso 4: Nueva contraseña no cumple la política de seguridad",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/reset-password",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "token": "<token_valido>",
+      "newPassword": "weak"
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Validation failed",
+      "details": {
+        "newPassword": "Password must be between 8 and 72 characters"
+      }
+    }
+  }
+}

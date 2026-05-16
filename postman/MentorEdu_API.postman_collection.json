@@ -1,0 +1,473 @@
+{
+  "info": {
+    "_postman_id": "fd62bcb4-1e63-47be-b001-mentoredu-api",
+    "name": "MentorEdu API - Local",
+    "description": "Coleccion para probar MentorEdu API en local. Cada endpoint tiene 2 ejemplos de request. Usa el environment MentorEdu Local.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('status is not 5xx', function () {",
+          "  pm.expect(pm.response.code).to.be.below(500);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Swagger / Health",
+      "item": [
+        {
+          "name": "OpenAPI JSON - ejemplo 1",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/v3/api-docs",
+            "description": "Valida que OpenAPI este disponible."
+          }
+        },
+        {
+          "name": "Swagger UI HTML - ejemplo 2",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/swagger-ui.html",
+            "description": "Valida que Swagger UI cargue en local."
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Auth",
+      "item": [
+        {
+          "name": "Register - estudiante principal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('userId', json.id);",
+                  "  pm.environment.set('email', json.email);",
+                  "}",
+                  "pm.test('register devuelve 201', function () { pm.expect(pm.response.code).to.eql(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ana\",\n  \"lastName\": \"Torres\",\n  \"age\": 18,\n  \"email\": \"student{{$timestamp}}@mentoredu.com\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Register - segundo estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('secondUserId', json.id);",
+                  "}",
+                  "pm.test('register segundo devuelve 201', function () { pm.expect(pm.response.code).to.eql(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Luis\",\n  \"lastName\": \"Ramos\",\n  \"age\": 19,\n  \"email\": \"friend{{$timestamp}}@mentoredu.com\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login - estudiante principal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('token', json.token);",
+                  "  pm.environment.set('userId', json.userId);",
+                  "}",
+                  "pm.test('login devuelve token', function () { pm.expect(pm.response.json().token).to.exist; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login - credenciales invalidas",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"wrong-password\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Documents",
+      "item": [
+        {
+          "name": "Publish JSON - examen UNI",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.environment.set('documentId', pm.response.json().id);",
+                  "}",
+                  "pm.test('documento creado', function () { pm.expect(pm.response.code).to.eql(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Examen Quimica UNI 2025\",\n  \"type\": \"PDF\",\n  \"category\": \"Quimica\",\n  \"fileUrl\": \"/uploads/documents/demo.pdf\",\n  \"university\": \"UNI\",\n  \"year\": 2025,\n  \"area\": \"Quimica\"\n}"
+            },
+            "url": "{{baseUrl}}/api/documents"
+          }
+        },
+        {
+          "name": "Publish JSON - practica UNMSM",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Practica Algebra UNMSM 2024\",\n  \"type\": \"PDF\",\n  \"category\": \"Matematica\",\n  \"fileUrl\": \"/uploads/documents/algebra-demo.pdf\",\n  \"university\": \"UNMSM\",\n  \"year\": 2024,\n  \"area\": \"Matematica\"\n}"
+            },
+            "url": "{{baseUrl}}/api/documents"
+          }
+        },
+        {
+          "name": "Upload PDF - valido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('uploadedDocumentId', json.id);",
+                  "  pm.environment.set('documentId', json.id);",
+                  "}",
+                  "pm.test('upload PDF devuelve 201', function () { pm.expect(pm.response.code).to.eql(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "{{samplePdfPath}}" },
+                { "key": "title", "value": "Practica Quimica PUCP 2025", "type": "text" },
+                { "key": "university", "value": "PUCP", "type": "text" },
+                { "key": "year", "value": "2025", "type": "text" },
+                { "key": "area", "value": "Quimica", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/documents/upload"
+          }
+        },
+        {
+          "name": "Upload PDF - falta year",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "{{samplePdfPath}}" },
+                { "key": "title", "value": "Practica incompleta", "type": "text" },
+                { "key": "university", "value": "ULima", "type": "text" },
+                { "key": "area", "value": "Fisica", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/documents/upload"
+          }
+        },
+        {
+          "name": "Search - filtros y texto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/search?university=UNI&year=2025&area=Quimica&q=Quimica"
+          }
+        },
+        {
+          "name": "Search - sin resultados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/search?university=NASA&year=1999&area=Astrofisica&q=no-existe"
+          }
+        },
+        {
+          "name": "Viewer - documento subido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/{{uploadedDocumentId}}/viewer"
+          }
+        },
+        {
+          "name": "Viewer - documento no previsualizable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/{{documentId}}/viewer"
+          }
+        },
+        {
+          "name": "Preview - PDF completo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/{{uploadedDocumentId}}/preview"
+          }
+        },
+        {
+          "name": "Preview - PDF con Range",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Range", "value": "bytes=0-99" }],
+            "url": "{{baseUrl}}/api/documents/{{uploadedDocumentId}}/preview"
+          }
+        },
+        {
+          "name": "Download - gratuito",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/{{documentId}}/download"
+          }
+        },
+        {
+          "name": "Download - usando monedas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/{{documentId}}/download?useCoins=true"
+          }
+        },
+        {
+          "name": "Toggle anonymous - activar",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/{{documentId}}/anonymous"
+          }
+        },
+        {
+          "name": "Toggle anonymous - desactivar",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/documents/{{documentId}}/anonymous"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Gamification",
+      "item": [
+        {
+          "name": "Get points - usuario principal",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/gamification/users/{{userId}}/points" }
+        },
+        {
+          "name": "Get points - segundo usuario",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/gamification/users/{{secondUserId}}/points" }
+        },
+        {
+          "name": "Add points - valido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 25\n}" },
+            "url": "{{baseUrl}}/api/gamification/users/{{userId}}/points/add"
+          }
+        },
+        {
+          "name": "Add points - monto invalido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": -5\n}" },
+            "url": "{{baseUrl}}/api/gamification/users/{{userId}}/points/add"
+          }
+        },
+        {
+          "name": "Get coins - usuario principal",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/gamification/users/{{userId}}/coins" }
+        },
+        {
+          "name": "Get coins - segundo usuario",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/gamification/users/{{secondUserId}}/coins" }
+        },
+        {
+          "name": "Add coins - valido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 10\n}" },
+            "url": "{{baseUrl}}/api/gamification/users/{{userId}}/coins/add"
+          }
+        },
+        {
+          "name": "Add coins - monto invalido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 0\n}" },
+            "url": "{{baseUrl}}/api/gamification/users/{{userId}}/coins/add"
+          }
+        },
+        {
+          "name": "Redeem coins - valido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 1\n}" },
+            "url": "{{baseUrl}}/api/gamification/users/{{userId}}/coins/redeem"
+          }
+        },
+        {
+          "name": "Redeem coins - saldo insuficiente",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 99999\n}" },
+            "url": "{{baseUrl}}/api/gamification/users/{{userId}}/coins/redeem"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Follows",
+      "item": [
+        {
+          "name": "Follow - usuario principal sigue al segundo",
+          "request": { "method": "POST", "header": [], "url": "{{baseUrl}}/api/follows/{{userId}}/follow/{{secondUserId}}" }
+        },
+        {
+          "name": "Follow - no puedes seguirte",
+          "request": { "method": "POST", "header": [], "url": "{{baseUrl}}/api/follows/{{userId}}/follow/{{userId}}" }
+        },
+        {
+          "name": "Unfollow - dejar de seguir",
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/api/follows/{{userId}}/unfollow/{{secondUserId}}" }
+        },
+        {
+          "name": "Unfollow - relacion inexistente",
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/api/follows/{{userId}}/unfollow/{{secondUserId}}" }
+        },
+        {
+          "name": "Following - usuario principal",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/follows/{{userId}}/following" }
+        },
+        {
+          "name": "Following - segundo usuario",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/follows/{{secondUserId}}/following" }
+        },
+        {
+          "name": "Followers - usuario principal",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/follows/{{userId}}/followers" }
+        },
+        {
+          "name": "Followers - segundo usuario",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/follows/{{secondUserId}}/followers" }
+        }
+      ]
+    },
+    {
+      "name": "05 - Reports",
+      "item": [
+        {
+          "name": "Create report - documento",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"DOCUMENT\",\n  \"targetId\": {{documentId}},\n  \"reason\": \"Contenido duplicado o desactualizado\"\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Create report - falta reason",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"DOCUMENT\",\n  \"targetId\": {{documentId}},\n  \"reason\": \"\"\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        }
+      ]
+    }
+  ]
+}

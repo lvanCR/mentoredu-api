@@ -1,0 +1,21 @@
+{
+  "description": "Caso 4: Campo email ausente en el body",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/forgot-password",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {}
+  },
+  "expected_response": {
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Validation failed",
+      "details": {
+        "email": "Email is required"
+      }
+    }
+  }
+}

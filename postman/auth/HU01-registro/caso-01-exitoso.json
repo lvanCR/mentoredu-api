@@ -1,0 +1,33 @@
+{
+  "escenario": "Caso 1 — Registro exitoso",
+  "gherkin": "Dado que ingreso un correo válido y una contraseña válida, cuando envío el formulario, entonces el sistema crea la cuenta y la deja lista para autenticación.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/auth/register",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "firstName": "Ana",
+      "lastName": "García",
+      "email": "ana.garcia@example.com",
+      "password": "Segura2024"
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "id": "<uuid-generado-por-el-sistema>",
+      "firstName": "Ana",
+      "lastName": "García",
+      "email": "ana.garcia@example.com",
+      "role": "STUDENT",
+      "status": "ACTIVE"
+    }
+  },
+  "notas": [
+    "El rol asignado siempre es STUDENT en el registro (RN-02).",
+    "La contraseña no aparece en la respuesta; se almacena cifrada con BCrypt (RN-03).",
+    "Guarda el 'email' y 'password' del body para usarlos en HU02 (login)."
+  ]
+}
