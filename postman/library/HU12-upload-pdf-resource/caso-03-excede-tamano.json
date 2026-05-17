@@ -1,0 +1,37 @@
+{
+  "name": "MentorEduLibraryHU12-SubirPdfPOST (excede tamaño)",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ],
+    "body": {
+      "mode": "formdata",
+      "formdata": [
+        {
+          "key": "file",
+          "type": "file",
+          "src": "/path/to/archivo-mayor-20mb.pdf",
+          "description": "PDF válido pero mayor a 20 MB"
+        }
+      ]
+    },
+    "url": {
+      "raw": "{{api_v1}}/resources/files",
+      "host": ["{{api_v1}}"],
+      "path": ["resources", "files"]
+    },
+    "description": "Escenario error: PDF excede el límite de 20 MB → 400 Bad Request"
+  },
+  "response": [
+    {
+      "name": "400 Bad Request — Archivo demasiado grande",
+      "status": "Bad Request",
+      "code": 400,
+      "body": "{\n  \"timestamp\": \"2026-05-16T21:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"File size exceeds the maximum allowed limit of 20 MB. Received: 25 MB.\"\n}"
+    }
+  ]
+}

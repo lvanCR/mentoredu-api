@@ -1,0 +1,37 @@
+{
+  "name": "MentorEduLibraryHU12-SubirPdfPOST (tipo inválido)",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ],
+    "body": {
+      "mode": "formdata",
+      "formdata": [
+        {
+          "key": "file",
+          "type": "file",
+          "src": "/path/to/documento.docx",
+          "description": "Archivo que no es PDF (Word, imagen, etc.)"
+        }
+      ]
+    },
+    "url": {
+      "raw": "{{api_v1}}/resources/files",
+      "host": ["{{api_v1}}"],
+      "path": ["resources", "files"]
+    },
+    "description": "Escenario error: el archivo no es PDF → 400 Bad Request"
+  },
+  "response": [
+    {
+      "name": "400 Bad Request — Tipo de archivo no permitido",
+      "status": "Bad Request",
+      "code": 400,
+      "body": "{\n  \"timestamp\": \"2026-05-16T21:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Only PDF files are accepted. Received content type: application/vnd.openxmlformats-officedocument.wordprocessingml.document\"\n}"
+    }
+  ]
+}
