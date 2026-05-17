@@ -3,17 +3,22 @@ package com.mentoredu.profile.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
+import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
+import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
+import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
+import com.mentoredu.profile.exception.TeacherProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.WrongProfileTypeException;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.model.StudentProfile;
+import com.mentoredu.profile.model.TeacherProfile;
 import com.mentoredu.profile.service.IProfileService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -472,5 +477,317 @@ class ProfileControllerTest {
                 .targetUniversity(targetUniversity)
                 .build();
         return new StudentProfileResponse(sp);
+    }
+
+    // =========================================================================
+    // US07 — Update student target university
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario 1 — Actualización exitosa → 200
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void updateStudentProfile_withValidTargetUniversity_returns200() throws Exception {
+        var request = updateStudentProfileRequest("Universidad Nacional Mayor de San Marcos");
+        var response = buildStudentProfileResponseFull("5TO_SECUNDARIA",
+                "Universidad Nacional Mayor de San Marcos", "Colegio Nacional", "Ingeniería", "MAÑANA");
+        when(profileService.updateStudentProfile(eq("student@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/profiles/student/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.targetUniversity").value("Universidad Nacional Mayor de San Marcos"))
+                .andExpect(jsonPath("$.profileId").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 3 — Solo targetUniversity; demás campos sin cambios → 200
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void updateStudentProfile_withOnlyTargetUniversity_returns200() throws Exception {
+        var request = updateStudentProfileRequest("Pontificia Universidad Católica del Perú");
+        var response = buildStudentProfileResponseFull("5TO_SECUNDARIA",
+                "Pontificia Universidad Católica del Perú", "Colegio Nacional", "Ingeniería", "MAÑANA");
+        when(profileService.updateStudentProfile(eq("student@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/profiles/student/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.targetUniversity").value("Pontificia Universidad Católica del Perú"))
+                .andExpect(jsonPath("$.gradeLevel").value("5TO_SECUNDARIA"))
+                .andExpect(jsonPath("$.schoolName").value("Colegio Nacional"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 2 — targetUniversity vacío → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void updateStudentProfile_withBlankTargetUniversity_returns400() throws Exception {
+        var request = updateStudentProfileRequest("");
+
+        mockMvc.perform(patch("/api/v1/profiles/student/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.targetUniversity").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 4 — Perfil de estudiante no existe → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void updateStudentProfile_whenStudentProfileNotFound_returns404() throws Exception {
+        when(profileService.updateStudentProfile(eq("student@example.com"), any()))
+                .thenThrow(new ProfileNotFoundException(
+                        "Student profile not found for user: student@example.com"));
+
+        var request = updateStudentProfileRequest("UNMSM");
+
+        mockMvc.perform(patch("/api/v1/profiles/student/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Student profile not found for user: student@example.com"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void updateStudentProfile_withoutAuth_returns401() throws Exception {
+        var request = updateStudentProfileRequest("UNMSM");
+
+        mockMvc.perform(patch("/api/v1/profiles/student/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // Helpers US07
+    // =========================================================================
+
+    private UpdateStudentProfileRequest updateStudentProfileRequest(String targetUniversity) {
+        var r = new UpdateStudentProfileRequest();
+        r.setTargetUniversity(targetUniversity);
+        return r;
+    }
+
+    private StudentProfileResponse buildStudentProfileResponseFull(
+            String gradeLevel, String targetUniversity,
+            String schoolName, String targetCareer, String studyShift) {
+        StudentProfile sp = StudentProfile.builder()
+                .profileId(UUID.randomUUID())
+                .gradeLevel(gradeLevel)
+                .targetUniversity(targetUniversity)
+                .schoolName(schoolName)
+                .targetCareer(targetCareer)
+                .studyShift(studyShift)
+                .build();
+        return new StudentProfileResponse(sp);
+    }
+
+    // =========================================================================
+    // US08 — Create teacher profile
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario 1 — Creación exitosa con campos obligatorios → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void createTeacherProfile_withRequiredFields_returns201() throws Exception {
+        var request = teacherProfileRequest("Matemáticas", "Instituto Preuniversitario El Triunfo", null);
+        var response = buildTeacherProfileResponse("Matemáticas", "Instituto Preuniversitario El Triunfo", null);
+        when(profileService.createTeacherProfile(eq("teacher@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/profiles/teacher")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.specialty").value("Matemáticas"))
+                .andExpect(jsonPath("$.institutionName").value("Instituto Preuniversitario El Triunfo"))
+                .andExpect(jsonPath("$.profileId").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 3 — Creación exitosa con todos los campos → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void createTeacherProfile_withAllFields_returns201() throws Exception {
+        var request = teacherProfileRequest("Física", "Academia Preuniversitaria Lumbre", "Docente con 10 años de experiencia.");
+        var response = buildTeacherProfileResponse("Física", "Academia Preuniversitaria Lumbre", "Docente con 10 años de experiencia.");
+        when(profileService.createTeacherProfile(eq("teacher@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/profiles/teacher")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.specialty").value("Física"))
+                .andExpect(jsonPath("$.institutionName").value("Academia Preuniversitaria Lumbre"))
+                .andExpect(jsonPath("$.bioProfessional").value("Docente con 10 años de experiencia."));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 2 — specialty vacío → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void createTeacherProfile_withBlankSpecialty_returns400() throws Exception {
+        var request = teacherProfileRequest("", "Academia Lumbre", null);
+
+        mockMvc.perform(post("/api/v1/profiles/teacher")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.specialty").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 2 alt — institutionName vacío → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void createTeacherProfile_withBlankInstitutionName_returns400() throws Exception {
+        var request = teacherProfileRequest("Química", "", null);
+
+        mockMvc.perform(post("/api/v1/profiles/teacher")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.institutionName").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 4 — Especialidad no válida (specialty nulo → falta el campo) → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void createTeacherProfile_withMissingSpecialty_returns400() throws Exception {
+        String body = "{\"institutionName\": \"Academia Lumbre\"}";
+
+        mockMvc.perform(post("/api/v1/profiles/teacher")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.specialty").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Tipo de cuenta incorrecto (no TEACHER) → 409
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void createTeacherProfile_whenWrongProfileType_returns409() throws Exception {
+        when(profileService.createTeacherProfile(eq("student@example.com"), any()))
+                .thenThrow(new WrongProfileTypeException(
+                        "Account type is not TEACHER. Current type: STUDENT"));
+
+        var request = teacherProfileRequest("Matemáticas", "Academia Lumbre", null);
+
+        mockMvc.perform(post("/api/v1/profiles/teacher")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Account type is not TEACHER. Current type: STUDENT"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Perfil de docente ya existe (RN-09) → 409
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void createTeacherProfile_whenAlreadyExists_returns409() throws Exception {
+        when(profileService.createTeacherProfile(eq("teacher@example.com"), any()))
+                .thenThrow(new TeacherProfileAlreadyExistsException(
+                        "Teacher profile already exists for this account."));
+
+        var request = teacherProfileRequest("Matemáticas", "Academia Lumbre", null);
+
+        mockMvc.perform(post("/api/v1/profiles/teacher")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Teacher profile already exists for this account."));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Perfil base no existe (US04 no ejecutada) → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "nuevo@example.com")
+    void createTeacherProfile_whenBaseProfileNotFound_returns404() throws Exception {
+        when(profileService.createTeacherProfile(eq("nuevo@example.com"), any()))
+                .thenThrow(new ProfileNotFoundException("Profile not found for user: nuevo@example.com"));
+
+        var request = teacherProfileRequest("Química", "Academia Lumbre", null);
+
+        mockMvc.perform(post("/api/v1/profiles/teacher")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Profile not found for user: nuevo@example.com"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void createTeacherProfile_withoutAuth_returns401() throws Exception {
+        var request = teacherProfileRequest("Matemáticas", "Academia Lumbre", null);
+
+        mockMvc.perform(post("/api/v1/profiles/teacher")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // Helpers US08
+    // =========================================================================
+
+    private CreateTeacherProfileRequest teacherProfileRequest(
+            String specialty, String institutionName, String bioProfessional) {
+        var r = new CreateTeacherProfileRequest();
+        r.setSpecialty(specialty);
+        r.setInstitutionName(institutionName);
+        r.setBioProfessional(bioProfessional);
+        return r;
+    }
+
+    private TeacherProfileResponse buildTeacherProfileResponse(
+            String specialty, String institutionName, String bioProfessional) {
+        TeacherProfile tp = TeacherProfile.builder()
+                .profileId(UUID.randomUUID())
+                .specialty(specialty)
+                .institutionName(institutionName)
+                .bioProfessional(bioProfessional)
+                .build();
+        return new TeacherProfileResponse(tp);
     }
 }

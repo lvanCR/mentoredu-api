@@ -1,0 +1,26 @@
+{
+  "scenario": "Error — specialty vacío",
+  "gherkin": "Dado que falta un dato obligatorio (specialty vacío), cuando intento crear el perfil, entonces el sistema rechaza la creación.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/profiles/teacher",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "specialty": "",
+      "institutionName": "Academia Lumbre"
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Validation failed",
+      "details": {
+        "specialty": "specialty is required"
+      }
+    }
+  }
+}

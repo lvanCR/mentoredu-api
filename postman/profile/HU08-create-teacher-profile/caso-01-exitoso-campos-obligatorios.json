@@ -1,0 +1,25 @@
+{
+  "scenario": "Exitoso — Cuenta TEACHER con specialty e institutionName válidos",
+  "gherkin": "Dado que mi cuenta fue clasificada como docente, cuando ingreso especialidad e institución, entonces el sistema crea el perfil.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/profiles/teacher",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "specialty": "Matemáticas",
+      "institutionName": "Instituto Preuniversitario El Triunfo"
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "profileId": "<uuid>",
+      "specialty": "Matemáticas",
+      "institutionName": "Instituto Preuniversitario El Triunfo",
+      "bioProfessional": null
+    }
+  }
+}

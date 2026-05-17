@@ -11,13 +11,13 @@ Gestiona el perfil base y los perfiles específicos de cada tipo de usuario.
 | HU04 | Seleccionar tipo de cuenta | `POST /api/v1/profiles/account-type` | `MentorEduProfileHU04-SelectAccountTypePOST` | 2026-05-16 |
 | HU05 | Actualizar datos comunes del perfil | `PATCH /api/v1/profiles/me` | `MentorEduProfileHU05-UpdateProfilePATCH` | 2026-05-16 |
 | HU06 | Crear perfil de estudiante | `POST /api/v1/profiles/student` | `MentorEduProfileHU06-CreateStudentProfilePOST` | 2026-05-16 |
+| HU07 | Actualizar universidad objetivo del estudiante | `PATCH /api/v1/profiles/student/me` | `MentorEduProfileHU07-UpdateTargetUniversityPATCH` | 2026-05-16 |
+| HU08 | Crear perfil de docente | `POST /api/v1/profiles/teacher` | `MentorEduProfileHU08-CreateTeacherProfilePOST` | 2026-05-16 |
 
 ## Historias pendientes
 
 | HU | Descripción |
 |---|---|
-| HU07 | Actualizar universidad objetivo del estudiante |
-| HU08 | Crear perfil de docente |
 | HU09 | Actualizar especialidad del docente |
 | HU10 | Crear perfil de organización |
 
@@ -42,16 +42,33 @@ profile/
 │   ├── caso-03-displayname-vacio.json
 │   ├── caso-04-sin-displayname.json
 │   └── caso-05-sin-autenticacion.json
-└── HU06-create-student-profile/
+├── HU06-create-student-profile/
+│   ├── README.md
+│   ├── caso-01-exitoso-campos-obligatorios.json
+│   ├── caso-02-exitoso-todos-campos.json
+│   ├── caso-03-gradelevel-vacio.json
+│   ├── caso-04-targetuniversity-vacio.json
+│   ├── caso-05-perfil-ya-existe.json
+│   ├── caso-06-tipo-incorrecto.json
+│   ├── caso-07-sin-perfil-base.json
+│   └── caso-08-sin-autenticacion.json
+├── HU07-update-target-university/
+│   ├── README.md
+│   ├── caso-01-exitoso.json
+│   ├── caso-02-solo-target-university.json
+│   ├── caso-03-targetuniversity-vacio.json
+│   ├── caso-04-perfil-no-existe.json
+│   └── caso-05-sin-autenticacion.json
+└── HU08-create-teacher-profile/
     ├── README.md
     ├── caso-01-exitoso-campos-obligatorios.json
     ├── caso-02-exitoso-todos-campos.json
-    ├── caso-03-gradelevel-vacio.json
-    ├── caso-04-targetuniversity-vacio.json
-    ├── caso-05-perfil-ya-existe.json
+    ├── caso-03-specialty-vacio.json
+    ├── caso-04-institution-vacio.json
+    ├── caso-05-specialty-faltante.json
     ├── caso-06-tipo-incorrecto.json
-    ├── caso-07-sin-perfil-base.json
-    └── caso-08-sin-autenticacion.json
+    ├── caso-07-perfil-ya-existe.json
+    └── caso-08-sin-perfil-base.json
 ```
 
 ---

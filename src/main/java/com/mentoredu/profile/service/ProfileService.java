@@ -3,20 +3,25 @@ package com.mentoredu.profile.service;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
+import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
+import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
+import com.mentoredu.profile.exception.TeacherProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.WrongProfileTypeException;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.model.StudentProfile;
+import com.mentoredu.profile.model.TeacherProfile;
 import com.mentoredu.profile.repository.ProfileRepository;
 import com.mentoredu.profile.repository.StudentProfileRepository;
+import com.mentoredu.profile.repository.TeacherProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -30,6 +35,7 @@ public class ProfileService implements IProfileService {
 
     private final ProfileRepository        profileRepository;
     private final StudentProfileRepository studentProfileRepository;
+    private final TeacherProfileRepository teacherProfileRepository;
     private final UserRepository           userRepository;
 
     // -------------------------------------------------------------------------
@@ -150,5 +156,39 @@ public class ProfileService implements IProfileService {
         if (request.getStudyShift() != null)        studentProfile.setStudyShift(request.getStudyShift());
 
         return new StudentProfileResponse(studentProfileRepository.save(studentProfile));
+    }
+
+    // -------------------------------------------------------------------------
+    // US08 — Create teacher profile
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public TeacherProfileResponse createTeacherProfile(String email, CreateTeacherProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Profile not found for user: " + email));
+
+        if (!ProfileType.TEACHER.name().equals(profile.getProfileType())) {
+            throw new WrongProfileTypeException(
+                    "Account type is not TEACHER. Current type: " + profile.getProfileType());
+        }
+
+        if (teacherProfileRepository.existsById(profile.getId())) {
+            throw new TeacherProfileAlreadyExistsException(
+                    "Teacher profile already exists for this account.");
+        }
+
+        TeacherProfile teacherProfile = TeacherProfile.builder()
+                .profileId(profile.getId())
+                .specialty(request.getSpecialty())
+                .institutionName(request.getInstitutionName())
+                .bioProfessional(request.getBioProfessional())
+                .build();
+
+        return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
     }
 }

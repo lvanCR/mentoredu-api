@@ -40,11 +40,13 @@ Permite al estudiante autenticado actualizar su universidad objetivo sin modific
 
 | Campo | Tipo | Requerido | Validación |
 |---|---|---|---|
-| `targetUniversity` | string | ✅ Sí | No puede estar vacío |
-| `schoolName` | string | No | — |
-| `gradeLevel` | string | No | — |
-| `targetCareer` | string | No | — |
-| `studyShift` | string | No | — |
+| `targetUniversity` | string | ✅ Sí | No puede estar vacío, máx. 120 caracteres |
+| `schoolName` | string | No | Máx. 120 caracteres |
+| `gradeLevel` | string | No | Máx. 20 caracteres |
+| `targetCareer` | string | No | Máx. 120 caracteres |
+| `studyShift` | string | No | Máx. 30 caracteres |
+
+> Los campos opcionales se actualizan solo si se envían; los omitidos conservan su valor actual.
 
 ---
 
@@ -52,8 +54,8 @@ Permite al estudiante autenticado actualizar su universidad objetivo sin modific
 
 | Regla | Descripción |
 |---|---|
-| RN-08 | El estudiante solo puede tener un perfil académico activo |
-| RN-11 | Solo se actualizan los campos enviados; los omitidos no se modifican |
+| RN-08 | El estudiante solo puede tener un perfil académico principal |
+| RN-11 | Solo se actualizan los campos enviados; los demás no se modifican |
 
 ---
 
@@ -61,10 +63,11 @@ Permite al estudiante autenticado actualizar su universidad objetivo sin modific
 
 | Escenario | Archivo | Status esperado |
 |---|---|---|
-| Exitoso: universidad válida enviada, perfil existe | `caso-01-exitoso.json` | 200 OK |
-| Alt exitoso: solo targetUniversity, otros campos no se tocan | `caso-02-solo-target-university.json` | 200 OK |
+| Exitoso: perfil existe, targetUniversity válida enviada | `caso-01-exitoso.json` | 200 OK |
+| Alt exitoso: solo targetUniversity, demás campos sin cambios | `caso-02-solo-target-university.json` | 200 OK |
 | Error: targetUniversity vacío | `caso-03-targetuniversity-vacio.json` | 400 Bad Request |
 | Alt error: perfil de estudiante no existe | `caso-04-perfil-no-existe.json` | 404 Not Found |
+| Sin autenticación | `caso-05-sin-autenticacion.json` | 401 Unauthorized |
 
 ---
 

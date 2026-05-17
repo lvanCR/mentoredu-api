@@ -1,6 +1,6 @@
 {
-  "scenario": "Alt error — Perfil de estudiante no existe",
-  "gherkin": "Dado que mi perfil de estudiante no existe (no se ejecutó US06), cuando intento editarlo, entonces el sistema responde que el recurso no fue encontrado.",
+  "scenario": "Alt error — Perfil de estudiante no existe (US06 no ejecutada)",
+  "gherkin": "Dado que mi perfil de estudiante no existe, cuando intento editarlo, entonces el sistema responde que el recurso no fue encontrado.",
   "request": {
     "method": "PATCH",
     "url": "{{api_v1}}/profiles/student/me",
@@ -20,5 +20,5 @@
       "message": "Student profile not found for user: <email>"
     }
   },
-  "note": "Usar un token de un usuario que haya ejecutado US04 pero NO US06."
+  "note": "Usar un token de un usuario que completó US04 con STUDENT pero NO ejecutó US06."
 }

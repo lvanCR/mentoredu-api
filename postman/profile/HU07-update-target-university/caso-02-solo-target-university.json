@@ -1,5 +1,5 @@
 {
-  "scenario": "Alt exitoso — Solo targetUniversity enviado, demás campos no se modifican",
+  "scenario": "Alt exitoso — Solo targetUniversity enviado; demás campos conservan su valor",
   "gherkin": "Dado que ingreso una universidad válida, cuando confirmo la edición, entonces el sistema actualiza el dato sin modificar los demás campos.",
   "request": {
     "method": "PATCH",

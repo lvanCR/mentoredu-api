@@ -1,6 +1,6 @@
 {
-  "scenario": "Exitoso — Universidad objetivo válida actualizada",
-  "gherkin": "Dado que mi perfil de estudiante existe, cuando cambio la universidad objetivo por una válida, entonces el sistema guarda la actualización.",
+  "scenario": "Exitoso — Perfil de estudiante existe, universidad objetivo válida enviada",
+  "gherkin": "Dado que mi perfil de estudiante existe, cuando cambio la universidad objetivo, entonces el sistema guarda la actualización.",
   "request": {
     "method": "PATCH",
     "url": "{{api_v1}}/profiles/student/me",

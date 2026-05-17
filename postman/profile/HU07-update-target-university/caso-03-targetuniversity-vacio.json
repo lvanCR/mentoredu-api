@@ -18,7 +18,7 @@
       "status": 400,
       "error": "Validation failed",
       "details": {
-        "targetUniversity": "La universidad objetivo no puede estar vacía"
+        "targetUniversity": "targetUniversity is required"
       }
     }
   }
