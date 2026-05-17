@@ -1,9 +1,11 @@
 package com.mentoredu.profile.controller;
 
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
+import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
+import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
 import com.mentoredu.profile.service.IProfileService;
@@ -79,6 +81,23 @@ public class ProfileController {
     }
 
     // -------------------------------------------------------------------------
+    // US08 — Create teacher profile
+    // -------------------------------------------------------------------------
+
+    @PostMapping("/teacher")
+    @Operation(summary = "US08 - Crear perfil de docente",
+               description = "Crea el perfil profesional del usuario autenticado. Requiere que la cuenta sea de tipo TEACHER (seleccionada previamente en US04). Solo puede ejecutarse una vez por usuario (RN-09).")
+    public ResponseEntity<TeacherProfileResponse> createTeacherProfile(
+            @Valid @RequestBody CreateTeacherProfileRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(profileService.createTeacherProfile(auth.getName(), request));
+    }
+
+    // -------------------------------------------------------------------------
     // Skeleton endpoints — pendientes de implementar en próximas US
     // -------------------------------------------------------------------------
 
@@ -89,9 +108,10 @@ public class ProfileController {
     }
 
     @PatchMapping("/student/me")
-    @Operation(summary = "Actualizar perfil de estudiante (skeleton — US07)")
+    @Operation(summary = "US07 - Actualizar universidad objetivo del estudiante",
+               description = "Actualiza la universidad objetivo del perfil académico del usuario autenticado. El campo targetUniversity es obligatorio y no puede quedar vacío. Requiere perfil de estudiante creado (US06).")
     public ResponseEntity<StudentProfileResponse> updateStudentProfile(
-            @RequestBody UpdateStudentProfileRequest request) {
+            @Valid @RequestBody UpdateStudentProfileRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
