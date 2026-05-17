@@ -480,6 +480,24 @@ package "billing" {
 }
 
 ' =========================
+' FEEDBACK
+' =========================
+package "feedback" {
+  entity "feedback_entries" as feedback_entries {
+    *id : UUID <<PK>>
+    --
+    *author_user_id : UUID <<FK>>
+    *target_user_id : UUID <<FK>>
+    program_id : UUID <<FK>>
+    cycle_id : UUID <<FK>>
+    *body : TEXT
+    score : DECIMAL(4,2)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+}
+
+' =========================
 ' NOTIFICATIONS
 ' =========================
 package "notifications" {
@@ -568,5 +586,10 @@ coin_packages ||--o{ coin_purchases : coin_package_id
 users ||--o{ premium_access : user_id
 
 users ||--o{ notifications : user_id
+
+users ||--o{ feedback_entries : author_user_id
+users ||--o{ feedback_entries : target_user_id
+programs ||--o{ feedback_entries : program_id
+cycles ||--o{ feedback_entries : cycle_id
 
 @enduml

@@ -42,6 +42,7 @@
 | EP-08 | Billing | Gestiona suscripciones, pagos y compra de beneficios premium. |
 | EP-09 | Notifications | Gestiona las notificaciones generadas por eventos del sistema. |
 | EP-10 | Gamification | Gestiona la acumulacion de puntos de experiencia, niveles, insignias y monedas del usuario. |
+| EP-11 | Feedback | Gestiona la retroalimentacion academica formal emitida por docentes hacia estudiantes y su consulta. |
 
 ## 2. User Stories
 
@@ -429,6 +430,30 @@
 | Alternativo exitoso | Dado que consulto mis insignias ganadas, cuando reviso el listado, entonces el sistema muestra cada insignia con su nombre y fecha de obtencion. |
 | Alternativo error | Dado que el hito requerido aun no fue alcanzado, cuando el sistema evalua mi actividad, entonces no acredita la insignia y no genera error. |
 
+### US34 — Provide academic feedback to student
+- **Epic**: EP-11
+- **Descripcion**: Como docente, quiero registrar retroalimentacion academica formal sobre el desempeño de un estudiante para que quede documentada en el sistema.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que soy un docente registrado y el estudiante existe, cuando envio retroalimentacion con cuerpo de texto valido, entonces el sistema la registra y la asocia al estudiante receptor. |
+| Error | Dado que el cuerpo de retroalimentacion esta vacio, cuando intento enviarla, entonces el sistema rechaza la operacion por validacion. |
+| Alternativo exitoso | Dado que incluyo una puntuacion junto al comentario de retroalimentacion, cuando confirmo el envio, entonces el sistema guarda ambos datos correctamente. |
+| Alternativo error | Dado que el estudiante objetivo no existe, cuando intento enviar retroalimentacion, entonces el sistema responde que el recurso no fue encontrado. |
+
+### US35 — View received academic feedback
+- **Epic**: EP-11
+- **Descripcion**: Como estudiante, quiero consultar la retroalimentacion academica que he recibido para conocer la evaluacion de mis docentes.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que tengo retroalimentacion registrada, cuando consulto mi historial de retroalimentacion, entonces el sistema devuelve el listado ordenado por fecha descendente. |
+| Error | Dado que no estoy autenticado, cuando intento consultar mi retroalimentacion, entonces el sistema rechaza el acceso. |
+| Alternativo exitoso | Dado que no tengo retroalimentacion registrada aun, cuando consulto el historial, entonces el sistema devuelve una lista vacia sin error. |
+| Alternativo error | Dado que intento modificar una retroalimentacion recibida, cuando envio el cambio, entonces el sistema rechaza la operacion porque las entradas son inmutables. |
+
 ### US33 — Create academy
 - **Epic**: EP-03
 - **Descripcion**: Como organizacion, quiero registrar mi academia en la plataforma para publicar oferta educativa.
@@ -498,6 +523,11 @@
 - RN-34: El historial de puntos de experiencia es de solo lectura y no puede modificarse manualmente.
 - RN-35: Los puntos de experiencia y las monedas virtuales son sistemas independientes.
 
+### Feedback
+- RN-36: Solo un usuario con rol TEACHER o ADMIN puede emitir retroalimentacion academica formal hacia un estudiante.
+- RN-37: Una entrada de retroalimentacion no puede modificarse ni eliminarse una vez registrada.
+- RN-38: El estudiante receptor puede consultar su retroalimentacion recibida pero no editarla ni eliminarla.
+
 ## 4. Bounded Contexts
 
 | Bounded Context | Descripcion |
@@ -512,6 +542,7 @@
 | billing | Gestiona suscripciones, pagos y compra de beneficios premium. |
 | notifications | Gestiona las notificaciones generadas por eventos del sistema. |
 | gamification | Gestiona la acumulacion de puntos de experiencia, niveles, insignias y monedas del usuario. |
+| feedback | Gestiona la retroalimentacion academica formal emitida por docentes hacia estudiantes. |
 
 ## 5. Relacion Epics → Bounded Contexts
 
@@ -529,3 +560,4 @@ Cada Epic agrupa funcionalidades de una sola capacidad de negocio. Ese mismo lim
 | EP-08 | Billing | billing | `billing/` |
 | EP-09 | Notifications | notifications | `notifications/` |
 | EP-10 | Gamification | gamification | `gamification/` |
+| EP-11 | Feedback | feedback | `feedback/` |
