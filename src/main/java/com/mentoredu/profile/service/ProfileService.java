@@ -131,16 +131,24 @@ public class ProfileService implements IProfileService {
 
     @Override
     @Transactional
-    public StudentProfileResponse updateStudentProfile(UUID userId, UpdateStudentProfileRequest request) {
-        Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Perfil no encontrado para el usuario"));
+    public StudentProfileResponse updateStudentProfile(String email, UpdateStudentProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Profile not found for user: " + email));
+
         StudentProfile studentProfile = studentProfileRepository.findById(profile.getId())
-                .orElseThrow(() -> new RuntimeException("Perfil de estudiante no encontrado"));
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Student profile not found for user: " + email));
+
         if (request.getSchoolName() != null)        studentProfile.setSchoolName(request.getSchoolName());
         if (request.getGradeLevel() != null)        studentProfile.setGradeLevel(request.getGradeLevel());
         if (request.getTargetUniversity() != null)  studentProfile.setTargetUniversity(request.getTargetUniversity());
         if (request.getTargetCareer() != null)      studentProfile.setTargetCareer(request.getTargetCareer());
         if (request.getStudyShift() != null)        studentProfile.setStudyShift(request.getStudyShift());
+
         return new StudentProfileResponse(studentProfileRepository.save(studentProfile));
     }
 }

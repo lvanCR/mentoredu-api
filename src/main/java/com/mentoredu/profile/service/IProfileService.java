@@ -14,5 +14,5 @@ public interface IProfileService {
     ProfileResponse updateProfile(String email, UpdateProfileRequest request);
     StudentProfileResponse createStudentProfile(String email, CreateStudentProfileRequest request);
     StudentProfileResponse getStudentProfile(UUID userId);
-    StudentProfileResponse updateStudentProfile(UUID userId, UpdateStudentProfileRequest request);
+    StudentProfileResponse updateStudentProfile(String email, UpdateStudentProfileRequest request);
 }

@@ -88,11 +88,14 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.getStudentProfile(userId));
     }
 
-    @PutMapping("/student/{userId}")
+    @PatchMapping("/student/me")
     @Operation(summary = "Actualizar perfil de estudiante (skeleton — US07)")
     public ResponseEntity<StudentProfileResponse> updateStudentProfile(
-            @PathVariable UUID userId,
             @RequestBody UpdateStudentProfileRequest request) {
-        return ResponseEntity.ok(profileService.updateStudentProfile(userId, request));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(profileService.updateStudentProfile(auth.getName(), request));
     }
 }

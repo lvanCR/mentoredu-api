@@ -138,8 +138,8 @@ Cuando una US quede implementada y testeada:
 
 | Bounded Context | HUs implementadas | HUs pendientes |
 |---|---|---|
-| auth | HU01 | HU02, HU03, HU26 |
-| profile | — | HU04, HU05, HU06, HU07, HU08, HU09, HU10 |
+| auth | HU01, HU02, HU03, HU26 | — |
+| profile | HU04, HU05, HU06 | HU07, HU08, HU09, HU10 |
 | academy | — | HU33, HU11 |
 | library | — | HU12, HU13, HU14, HU15 |
 | forum | — | HU16, HU17, HU18, HU27, HU28, HU29 |
