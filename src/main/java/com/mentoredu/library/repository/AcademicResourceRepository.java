@@ -10,6 +10,8 @@ import java.util.UUID;
 
 public interface AcademicResourceRepository extends JpaRepository<AcademicResource, UUID> {
 
+    boolean existsByFileId(UUID fileId);
+
     @Query("""
             SELECT r FROM AcademicResource r
             JOIN FETCH r.author

@@ -1,0 +1,27 @@
+{
+  "name": "MentorEduLibraryHU13-RegisterResourcePOST",
+  "description": "Caso 01 — Exitoso: registrar metadatos con campos mínimos obligatorios. Respuesta esperada: 201 Created con id, title, type, visibility=PUBLIC, fileId.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/resources",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": {
+        "title": "Examen de Admisión UNI 2024-I",
+        "fileId": "{{file_id}}",
+        "institutionId": "{{institution_id}}",
+        "subjectId": "{{subject_id}}",
+        "year": 2024,
+        "type": "EXAM"
+      }
+    }
+  },
+  "expectedResponse": {
+    "status": 201,
+    "fields": ["id", "title", "type", "visibility", "fileId", "institutionId", "subjectId", "year", "createdAt", "authorName"]
+  }
+}
