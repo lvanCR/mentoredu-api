@@ -14,5 +14,8 @@ public class ThreadResponse {
     private String body;
     private boolean anonymous;
     private String authorDisplay;
+    private UUID subjectId;
+    private String status;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
