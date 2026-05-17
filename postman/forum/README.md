@@ -12,6 +12,7 @@ Colección de casos de prueba para el Bounded Context **Forum** (EP-05).
 | [HU17](./HU17-reply-to-forum-thread/) | Responder a hilo de foro | 4 | `POST /api/v1/threads/{id}/answers` |
 | [HU18](./HU18-close-forum-thread/) | Cerrar hilo de foro | 5 | `PATCH /api/v1/threads/{id}/close` |
 | [HU27](./HU27-react-to-forum-content/) | Reaccionar a contenido del foro | 4 | `POST /api/v1/threads/{id}/reactions` |
+| [HU28](./HU28-comment-on-answer/) | Comentar respuesta del foro | 4 | `POST /api/v1/answers/{id}/comments` |
 
 ---
 
@@ -19,7 +20,6 @@ Colección de casos de prueba para el Bounded Context **Forum** (EP-05).
 
 | HU | Descripción | Endpoint |
 |---|---|---|
-| HU28 | Comentar respuesta del foro | `POST /api/v1/answers/{id}/comments` |
 | HU29 | Seguir a un usuario | `POST /api/v1/users/{id}/follow` |
 
 ---
