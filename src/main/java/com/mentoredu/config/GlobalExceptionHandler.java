@@ -1,5 +1,7 @@
 package com.mentoredu.config;
 
+import com.mentoredu.academy.exception.AcademyAlreadyExistsException;
+import com.mentoredu.academy.exception.AcademyNotFoundException;
 import com.mentoredu.auth.exception.EmailAlreadyExistsException;
 import com.mentoredu.auth.exception.EmailNotFoundException;
 import com.mentoredu.auth.exception.InvalidCredentialsException;
@@ -173,6 +175,28 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(AcademyAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleAcademyAlreadyExists(AcademyAlreadyExistsException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(AcademyNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleAcademyNotFound(AcademyNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
