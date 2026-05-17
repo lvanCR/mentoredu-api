@@ -127,4 +127,24 @@ public class ThreadController {
         }
         return ResponseEntity.ok(answerService.listByThread(threadId));
     }
+
+    // -------------------------------------------------------------------------
+    // US18 — Close forum thread
+    // -------------------------------------------------------------------------
+
+    @PatchMapping("/{id}/close")
+    @Operation(
+        summary = "US18 - Cerrar hilo de foro",
+        description = "Cambia el estado del hilo a CLOSED. Solo el autor puede cerrarlo (RN-18). "
+            + "Una vez cerrado, el hilo no acepta nuevas respuestas (RN-17). "
+            + "Devuelve 403 si el solicitante no es el autor, 404 si el hilo no existe. "
+            + "Requiere autenticación JWT."
+    )
+    public ResponseEntity<ThreadResponse> close(@PathVariable UUID id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(threadService.close(id, auth.getName()));
+    }
 }

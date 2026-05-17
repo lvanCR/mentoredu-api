@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduForumHU18-CerrarHiloYaCerradoPATCH",
+  "description": "Escenario guardia: el autor intenta cerrar un hilo que ya está en estado CLOSED. El sistema debe rechazar la operación con 409 Conflict.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/threads/{{closed_thread_id}}/close",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ]
+  },
+  "response": {
+    "status": 409,
+    "description": "Conflict. El hilo ya está cerrado. Mensaje: 'Thread is already closed: {id}'."
+  }
+}

@@ -8,6 +8,7 @@ import com.mentoredu.forum.dto.CreateThreadRequest;
 import com.mentoredu.forum.dto.ThreadResponse;
 import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
+import com.mentoredu.forum.exception.ThreadNotOwnedException;
 import com.mentoredu.forum.service.IAnswerService;
 import com.mentoredu.forum.service.IThreadService;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -377,6 +379,83 @@ class ThreadControllerTest {
     @Test
     void listAnswers_withoutAuth_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/threads/{threadId}/answers", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // US18 — Close forum thread
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "author@example.com")
+    void closeThread_asAuthor_returns200WithStatusClosed() throws Exception {
+        UUID id = UUID.randomUUID();
+        UUID subjectId = UUID.randomUUID();
+        var closed = ThreadResponse.builder()
+                .id(id)
+                .title("¿Cómo resolver integrales dobles?")
+                .body("Necesito ayuda con integrales dobles de funciones trigonométricas.")
+                .anonymous(false)
+                .authorDisplay("Juan Pérez")
+                .subjectId(subjectId)
+                .status("CLOSED")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        when(threadService.close(eq(id), eq("author@example.com"))).thenReturn(closed);
+
+        mockMvc.perform(patch("/api/v1/threads/{id}/close", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.status").value("CLOSED"));
+    }
+
+    @Test
+    @WithMockUser(username = "other@example.com")
+    void closeThread_asNonAuthor_returns403() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(threadService.close(eq(id), eq("other@example.com")))
+                .thenThrow(new ThreadNotOwnedException("Only the author can close this thread: " + id));
+
+        mockMvc.perform(patch("/api/v1/threads/{id}/close", id))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").value("Only the author can close this thread: " + id));
+    }
+
+    @Test
+    @WithMockUser(username = "author@example.com")
+    void closeThread_whenNotFound_returns404() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(threadService.close(eq(id), eq("author@example.com")))
+                .thenThrow(new ThreadNotFoundException("Thread not found: " + id));
+
+        mockMvc.perform(patch("/api/v1/threads/{id}/close", id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Thread not found: " + id));
+    }
+
+    @Test
+    @WithMockUser(username = "author@example.com")
+    void closeThread_alreadyClosed_returns409() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(threadService.close(eq(id), eq("author@example.com")))
+                .thenThrow(new ThreadClosedException("Thread is already closed: " + id));
+
+        mockMvc.perform(patch("/api/v1/threads/{id}/close", id))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Thread is already closed: " + id));
+    }
+
+    @Test
+    void closeThread_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(patch("/api/v1/threads/{id}/close", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
     }
 

@@ -10,4 +10,5 @@ public interface IThreadService {
     ThreadResponse create(CreateThreadRequest request, String authorEmail);
     List<ThreadResponse> listRecent(int page, int size);
     ThreadResponse get(UUID id);
+    ThreadResponse close(UUID id, String requesterEmail);
 }

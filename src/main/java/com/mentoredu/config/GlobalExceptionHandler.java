@@ -2,6 +2,7 @@ package com.mentoredu.config;
 
 import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
+import com.mentoredu.forum.exception.ThreadNotOwnedException;
 import com.mentoredu.academy.exception.AcademyAlreadyExistsException;
 import com.mentoredu.academy.exception.AcademyNotFoundException;
 import com.mentoredu.academy.exception.CycleAlreadyExistsException;
@@ -353,6 +354,17 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(ThreadNotOwnedException.class)
+    public ResponseEntity<Map<String, Object>> handleThreadNotOwned(ThreadNotOwnedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

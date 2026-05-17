@@ -3,7 +3,9 @@ package com.mentoredu.forum.service;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.forum.dto.CreateThreadRequest;
 import com.mentoredu.forum.dto.ThreadResponse;
+import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
+import com.mentoredu.forum.exception.ThreadNotOwnedException;
 import com.mentoredu.forum.model.Thread;
 import com.mentoredu.forum.repository.ThreadRepository;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +59,28 @@ public class ThreadService implements IThreadService {
         return threadRepository.findById(id)
                 .map(this::toResponse)
                 .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + id));
+    }
+
+    // -------------------------------------------------------------------------
+    // US18 — Close forum thread (RN-17: only OPEN/CLOSED states; RN-18: author only)
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public ThreadResponse close(UUID id, String requesterEmail) {
+        Thread thread = threadRepository.findById(id)
+                .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + id));
+
+        if (!thread.getAuthor().getEmail().equals(requesterEmail)) {
+            throw new ThreadNotOwnedException("Only the author can close this thread: " + id);
+        }
+
+        if ("CLOSED".equals(thread.getStatus())) {
+            throw new ThreadClosedException("Thread is already closed: " + id);
+        }
+
+        thread.setStatus("CLOSED");
+        return toResponse(threadRepository.save(thread));
     }
 
     // -------------------------------------------------------------------------
