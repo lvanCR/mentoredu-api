@@ -1,16 +1,32 @@
 package com.mentoredu.library.service;
 
+import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.billing.model.enums.SubscriptionStatus;
+import com.mentoredu.billing.repository.SubscriptionRepository;
+import com.mentoredu.gamification.repository.CoinWalletRepository;
+import com.mentoredu.library.dto.DownloadResult;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.exception.DuplicateResourceException;
+import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceFileNotFoundException;
+import com.mentoredu.library.exception.ResourceNotFoundException;
+import com.mentoredu.library.exception.ResourceNotAvailableException;
 import com.mentoredu.library.model.AcademicResource;
+import com.mentoredu.library.model.DownloadLog;
 import com.mentoredu.library.repository.AcademicResourceRepository;
+import com.mentoredu.library.repository.DownloadLogRepository;
 import com.mentoredu.library.repository.ResourceFileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -26,7 +42,10 @@ public class ResourceService implements IResourceService {
 
     private final AcademicResourceRepository resourceRepository;
     private final ResourceFileRepository resourceFileRepository;
+    private final DownloadLogRepository downloadLogRepository;
     private final UserRepository userRepository;
+    private final SubscriptionRepository subscriptionRepository;
+    private final CoinWalletRepository coinWalletRepository;
 
     // -------------------------------------------------------------------------
     // US13 — Register resource metadata
@@ -83,14 +102,79 @@ public class ResourceService implements IResourceService {
     }
 
     // -------------------------------------------------------------------------
-    // US15 — Get resource by ID (skeleton)
+    // US15 — Get resource metadata by ID
     // -------------------------------------------------------------------------
 
     @Override
     public ResourceResponse getById(UUID resourceId) {
         return resourceRepository.findById(resourceId)
                 .map(ResourceResponse::new)
-                .orElseThrow(() -> new RuntimeException("Resource not found: " + resourceId));
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
+    }
+
+    // -------------------------------------------------------------------------
+    // US15 — Download academic resource (stream file)
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public DownloadResult downloadResource(UUID resourceId, String userEmail) {
+        AcademicResource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found: " + userEmail));
+
+        checkAccessPermission(resource, user);
+
+        var file = resourceFileRepository.findById(resource.getFileId())
+                .orElseThrow(() -> new ResourceNotAvailableException(
+                        "File record not found for resource: " + resourceId));
+
+        Path filePath = Paths.get(file.getFileUrl());
+        if (!Files.exists(filePath)) {
+            throw new ResourceNotAvailableException(
+                    "File is temporarily unavailable: " + file.getFileName());
+        }
+
+        downloadLogRepository.save(DownloadLog.builder()
+                .user(user)
+                .resource(resource)
+                .downloadedAt(LocalDateTime.now())
+                .build());
+
+        return new DownloadResult(new FileSystemResource(filePath), file.getFileName());
+    }
+
+    // -------------------------------------------------------------------------
+    // Access control (RN-15)
+    // -------------------------------------------------------------------------
+
+    private void checkAccessPermission(AcademicResource resource, User user) {
+        switch (resource.getVisibility()) {
+            case "PRIVATE" -> {
+                if (!resource.getAuthor().getId().equals(user.getId())) {
+                    throw new ResourceAccessDeniedException(
+                            "This resource is private and only accessible to its author.");
+                }
+            }
+            case "PREMIUM" -> {
+                boolean hasActiveSubscription = subscriptionRepository
+                        .findByUserIdAndStatus(user.getId(), SubscriptionStatus.ACTIVE)
+                        .map(sub -> sub.getEndsAt() != null && sub.getEndsAt().isAfter(LocalDateTime.now()))
+                        .orElse(false);
+
+                boolean hasCoins = coinWalletRepository.findById(user.getId())
+                        .map(wallet -> wallet.getBalance() != null && wallet.getBalance() > 0)
+                        .orElse(false);
+
+                if (!hasActiveSubscription && !hasCoins) {
+                    throw new ResourceAccessDeniedException(
+                            "This resource requires a premium subscription or coin balance to download.");
+                }
+            }
+            default -> { /* PUBLIC — no restriction */ }
+        }
     }
 
     // -------------------------------------------------------------------------

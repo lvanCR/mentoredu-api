@@ -1,5 +1,6 @@
 package com.mentoredu.library.controller;
 
+import com.mentoredu.library.dto.DownloadResult;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.service.IResourceService;
@@ -9,7 +10,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,7 +26,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/resources")
 @RequiredArgsConstructor
-@Tag(name = "Biblioteca de recursos", description = "Publicación, búsqueda y consulta de recursos académicos (US13-US15).")
+@Tag(name = "Biblioteca de recursos", description = "Publicación, búsqueda, consulta y descarga de recursos académicos (US13-US15).")
 public class ResourceController {
 
     private final IResourceService resourceService;
@@ -91,13 +95,52 @@ public class ResourceController {
     }
 
     // -------------------------------------------------------------------------
-    // US15 — Get resource by ID (skeleton)
+    // US15 — Get resource metadata by ID
     // -------------------------------------------------------------------------
 
     @GetMapping("/{id}")
-    @Operation(summary = "US15 - Obtener recurso por ID")
+    @Operation(
+        summary = "US15 - Obtener metadatos de un recurso por ID",
+        description = "Devuelve los metadatos de un recurso académico existente. Requiere autenticación JWT."
+    )
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ResourceResponse> getById(@PathVariable UUID id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(resourceService.getById(id));
+    }
+
+    // -------------------------------------------------------------------------
+    // US15 — Download academic resource (stream PDF)
+    // -------------------------------------------------------------------------
+
+    @GetMapping("/{id}/download")
+    @Operation(
+        summary = "US15 - Descargar recurso académico",
+        description = "Descarga el archivo PDF de un recurso académico. "
+            + "Requiere autenticación JWT (RN-15). "
+            + "Recursos PUBLIC: cualquier usuario autenticado puede descargar. "
+            + "Recursos PREMIUM: requiere suscripción activa o saldo de monedas (coin_wallet.balance > 0). "
+            + "Recursos PRIVATE: solo el autor puede descargar. "
+            + "Registra la descarga en download_logs. "
+            + "Devuelve 404 si el recurso no existe, 403 si el acceso no está autorizado, "
+            + "503 si el archivo no está disponible temporalmente."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable UUID id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        DownloadResult result = resourceService.downloadResource(id, auth.getName());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(result.fileName()).build().toString())
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(result.resource());
     }
 }

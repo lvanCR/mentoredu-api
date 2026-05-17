@@ -1,0 +1,20 @@
+{
+  "name": "MentorEduLibraryHU15-DownloadResourceNotFoundGET",
+  "description": "Caso 02 — Error: ID de recurso que no existe. Respuesta esperada: 404 Not Found con mensaje 'Resource not found'.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/resources/00000000-0000-0000-0000-000000000000/download",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ]
+  },
+  "expectedResponse": {
+    "status": 404,
+    "body": {
+      "error": "Not Found"
+    }
+  }
+}

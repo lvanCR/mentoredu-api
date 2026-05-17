@@ -2,16 +2,22 @@ package com.mentoredu.library.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.library.dto.DownloadResult;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.exception.DuplicateResourceException;
+import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceFileNotFoundException;
+import com.mentoredu.library.exception.ResourceNotFoundException;
+import com.mentoredu.library.exception.ResourceNotAvailableException;
 import com.mentoredu.library.model.AcademicResource;
 import com.mentoredu.library.service.IResourceService;
 import com.mentoredu.auth.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -483,6 +489,174 @@ class ResourceControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").exists());
+    }
+
+    // =========================================================================
+    // US15 — Download academic resource
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario exitoso: recurso PUBLIC y archivo disponible → 200 + PDF
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void downloadResource_publicResourceAvailable_returns200WithPdf() throws Exception {
+        UUID id = UUID.randomUUID();
+        byte[] pdfBytes = "%PDF-1.4 test content".getBytes();
+
+        when(resourceService.downloadResource(eq(id), eq("user@example.com")))
+                .thenReturn(new DownloadResult(new ByteArrayResource(pdfBytes), "examen-uni-2024.pdf"));
+
+        mockMvc.perform(get("/api/v1/resources/{id}/download", id))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
+                        org.hamcrest.Matchers.containsString("examen-uni-2024.pdf")));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario alternativo exitoso: recurso PREMIUM con monedas → 200 + PDF
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "premium@example.com")
+    void downloadResource_premiumResourceWithCoins_returns200() throws Exception {
+        UUID id = UUID.randomUUID();
+        byte[] pdfBytes = "%PDF-1.4 premium content".getBytes();
+
+        when(resourceService.downloadResource(eq(id), eq("premium@example.com")))
+                .thenReturn(new DownloadResult(new ByteArrayResource(pdfBytes), "recurso-premium.pdf"));
+
+        mockMvc.perform(get("/api/v1/resources/{id}/download", id))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: recurso no existe → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void downloadResource_resourceNotFound_returns404() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(resourceService.downloadResource(eq(id), eq("user@example.com")))
+                .thenThrow(new ResourceNotFoundException("Resource not found: " + id));
+
+        mockMvc.perform(get("/api/v1/resources/{id}/download", id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Resource not found: " + id));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: recurso PRIVATE y usuario no es autor → 403
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "other@example.com")
+    void downloadResource_privateResourceNotAuthor_returns403() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(resourceService.downloadResource(eq(id), eq("other@example.com")))
+                .thenThrow(new ResourceAccessDeniedException(
+                        "This resource is private and only accessible to its author."));
+
+        mockMvc.perform(get("/api/v1/resources/{id}/download", id))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: recurso PREMIUM sin suscripción ni monedas → 403
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void downloadResource_premiumResourceWithoutAccess_returns403() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(resourceService.downloadResource(eq(id), eq("user@example.com")))
+                .thenThrow(new ResourceAccessDeniedException(
+                        "This resource requires a premium subscription or coin balance to download."));
+
+        mockMvc.perform(get("/api/v1/resources/{id}/download", id))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario alternativo error: archivo no disponible en disco → 503
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void downloadResource_fileUnavailableOnDisk_returns503() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(resourceService.downloadResource(eq(id), eq("user@example.com")))
+                .thenThrow(new ResourceNotAvailableException(
+                        "File is temporarily unavailable: examen.pdf"));
+
+        mockMvc.perform(get("/api/v1/resources/{id}/download", id))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.error").value("Service Unavailable"))
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void downloadResource_withoutAuth_returns401() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/v1/resources/{id}/download", id))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // US15 — Get resource metadata by ID
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getResourceById_whenExists_returns200() throws Exception {
+        UUID fileId = UUID.randomUUID();
+        UUID id = UUID.randomUUID();
+
+        when(resourceService.getById(eq(id)))
+                .thenReturn(buildResponse(fileId, "Examen UNI 2024", "EXAM", "PUBLIC"));
+
+        mockMvc.perform(get("/api/v1/resources/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Examen UNI 2024"))
+                .andExpect(jsonPath("$.type").value("EXAM"));
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getResourceById_whenNotFound_returns404() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(resourceService.getById(eq(id)))
+                .thenThrow(new ResourceNotFoundException("Resource not found: " + id));
+
+        mockMvc.perform(get("/api/v1/resources/{id}", id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Resource not found: " + id));
+    }
+
+    @Test
+    void getResourceById_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/resources/{id}", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
     }
 
     // =========================================================================
