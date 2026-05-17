@@ -1,0 +1,26 @@
+{
+  "name": "MentorEduLibraryHU13-RegisterResourceMissingTitlePOST",
+  "description": "Caso 02 — Error: falta campo obligatorio 'title'. Respuesta esperada: 400 Bad Request con details.title.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/resources",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": {
+        "fileId": "{{file_id}}",
+        "institutionId": "{{institution_id}}",
+        "subjectId": "{{subject_id}}",
+        "year": 2024,
+        "type": "EXAM"
+      }
+    }
+  },
+  "expectedResponse": {
+    "status": 400,
+    "fields": ["details.title"]
+  }
+}

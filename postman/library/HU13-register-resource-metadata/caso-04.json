@@ -1,0 +1,27 @@
+{
+  "name": "MentorEduLibraryHU13-RegisterResourceInvalidYearPOST",
+  "description": "Caso 04 — Alternativo error: año fuera del rango válido (1900–2099). Respuesta esperada: 400 Bad Request con details.year.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/resources",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": {
+        "title": "Examen Antiguo",
+        "fileId": "{{file_id}}",
+        "institutionId": "{{institution_id}}",
+        "subjectId": "{{subject_id}}",
+        "year": 1800,
+        "type": "EXAM"
+      }
+    }
+  },
+  "expectedResponse": {
+    "status": 400,
+    "fields": ["details.year"]
+  }
+}
