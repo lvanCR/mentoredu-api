@@ -11,7 +11,10 @@ import com.mentoredu.auth.exception.InvalidTokenException;
 import com.mentoredu.library.exception.DuplicateResourceException;
 import com.mentoredu.library.exception.FileSizeLimitExceededException;
 import com.mentoredu.library.exception.InvalidFileTypeException;
+import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceFileNotFoundException;
+import com.mentoredu.library.exception.ResourceNotFoundException;
+import com.mentoredu.library.exception.ResourceNotAvailableException;
 import com.mentoredu.profile.exception.OrganizationNameAlreadyExistsException;
 import com.mentoredu.profile.exception.OrganizationProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
@@ -249,6 +252,39 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
 
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(ResourceAccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceAccessDenied(ResourceAccessDeniedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(ResourceNotAvailableException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotAvailable(ResourceNotAvailableException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        body.put("error", "Service Unavailable");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
     }
 
     @ExceptionHandler(ResourceFileNotFoundException.class)
