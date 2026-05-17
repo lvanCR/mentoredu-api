@@ -1,5 +1,6 @@
 package com.mentoredu.config;
 
+import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.academy.exception.AcademyAlreadyExistsException;
 import com.mentoredu.academy.exception.AcademyNotFoundException;
@@ -330,6 +331,17 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
 
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(ThreadClosedException.class)
+    public ResponseEntity<Map<String, Object>> handleThreadClosed(ThreadClosedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(ThreadNotFoundException.class)
