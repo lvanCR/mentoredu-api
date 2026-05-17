@@ -45,8 +45,14 @@ public class Report {
     @Column(nullable = false)
     private ReportStatus status;
 
+    @Column(name = "resolved_by", columnDefinition = "uuid")
+    private UUID resolvedBy;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
 
     @PrePersist
     protected void onCreate() {
