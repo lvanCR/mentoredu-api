@@ -571,6 +571,26 @@ package "billing" {
 }
 
 ' =========================
+' FEEDBACK
+' =========================
+package "feedback" {
+  class FeedbackEntry {
+    +id: UUID
+    +authorUserId: UUID
+    +targetUserId: UUID
+    +programId: UUID
+    +cycleId: UUID
+    +body: String
+    +score: BigDecimal
+    +createdAt: LocalDateTime
+    +updatedAt: LocalDateTime
+
+    +submit(): void
+    +view(): void
+  }
+}
+
+' =========================
 ' NOTIFICATIONS
 ' =========================
 package "notifications" {
@@ -670,5 +690,9 @@ Notification ..> VerificationRequest : notifies about
 Notification ..> Subscription : notifies about
 Notification ..> Thread : notifies about
 Notification ..> Answer : notifies about
+
+' Feedback
+User "1" -- "0..*" FeedbackEntry : provides >
+User "1" -- "0..*" FeedbackEntry : receives >
 
 @enduml
