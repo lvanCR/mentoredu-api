@@ -1,0 +1,26 @@
+{
+  "name": "MentorEduForumHU27-ReactToThreadPOST",
+  "description": "Caso 01 — Exitoso: reacción nueva sobre un hilo existente. Retorna 201 con la reacción registrada.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/threads/{{thread_id}}/reactions",
+    "headers": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "body": {
+      "reactionType": "LIKE"
+    }
+  },
+  "expected": {
+    "status": 201,
+    "body": {
+      "id": "<uuid>",
+      "targetType": "THREAD",
+      "targetId": "{{thread_id}}",
+      "reactionType": "LIKE",
+      "userId": "<uuid>",
+      "createdAt": "<timestamp>"
+    }
+  }
+}
