@@ -2,9 +2,13 @@ package com.mentoredu.forum.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.forum.dto.AnswerResponse;
+import com.mentoredu.forum.dto.CreateAnswerRequest;
 import com.mentoredu.forum.dto.CreateThreadRequest;
 import com.mentoredu.forum.dto.ThreadResponse;
+import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
+import com.mentoredu.forum.service.IAnswerService;
 import com.mentoredu.forum.service.IThreadService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +41,9 @@ class ThreadControllerTest {
     private IThreadService threadService;
 
     @MockitoBean
+    private IAnswerService answerService;
+
+    @MockitoBean
     private JwtUtil jwtUtil;
 
     @MockitoBean
@@ -46,16 +53,12 @@ class ThreadControllerTest {
     // US16 — Create forum thread
     // =========================================================================
 
-    // -------------------------------------------------------------------------
-    // Escenario exitoso: texto válido → 201
-    // -------------------------------------------------------------------------
-
     @Test
     @WithMockUser(username = "user@example.com")
     void createThread_withValidFields_returns201() throws Exception {
         UUID subjectId = UUID.randomUUID();
-        var request = validRequest(subjectId);
-        var response = buildResponse(subjectId, "¿Cómo resolver integrales dobles?", false);
+        var request = validThreadRequest(subjectId);
+        var response = buildThreadResponse(subjectId, "¿Cómo resolver integrales dobles?", false);
 
         when(threadService.create(any(), eq("user@example.com"))).thenReturn(response);
 
@@ -70,17 +73,13 @@ class ThreadControllerTest {
                 .andExpect(jsonPath("$.createdAt").exists());
     }
 
-    // -------------------------------------------------------------------------
-    // Escenario alternativo exitoso: duda concreta → 201
-    // -------------------------------------------------------------------------
-
     @Test
     @WithMockUser(username = "student@example.com")
     void createThread_withAnonymousFlag_returns201WithAnonimoDisplay() throws Exception {
         UUID subjectId = UUID.randomUUID();
-        var request = validRequest(subjectId);
+        var request = validThreadRequest(subjectId);
         request.setAnonymous(true);
-        var response = buildAnonymousResponse(subjectId, "¿Diferencia entre serie y sucesión?");
+        var response = buildAnonymousThreadResponse(subjectId, "¿Diferencia entre serie y sucesión?");
 
         when(threadService.create(any(), eq("student@example.com"))).thenReturn(response);
 
@@ -93,14 +92,10 @@ class ThreadControllerTest {
                 .andExpect(jsonPath("$.status").value("OPEN"));
     }
 
-    // -------------------------------------------------------------------------
-    // Escenario error: body vacío → 400
-    // -------------------------------------------------------------------------
-
     @Test
     @WithMockUser(username = "user@example.com")
     void createThread_withEmptyBody_returns400() throws Exception {
-        var request = validRequest(UUID.randomUUID());
+        var request = validThreadRequest(UUID.randomUUID());
         request.setBody("");
 
         mockMvc.perform(post("/api/v1/threads")
@@ -110,13 +105,9 @@ class ThreadControllerTest {
                 .andExpect(jsonPath("$.details.body").exists());
     }
 
-    // -------------------------------------------------------------------------
-    // Escenario alternativo error: no autenticado → 401
-    // -------------------------------------------------------------------------
-
     @Test
     void createThread_withoutAuth_returns401() throws Exception {
-        var request = validRequest(UUID.randomUUID());
+        var request = validThreadRequest(UUID.randomUUID());
 
         mockMvc.perform(post("/api/v1/threads")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -124,14 +115,10 @@ class ThreadControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // -------------------------------------------------------------------------
-    // Validación: title vacío → 400
-    // -------------------------------------------------------------------------
-
     @Test
     @WithMockUser(username = "user@example.com")
     void createThread_withEmptyTitle_returns400() throws Exception {
-        var request = validRequest(UUID.randomUUID());
+        var request = validThreadRequest(UUID.randomUUID());
         request.setTitle("");
 
         mockMvc.perform(post("/api/v1/threads")
@@ -141,14 +128,10 @@ class ThreadControllerTest {
                 .andExpect(jsonPath("$.details.title").exists());
     }
 
-    // -------------------------------------------------------------------------
-    // Validación: title excede 160 caracteres → 400
-    // -------------------------------------------------------------------------
-
     @Test
     @WithMockUser(username = "user@example.com")
     void createThread_withTitleTooLong_returns400() throws Exception {
-        var request = validRequest(UUID.randomUUID());
+        var request = validThreadRequest(UUID.randomUUID());
         request.setTitle("A".repeat(161));
 
         mockMvc.perform(post("/api/v1/threads")
@@ -157,10 +140,6 @@ class ThreadControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.title").exists());
     }
-
-    // -------------------------------------------------------------------------
-    // RN-16: subjectId ausente → 400
-    // -------------------------------------------------------------------------
 
     @Test
     @WithMockUser(username = "user@example.com")
@@ -188,7 +167,7 @@ class ThreadControllerTest {
     void listThreads_authenticated_returns200() throws Exception {
         UUID subjectId = UUID.randomUUID();
         when(threadService.listRecent(0, 10))
-                .thenReturn(List.of(buildResponse(subjectId, "Hilo de prueba", false)));
+                .thenReturn(List.of(buildThreadResponse(subjectId, "Hilo de prueba", false)));
 
         mockMvc.perform(get("/api/v1/threads"))
                 .andExpect(status().isOk())
@@ -226,7 +205,7 @@ class ThreadControllerTest {
         UUID subjectId = UUID.randomUUID();
 
         when(threadService.get(eq(id)))
-                .thenReturn(buildResponse(id, subjectId, "¿Cómo resolver integrales dobles?", false));
+                .thenReturn(buildThreadResponse(id, subjectId, "¿Cómo resolver integrales dobles?", false));
 
         mockMvc.perform(get("/api/v1/threads/{id}", id))
                 .andExpect(status().isOk())
@@ -257,10 +236,155 @@ class ThreadControllerTest {
     }
 
     // =========================================================================
+    // US17 — Reply to forum thread
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void createAnswer_withValidBody_returns201() throws Exception {
+        UUID threadId = UUID.randomUUID();
+        var request = validAnswerRequest();
+        var response = buildAnswerResponse(threadId);
+
+        when(answerService.create(eq(threadId), any(), eq("user@example.com"))).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.threadId").value(threadId.toString()))
+                .andExpect(jsonPath("$.body").value("Los límites de integración deben seguir el orden correcto."))
+                .andExpect(jsonPath("$.accepted").value(false))
+                .andExpect(jsonPath("$.authorDisplay").exists())
+                .andExpect(jsonPath("$.createdAt").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void createAnswer_withDetailedExplanation_returns201() throws Exception {
+        UUID threadId = UUID.randomUUID();
+        var request = new CreateAnswerRequest();
+        request.setBody("Para resolver integrales dobles, primero define el dominio de integración y luego aplica Fubini.");
+        var response = buildAnswerResponse(threadId,
+                "Para resolver integrales dobles, primero define el dominio de integración y luego aplica Fubini.",
+                "María López");
+
+        when(answerService.create(eq(threadId), any(), eq("teacher@example.com"))).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.body").value("Para resolver integrales dobles, primero define el dominio de integración y luego aplica Fubini."))
+                .andExpect(jsonPath("$.authorDisplay").value("María López"));
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void createAnswer_withEmptyBody_returns400() throws Exception {
+        UUID threadId = UUID.randomUUID();
+        var request = new CreateAnswerRequest();
+        request.setBody("");
+
+        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.body").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void createAnswer_withNullBody_returns400() throws Exception {
+        UUID threadId = UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.body").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void createAnswer_onClosedThread_returns409() throws Exception {
+        UUID threadId = UUID.randomUUID();
+
+        when(answerService.create(eq(threadId), any(), any()))
+                .thenThrow(new ThreadClosedException("Thread is closed and does not accept new replies: " + threadId));
+
+        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validAnswerRequest())))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Thread is closed and does not accept new replies: " + threadId));
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void createAnswer_onNonExistentThread_returns404() throws Exception {
+        UUID threadId = UUID.randomUUID();
+
+        when(answerService.create(eq(threadId), any(), any()))
+                .thenThrow(new ThreadNotFoundException("Thread not found: " + threadId));
+
+        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validAnswerRequest())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Thread not found: " + threadId));
+    }
+
+    @Test
+    void createAnswer_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validAnswerRequest())))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void listAnswers_whenThreadExists_returns200() throws Exception {
+        UUID threadId = UUID.randomUUID();
+
+        when(answerService.listByThread(eq(threadId)))
+                .thenReturn(List.of(buildAnswerResponse(threadId)));
+
+        mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].threadId").value(threadId.toString()))
+                .andExpect(jsonPath("$[0].body").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void listAnswers_whenThreadNotFound_returns404() throws Exception {
+        UUID threadId = UUID.randomUUID();
+
+        when(answerService.listByThread(eq(threadId)))
+                .thenThrow(new ThreadNotFoundException("Thread not found: " + threadId));
+
+        mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    void listAnswers_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/threads/{threadId}/answers", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
-    private CreateThreadRequest validRequest(UUID subjectId) {
+    private CreateThreadRequest validThreadRequest(UUID subjectId) {
         var r = new CreateThreadRequest();
         r.setTitle("¿Cómo resolver integrales dobles?");
         r.setBody("Necesito ayuda con integrales dobles de funciones trigonométricas.");
@@ -268,7 +392,7 @@ class ThreadControllerTest {
         return r;
     }
 
-    private ThreadResponse buildResponse(UUID subjectId, String title, boolean anonymous) {
+    private ThreadResponse buildThreadResponse(UUID subjectId, String title, boolean anonymous) {
         return ThreadResponse.builder()
                 .id(UUID.randomUUID())
                 .title(title)
@@ -282,7 +406,7 @@ class ThreadControllerTest {
                 .build();
     }
 
-    private ThreadResponse buildResponse(UUID id, UUID subjectId, String title, boolean anonymous) {
+    private ThreadResponse buildThreadResponse(UUID id, UUID subjectId, String title, boolean anonymous) {
         return ThreadResponse.builder()
                 .id(id)
                 .title(title)
@@ -296,7 +420,7 @@ class ThreadControllerTest {
                 .build();
     }
 
-    private ThreadResponse buildAnonymousResponse(UUID subjectId, String title) {
+    private ThreadResponse buildAnonymousThreadResponse(UUID subjectId, String title) {
         return ThreadResponse.builder()
                 .id(UUID.randomUUID())
                 .title(title)
@@ -305,6 +429,29 @@ class ThreadControllerTest {
                 .authorDisplay("Anónimo")
                 .subjectId(subjectId)
                 .status("OPEN")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    private CreateAnswerRequest validAnswerRequest() {
+        var r = new CreateAnswerRequest();
+        r.setBody("Los límites de integración deben seguir el orden correcto.");
+        return r;
+    }
+
+    private AnswerResponse buildAnswerResponse(UUID threadId) {
+        return buildAnswerResponse(threadId,
+                "Los límites de integración deben seguir el orden correcto.", "Juan Pérez");
+    }
+
+    private AnswerResponse buildAnswerResponse(UUID threadId, String body, String authorDisplay) {
+        return AnswerResponse.builder()
+                .id(UUID.randomUUID())
+                .threadId(threadId)
+                .body(body)
+                .accepted(false)
+                .authorDisplay(authorDisplay)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
