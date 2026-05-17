@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduForumHU18-CerrarHiloNoAutorPATCH",
+  "description": "Escenario error: un usuario que no es el autor intenta cerrar el hilo. El sistema debe rechazar la operación con 403 Forbidden.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/threads/{{thread_id}}/close",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{other_user_token}}"
+      }
+    ]
+  },
+  "response": {
+    "status": 403,
+    "description": "Forbidden. Solo el autor puede cerrar el hilo. Mensaje: 'Only the author can close this thread: {id}'."
+  }
+}
