@@ -1,0 +1,26 @@
+{
+  "name": "MentorEduForumHU28-ComentarRespuestaInexistentePOST",
+  "description": "Alternativo error: la respuesta referenciada no existe. El sistema debe responder 404.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/answers/00000000-0000-0000-0000-000000000000/comments",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"body\": \"Este comentario no debería crearse porque la respuesta no existe.\"\n}"
+    }
+  },
+  "response": {
+    "status": 404,
+    "description": "Answer not found. La respuesta con el ID indicado no existe en el sistema."
+  }
+}
