@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface ProgramRepository extends JpaRepository<Program, UUID> {
     List<Program> findByAcademyId(UUID academyId);
+    boolean existsByNameAndAcademyId(String name, UUID academyId);
 }

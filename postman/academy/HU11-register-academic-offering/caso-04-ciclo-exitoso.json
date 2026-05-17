@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduAcademyHU11-CreateCyclePOST",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "url": "{{api_v1}}/academies/{{academyId}}/cycles",
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"name\": \"Ciclo Intensivo Verano 2026\",\n  \"cycleType\": \"INTENSIVO\",\n  \"startDate\": \"2026-01-06\",\n  \"endDate\": \"2026-03-31\"\n}"
+    }
+  },
+  "response": [],
+  "_scenario": "exitoso - ciclo académico con todos los campos",
+  "_expectedStatus": 201
+}

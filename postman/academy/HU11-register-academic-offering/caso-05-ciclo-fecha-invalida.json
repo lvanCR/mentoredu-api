@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduAcademyHU11-CreateCycleFechaInvalidaPOST",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "url": "{{api_v1}}/academies/{{academyId}}/cycles",
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"name\": \"Ciclo Verano\",\n  \"cycleType\": \"REGULAR\",\n  \"startDate\": \"06/01/2026\",\n  \"endDate\": \"31/03/2026\"\n}"
+    }
+  },
+  "response": [],
+  "_scenario": "error - formato de fecha incorrecto (dd/MM/yyyy en vez de yyyy-MM-dd)",
+  "_expectedStatus": 400
+}
