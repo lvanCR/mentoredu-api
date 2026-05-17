@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface CycleRepository extends JpaRepository<Cycle, UUID> {
     List<Cycle> findByAcademyId(UUID academyId);
+    boolean existsByNameAndAcademyId(String name, UUID academyId);
 }

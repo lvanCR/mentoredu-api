@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduAcademyHU11-CreateProgramAcademiaNoEncontradaPOST",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "url": "{{api_v1}}/academies/00000000-0000-0000-0000-000000000000/programs",
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"name\": \"Preparatorio UNI\",\n  \"modality\": \"PRESENCIAL\",\n  \"intensity\": \"NORMAL\",\n  \"targetUniversity\": \"UNI\"\n}"
+    }
+  },
+  "response": [],
+  "_scenario": "error - academyId inexistente",
+  "_expectedStatus": 404
+}
