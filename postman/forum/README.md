@@ -13,14 +13,7 @@ Colección de casos de prueba para el Bounded Context **Forum** (EP-05).
 | [HU18](./HU18-close-forum-thread/) | Cerrar hilo de foro | 5 | `PATCH /api/v1/threads/{id}/close` |
 | [HU27](./HU27-react-to-forum-content/) | Reaccionar a contenido del foro | 4 | `POST /api/v1/threads/{id}/reactions` |
 | [HU28](./HU28-comment-on-answer/) | Comentar respuesta del foro | 4 | `POST /api/v1/answers/{id}/comments` |
-
----
-
-## Pendientes
-
-| HU | Descripción | Endpoint |
-|---|---|---|
-| HU29 | Seguir a un usuario | `POST /api/v1/users/{id}/follow` |
+| [HU29](./HU29-follow-user/) | Seguir / dejar de seguir a un usuario | 4 | `POST /api/v1/users/{id}/follow` |
 
 ---
 
