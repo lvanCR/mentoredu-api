@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface IResourceService {
     ResourceResponse publish(PublishResourceRequest request, String authorEmail);
-    List<ResourceResponse> search(String query, String type, String visibility);
+    List<ResourceResponse> search(String query, String type, String visibility,
+                                  UUID institutionId, UUID subjectId, Integer year);
     ResourceResponse getById(UUID resourceId);
 }

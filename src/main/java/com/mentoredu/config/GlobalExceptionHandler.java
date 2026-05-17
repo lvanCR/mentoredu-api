@@ -19,6 +19,7 @@ import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.TeacherProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.WrongProfileTypeException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -226,6 +227,17 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("message", "Invalid value for parameter '" + ex.getName() + "': " + ex.getValue());
+
+        return ResponseEntity.badRequest().body(body);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
