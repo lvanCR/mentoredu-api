@@ -1,0 +1,26 @@
+{
+  "scenario": "Alt exitoso — Solo targetUniversity enviado, demás campos no se modifican",
+  "gherkin": "Dado que ingreso una universidad válida, cuando confirmo la edición, entonces el sistema actualiza el dato sin modificar los demás campos.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/profiles/student/me",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "targetUniversity": "Pontificia Universidad Católica del Perú"
+    }
+  },
+  "expected_response": {
+    "status": 200,
+    "body": {
+      "profileId": "<uuid>",
+      "targetUniversity": "Pontificia Universidad Católica del Perú",
+      "gradeLevel": "<valor previo sin cambios>",
+      "schoolName": "<valor previo sin cambios>",
+      "targetCareer": "<valor previo sin cambios>",
+      "studyShift": "<valor previo sin cambios>"
+    }
+  }
+}

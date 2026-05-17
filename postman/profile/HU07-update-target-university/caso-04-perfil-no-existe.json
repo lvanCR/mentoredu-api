@@ -1,0 +1,24 @@
+{
+  "scenario": "Alt error — Perfil de estudiante no existe",
+  "gherkin": "Dado que mi perfil de estudiante no existe (no se ejecutó US06), cuando intento editarlo, entonces el sistema responde que el recurso no fue encontrado.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/profiles/student/me",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "targetUniversity": "UNMSM"
+    }
+  },
+  "expected_response": {
+    "status": 404,
+    "body": {
+      "status": 404,
+      "error": "Not Found",
+      "message": "Student profile not found for user: <email>"
+    }
+  },
+  "note": "Usar un token de un usuario que haya ejecutado US04 pero NO US06."
+}
