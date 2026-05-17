@@ -1,0 +1,21 @@
+{
+  "name": "MentorEduAcademyHU33-CreateAcademyPOST",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"name\": \"\",\n  \"description\": \"Descripción válida\"\n}"
+    },
+    "url": {
+      "raw": "{{api_v1}}/academies",
+      "host": ["{{api_v1}}"],
+      "path": ["academies"]
+    },
+    "description": "Caso 03 — Error: name vacío. Debe retornar 400 con details.name."
+  },
+  "response": []
+}
