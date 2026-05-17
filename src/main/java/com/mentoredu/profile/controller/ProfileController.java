@@ -1,7 +1,9 @@
 package com.mentoredu.profile.controller;
 
+import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
 import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
+import com.mentoredu.profile.dto.OrganizationProfileResponse;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
@@ -96,6 +98,23 @@ public class ProfileController {
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(profileService.createTeacherProfile(auth.getName(), request));
+    }
+
+    // -------------------------------------------------------------------------
+    // US10 — Create organization profile
+    // -------------------------------------------------------------------------
+
+    @PostMapping("/organization")
+    @Operation(summary = "US10 - Crear perfil de organización",
+               description = "Crea el perfil institucional del usuario autenticado. Requiere que la cuenta sea de tipo ORGANIZATION (seleccionada previamente en US04). Solo puede ejecutarse una vez por usuario (RN-10). El nombre institucional debe ser único.")
+    public ResponseEntity<OrganizationProfileResponse> createOrganizationProfile(
+            @Valid @RequestBody CreateOrganizationProfileRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(profileService.createOrganizationProfile(auth.getName(), request));
     }
 
     // -------------------------------------------------------------------------

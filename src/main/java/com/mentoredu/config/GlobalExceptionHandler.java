@@ -4,6 +4,8 @@ import com.mentoredu.auth.exception.EmailAlreadyExistsException;
 import com.mentoredu.auth.exception.EmailNotFoundException;
 import com.mentoredu.auth.exception.InvalidCredentialsException;
 import com.mentoredu.auth.exception.InvalidTokenException;
+import com.mentoredu.profile.exception.OrganizationNameAlreadyExistsException;
+import com.mentoredu.profile.exception.OrganizationProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
@@ -142,6 +144,28 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(WrongProfileTypeException.class)
     public ResponseEntity<Map<String, Object>> handleWrongProfileType(WrongProfileTypeException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(OrganizationProfileAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleOrganizationProfileAlreadyExists(OrganizationProfileAlreadyExistsException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(OrganizationNameAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleOrganizationNameAlreadyExists(OrganizationNameAlreadyExistsException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", HttpStatus.CONFLICT.value());

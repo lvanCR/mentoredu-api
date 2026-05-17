@@ -1,0 +1,28 @@
+{
+  "scenario": "Alt exitoso — Todos los campos institucionales válidos enviados",
+  "gherkin": "Dado que completo los datos institucionales válidos, cuando confirmo el formulario, entonces el sistema registra mi perfil de organización.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/profiles/organization",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "organizationName": "Academia Preuniversitaria Lima",
+      "ruc": "20123456789",
+      "website": "https://academia-lima.pe",
+      "contactEmail": "contacto@academia-lima.pe"
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "profileId": "<uuid>",
+      "organizationName": "Academia Preuniversitaria Lima",
+      "ruc": "20123456789",
+      "website": "https://academia-lima.pe",
+      "contactEmail": "contacto@academia-lima.pe"
+    }
+  }
+}
