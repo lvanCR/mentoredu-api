@@ -8,6 +8,7 @@ import com.mentoredu.profile.dto.StudentProfileResponse;
 import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
+import com.mentoredu.profile.dto.UpdateTeacherProfileRequest;
 import com.mentoredu.profile.service.IProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -95,6 +96,22 @@ public class ProfileController {
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(profileService.createTeacherProfile(auth.getName(), request));
+    }
+
+    // -------------------------------------------------------------------------
+    // US09 — Update teacher specialty
+    // -------------------------------------------------------------------------
+
+    @PatchMapping("/teacher/me")
+    @Operation(summary = "US09 - Actualizar especialidad del docente",
+               description = "Actualiza la especialidad del perfil docente del usuario autenticado. El campo specialty es obligatorio. Requiere perfil de docente creado (US08).")
+    public ResponseEntity<TeacherProfileResponse> updateTeacherProfile(
+            @Valid @RequestBody UpdateTeacherProfileRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(profileService.updateTeacherProfile(auth.getName(), request));
     }
 
     // -------------------------------------------------------------------------

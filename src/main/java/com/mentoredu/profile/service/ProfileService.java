@@ -10,6 +10,7 @@ import com.mentoredu.profile.dto.StudentProfileResponse;
 import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
+import com.mentoredu.profile.dto.UpdateTeacherProfileRequest;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
@@ -156,6 +157,31 @@ public class ProfileService implements IProfileService {
         if (request.getStudyShift() != null)        studentProfile.setStudyShift(request.getStudyShift());
 
         return new StudentProfileResponse(studentProfileRepository.save(studentProfile));
+    }
+
+    // -------------------------------------------------------------------------
+    // US09 — Update teacher specialty
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Profile not found for user: " + email));
+
+        TeacherProfile teacherProfile = teacherProfileRepository.findById(profile.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Teacher profile not found for user: " + email));
+
+        teacherProfile.setSpecialty(request.getSpecialty());
+        if (request.getInstitutionName() != null) teacherProfile.setInstitutionName(request.getInstitutionName());
+        if (request.getBioProfessional()  != null) teacherProfile.setBioProfessional(request.getBioProfessional());
+
+        return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
     }
 
     // -------------------------------------------------------------------------
