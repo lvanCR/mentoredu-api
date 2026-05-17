@@ -2,8 +2,10 @@ package com.mentoredu.profile.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
 import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
+import com.mentoredu.profile.dto.OrganizationProfileResponse;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
@@ -11,15 +13,19 @@ import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
 import com.mentoredu.profile.dto.UpdateTeacherProfileRequest;
+import com.mentoredu.profile.exception.OrganizationNameAlreadyExistsException;
+import com.mentoredu.profile.exception.OrganizationProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.TeacherProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.WrongProfileTypeException;
+import com.mentoredu.profile.model.OrganizationProfile;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.model.StudentProfile;
 import com.mentoredu.profile.model.TeacherProfile;
+import com.mentoredu.profile.repository.OrganizationProfileRepository;
 import com.mentoredu.profile.repository.ProfileRepository;
 import com.mentoredu.profile.repository.StudentProfileRepository;
 import com.mentoredu.profile.repository.TeacherProfileRepository;
@@ -34,10 +40,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProfileService implements IProfileService {
 
-    private final ProfileRepository        profileRepository;
-    private final StudentProfileRepository studentProfileRepository;
-    private final TeacherProfileRepository teacherProfileRepository;
-    private final UserRepository           userRepository;
+    private final ProfileRepository             profileRepository;
+    private final StudentProfileRepository      studentProfileRepository;
+    private final TeacherProfileRepository      teacherProfileRepository;
+    private final OrganizationProfileRepository organizationProfileRepository;
+    private final UserRepository                userRepository;
 
     // -------------------------------------------------------------------------
     // US04 — Select account type
@@ -182,6 +189,51 @@ public class ProfileService implements IProfileService {
         if (request.getBioProfessional()  != null) teacherProfile.setBioProfessional(request.getBioProfessional());
 
         return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
+    }
+
+    // -------------------------------------------------------------------------
+    // US10 — Create organization profile
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public OrganizationProfileResponse createOrganizationProfile(String email, CreateOrganizationProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Profile not found for user: " + email));
+
+        if (!ProfileType.ORGANIZATION.name().equals(profile.getProfileType())) {
+            throw new WrongProfileTypeException(
+                    "Account type is not ORGANIZATION. Current type: " + profile.getProfileType());
+        }
+
+        if (organizationProfileRepository.existsById(profile.getId())) {
+            throw new OrganizationProfileAlreadyExistsException(
+                    "Organization profile already exists for this account.");
+        }
+
+        if (organizationProfileRepository.existsByOrganizationName(request.getOrganizationName())) {
+            throw new OrganizationNameAlreadyExistsException(
+                    "An organization with this name already exists: " + request.getOrganizationName());
+        }
+
+        if (request.getRuc() != null && organizationProfileRepository.existsByRuc(request.getRuc())) {
+            throw new OrganizationNameAlreadyExistsException(
+                    "An organization with this RUC already exists: " + request.getRuc());
+        }
+
+        OrganizationProfile organizationProfile = OrganizationProfile.builder()
+                .profileId(profile.getId())
+                .organizationName(request.getOrganizationName())
+                .ruc(request.getRuc())
+                .website(request.getWebsite())
+                .contactEmail(request.getContactEmail())
+                .build();
+
+        return new OrganizationProfileResponse(organizationProfileRepository.save(organizationProfile));
     }
 
     // -------------------------------------------------------------------------

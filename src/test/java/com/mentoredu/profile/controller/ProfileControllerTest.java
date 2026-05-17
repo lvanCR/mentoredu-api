@@ -9,8 +9,12 @@ import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
 import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
+import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
+import com.mentoredu.profile.dto.OrganizationProfileResponse;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
 import com.mentoredu.profile.dto.UpdateTeacherProfileRequest;
+import com.mentoredu.profile.exception.OrganizationNameAlreadyExistsException;
+import com.mentoredu.profile.exception.OrganizationProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
@@ -18,6 +22,7 @@ import com.mentoredu.profile.exception.TeacherProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.WrongProfileTypeException;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
+import com.mentoredu.profile.model.OrganizationProfile;
 import com.mentoredu.profile.model.StudentProfile;
 import com.mentoredu.profile.model.TeacherProfile;
 import com.mentoredu.profile.service.IProfileService;
@@ -898,5 +903,192 @@ class ProfileControllerTest {
         r.setInstitutionName(institutionName);
         r.setBioProfessional(bioProfessional);
         return r;
+    }
+
+    // =========================================================================
+    // US10 — Create organization profile
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario 1 — Creación exitosa con campos obligatorios → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createOrganizationProfile_withRequiredFields_returns201() throws Exception {
+        var request = organizationProfileRequest("Academia Preuniversitaria Lima", null, null, null);
+        var response = buildOrganizationProfileResponse("Academia Preuniversitaria Lima", null, null, null);
+        when(profileService.createOrganizationProfile(eq("org@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/profiles/organization")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.organizationName").value("Academia Preuniversitaria Lima"))
+                .andExpect(jsonPath("$.profileId").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 3 — Creación exitosa con todos los campos → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createOrganizationProfile_withAllFields_returns201() throws Exception {
+        var request = organizationProfileRequest(
+                "Academia Preuniversitaria Lima", "20123456789",
+                "https://academia-lima.pe", "contacto@academia-lima.pe");
+        var response = buildOrganizationProfileResponse(
+                "Academia Preuniversitaria Lima", "20123456789",
+                "https://academia-lima.pe", "contacto@academia-lima.pe");
+        when(profileService.createOrganizationProfile(eq("org@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/profiles/organization")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.organizationName").value("Academia Preuniversitaria Lima"))
+                .andExpect(jsonPath("$.ruc").value("20123456789"))
+                .andExpect(jsonPath("$.website").value("https://academia-lima.pe"))
+                .andExpect(jsonPath("$.contactEmail").value("contacto@academia-lima.pe"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 2 — organizationName vacío → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createOrganizationProfile_withBlankOrganizationName_returns400() throws Exception {
+        var request = organizationProfileRequest("", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/organization")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.organizationName").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 4 — Nombre institucional ya existe → 409
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createOrganizationProfile_whenNameAlreadyExists_returns409() throws Exception {
+        when(profileService.createOrganizationProfile(eq("org@example.com"), any()))
+                .thenThrow(new OrganizationNameAlreadyExistsException(
+                        "An organization with this name already exists: Academia Preuniversitaria Lima"));
+
+        var request = organizationProfileRequest("Academia Preuniversitaria Lima", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/organization")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("An organization with this name already exists: Academia Preuniversitaria Lima"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Tipo de cuenta incorrecto (no ORGANIZATION) → 409
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void createOrganizationProfile_whenWrongProfileType_returns409() throws Exception {
+        when(profileService.createOrganizationProfile(eq("student@example.com"), any()))
+                .thenThrow(new WrongProfileTypeException(
+                        "Account type is not ORGANIZATION. Current type: STUDENT"));
+
+        var request = organizationProfileRequest("Academia Lima", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/organization")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Account type is not ORGANIZATION. Current type: STUDENT"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Perfil de organización ya existe (RN-10) → 409
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createOrganizationProfile_whenAlreadyExists_returns409() throws Exception {
+        when(profileService.createOrganizationProfile(eq("org@example.com"), any()))
+                .thenThrow(new OrganizationProfileAlreadyExistsException(
+                        "Organization profile already exists for this account."));
+
+        var request = organizationProfileRequest("Academia Lima", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/organization")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Organization profile already exists for this account."));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario — Sin perfil base (US04 no ejecutada) → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "nuevo@example.com")
+    void createOrganizationProfile_whenBaseProfileNotFound_returns404() throws Exception {
+        when(profileService.createOrganizationProfile(eq("nuevo@example.com"), any()))
+                .thenThrow(new ProfileNotFoundException("Profile not found for user: nuevo@example.com"));
+
+        var request = organizationProfileRequest("Academia Lima", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/organization")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Profile not found for user: nuevo@example.com"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void createOrganizationProfile_withoutAuth_returns401() throws Exception {
+        var request = organizationProfileRequest("Academia Lima", null, null, null);
+
+        mockMvc.perform(post("/api/v1/profiles/organization")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // Helpers US10
+    // =========================================================================
+
+    private CreateOrganizationProfileRequest organizationProfileRequest(
+            String organizationName, String ruc, String website, String contactEmail) {
+        var r = new CreateOrganizationProfileRequest();
+        r.setOrganizationName(organizationName);
+        r.setRuc(ruc);
+        r.setWebsite(website);
+        r.setContactEmail(contactEmail);
+        return r;
+    }
+
+    private OrganizationProfileResponse buildOrganizationProfileResponse(
+            String organizationName, String ruc, String website, String contactEmail) {
+        OrganizationProfile op = OrganizationProfile.builder()
+                .profileId(UUID.randomUUID())
+                .organizationName(organizationName)
+                .ruc(ruc)
+                .website(website)
+                .contactEmail(contactEmail)
+                .build();
+        return new OrganizationProfileResponse(op);
     }
 }

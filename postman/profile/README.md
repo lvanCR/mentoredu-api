@@ -14,12 +14,11 @@ Gestiona el perfil base y los perfiles específicos de cada tipo de usuario.
 | HU07 | Actualizar universidad objetivo del estudiante | `PATCH /api/v1/profiles/student/me` | `MentorEduProfileHU07-UpdateTargetUniversityPATCH` | 2026-05-16 |
 | HU08 | Crear perfil de docente | `POST /api/v1/profiles/teacher` | `MentorEduProfileHU08-CreateTeacherProfilePOST` | 2026-05-16 |
 | HU09 | Actualizar especialidad del docente | `PATCH /api/v1/profiles/teacher/me` | `MentorEduProfileHU09-UpdateTeacherSpecialtyPATCH` | 2026-05-16 |
+| HU10 | Crear perfil de organización | `POST /api/v1/profiles/organization` | `MentorEduProfileHU10-CreateOrganizationProfilePOST` | 2026-05-16 |
 
 ## Historias pendientes
 
-| HU | Descripción |
-|---|---|
-| HU10 | Crear perfil de organización |
+_EP-02 Profile completado. Continúa en EP-03 Academy (HU33, HU11)._
 
 ---
 
@@ -69,13 +68,23 @@ profile/
 │   ├── caso-06-tipo-incorrecto.json
 │   ├── caso-07-perfil-ya-existe.json
 │   └── caso-08-sin-perfil-base.json
-└── HU09-update-teacher-specialty/
+├── HU09-update-teacher-specialty/
+│   ├── README.md
+│   ├── caso-01-exitoso.json
+│   ├── caso-02-solo-specialty.json
+│   ├── caso-03-specialty-vacio.json
+│   ├── caso-04-perfil-no-existe.json
+│   └── caso-05-sin-autenticacion.json
+└── HU10-create-organization-profile/
     ├── README.md
-    ├── caso-01-exitoso.json
-    ├── caso-02-solo-specialty.json
-    ├── caso-03-specialty-vacio.json
-    ├── caso-04-perfil-no-existe.json
-    └── caso-05-sin-autenticacion.json
+    ├── caso-01-exitoso-campos-obligatorios.json
+    ├── caso-02-exitoso-todos-campos.json
+    ├── caso-03-nombre-vacio.json
+    ├── caso-04-nombre-duplicado.json
+    ├── caso-05-tipo-incorrecto.json
+    ├── caso-06-perfil-ya-existe.json
+    ├── caso-07-sin-perfil-base.json
+    └── caso-08-sin-autenticacion.json
 ```
 
 ---

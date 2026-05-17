@@ -1,7 +1,9 @@
 package com.mentoredu.profile.service;
 
+import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
 import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
+import com.mentoredu.profile.dto.OrganizationProfileResponse;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
@@ -20,4 +22,5 @@ public interface IProfileService {
     StudentProfileResponse updateStudentProfile(String email, UpdateStudentProfileRequest request);
     TeacherProfileResponse createTeacherProfile(String email, CreateTeacherProfileRequest request);
     TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request);
+    OrganizationProfileResponse createOrganizationProfile(String email, CreateOrganizationProfileRequest request);
 }
