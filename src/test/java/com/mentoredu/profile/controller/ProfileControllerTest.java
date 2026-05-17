@@ -10,6 +10,7 @@ import com.mentoredu.profile.dto.StudentProfileResponse;
 import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
+import com.mentoredu.profile.dto.UpdateTeacherProfileRequest;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
@@ -789,5 +790,113 @@ class ProfileControllerTest {
                 .bioProfessional(bioProfessional)
                 .build();
         return new TeacherProfileResponse(tp);
+    }
+
+    // =========================================================================
+    // US09 — Update teacher specialty
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario 1 — Actualización exitosa → 200
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void updateTeacherProfile_withValidSpecialty_returns200() throws Exception {
+        var request = updateTeacherProfileRequest("Química", "Instituto Preuniversitario El Triunfo", null);
+        var response = buildTeacherProfileResponse("Química", "Instituto Preuniversitario El Triunfo", null);
+        when(profileService.updateTeacherProfile(eq("teacher@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/profiles/teacher/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.specialty").value("Química"))
+                .andExpect(jsonPath("$.institutionName").value("Instituto Preuniversitario El Triunfo"))
+                .andExpect(jsonPath("$.profileId").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 3 — Solo specialty; demás campos sin cambios → 200
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void updateTeacherProfile_withOnlySpecialty_returns200() throws Exception {
+        var request = updateTeacherProfileRequest("Física", null, null);
+        var response = buildTeacherProfileResponse("Física", "Academia Lumbre", "Bio previa del docente.");
+        when(profileService.updateTeacherProfile(eq("teacher@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/profiles/teacher/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.specialty").value("Física"))
+                .andExpect(jsonPath("$.institutionName").value("Academia Lumbre"))
+                .andExpect(jsonPath("$.bioProfessional").value("Bio previa del docente."));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 2 — specialty vacía → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void updateTeacherProfile_withBlankSpecialty_returns400() throws Exception {
+        var request = updateTeacherProfileRequest("", null, null);
+
+        mockMvc.perform(patch("/api/v1/profiles/teacher/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.specialty").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 4 — Perfil de docente no existe → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void updateTeacherProfile_whenTeacherProfileNotFound_returns404() throws Exception {
+        when(profileService.updateTeacherProfile(eq("teacher@example.com"), any()))
+                .thenThrow(new ProfileNotFoundException(
+                        "Teacher profile not found for user: teacher@example.com"));
+
+        var request = updateTeacherProfileRequest("Biología", null, null);
+
+        mockMvc.perform(patch("/api/v1/profiles/teacher/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Teacher profile not found for user: teacher@example.com"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void updateTeacherProfile_withoutAuth_returns401() throws Exception {
+        var request = updateTeacherProfileRequest("Matemáticas", null, null);
+
+        mockMvc.perform(patch("/api/v1/profiles/teacher/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // Helpers US09
+    // =========================================================================
+
+    private UpdateTeacherProfileRequest updateTeacherProfileRequest(
+            String specialty, String institutionName, String bioProfessional) {
+        var r = new UpdateTeacherProfileRequest();
+        r.setSpecialty(specialty);
+        r.setInstitutionName(institutionName);
+        r.setBioProfessional(bioProfessional);
+        return r;
     }
 }

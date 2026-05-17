@@ -8,6 +8,7 @@ import com.mentoredu.profile.dto.StudentProfileResponse;
 import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
+import com.mentoredu.profile.dto.UpdateTeacherProfileRequest;
 
 import java.util.UUID;
 
@@ -18,4 +19,5 @@ public interface IProfileService {
     StudentProfileResponse getStudentProfile(UUID userId);
     StudentProfileResponse updateStudentProfile(String email, UpdateStudentProfileRequest request);
     TeacherProfileResponse createTeacherProfile(String email, CreateTeacherProfileRequest request);
+    TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request);
 }

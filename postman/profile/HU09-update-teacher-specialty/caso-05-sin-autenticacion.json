@@ -1,0 +1,19 @@
+{
+  "scenario": "Sin autenticación — Token ausente o inválido",
+  "gherkin": "Dado que no estoy autenticado, cuando intento actualizar la especialidad, entonces el sistema rechaza el acceso.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/profiles/teacher/me",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "specialty": "Matemáticas"
+    }
+  },
+  "expected_response": {
+    "status": 401,
+    "body": {}
+  },
+  "note": "No incluir el header Authorization o enviar un token expirado/inválido."
+}
