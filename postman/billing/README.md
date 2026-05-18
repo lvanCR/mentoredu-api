@@ -6,20 +6,20 @@ Colección de casos de prueba para el Bounded Context **Billing** (EP-08).
 
 ## Implementadas
 
-_Ninguna aún. EP-08 está pendiente de implementación._
-
----
-
-## Pendientes
-
-| HU | Descripción | Endpoint previsto |
+| HU | Descripción | Endpoint |
 |---|---|---|
 | HU23 | Activar suscripción premium | `POST /api/v1/billing/subscriptions` |
 | HU24 | Comprar paquete de monedas | `POST /api/v1/billing/coin-purchases` |
 
 ---
 
-## Reglas de negocio aplicables
+## Pendientes
+
+_EP-08 completo._
+
+---
+
+## Reglas de negocio aplicadas
 
 - RN-26: Un usuario solo puede tener una suscripción premium activa a la vez.
 - RN-27: El acceso premium depende de suscripción vigente o compra validada.
@@ -27,11 +27,23 @@ _Ninguna aún. EP-08 está pendiente de implementación._
 
 ---
 
-## Variables de entorno previstas
+## Endpoints disponibles
+
+| Método | Ruta | US | Descripción |
+|---|---|---|---|
+| `POST` | `/api/v1/billing/subscriptions` | US23 | Activar suscripción premium |
+| `GET`  | `/api/v1/billing/subscriptions/me` | US23 | Listar mis suscripciones |
+| `GET`  | `/api/v1/billing/subscriptions/me/active` | US23 | Suscripción activa |
+| `GET`  | `/api/v1/billing/coin-packages` | US24 | Listar paquetes de monedas activos |
+| `POST` | `/api/v1/billing/coin-purchases` | US24 | Comprar paquete de monedas |
+
+---
+
+## Variables de entorno
 
 | Variable | Descripción | Requerida en |
 |---|---|---|
 | `{{api_v1}}` | `http://localhost:8080/api/v1` | Todas |
 | `{{access_token}}` | JWT del usuario comprador | HU23, HU24 |
-| `{{plan_id}}` | UUID del plan premium elegido | HU23 |
-| `{{coin_package_id}}` | UUID del paquete de monedas elegido | HU24 |
+| `{{plan_id}}` | UUID del plan premium elegido (seed: V5) | HU23 |
+| `{{coin_package_id}}` | UUID del paquete de monedas elegido (seed: V5) | HU24 |
