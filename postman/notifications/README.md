@@ -6,15 +6,15 @@ Colección de casos de prueba para el Bounded Context **Notifications** (EP-09).
 
 ## Implementadas
 
-_Ninguna aún. EP-09 está pendiente de implementación._
+| HU | Descripción | Endpoint |
+|---|---|---|
+| HU25 | Consultar notificaciones pendientes | `GET /api/v1/notifications/me/pending` |
 
 ---
 
 ## Pendientes
 
-| HU | Descripción | Endpoint previsto |
-|---|---|---|
-| HU25 | Consultar notificaciones pendientes | `GET /api/v1/notifications` |
+_Ninguna. EP-09 completo._
 
 ---
 
@@ -25,7 +25,7 @@ _Ninguna aún. EP-09 está pendiente de implementación._
 
 ---
 
-## Variables de entorno previstas
+## Variables de entorno
 
 | Variable | Descripción | Requerida en |
 |---|---|---|

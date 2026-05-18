@@ -13,6 +13,7 @@ import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceFileNotFoundException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
 import com.mentoredu.library.exception.ResourceNotAvailableException;
+import com.mentoredu.forum.exception.UserNotFoundException;
 import com.mentoredu.library.model.AcademicResource;
 import com.mentoredu.library.model.DownloadLog;
 import com.mentoredu.library.repository.AcademicResourceRepository;
@@ -54,7 +55,7 @@ public class ResourceService implements IResourceService {
     @Override
     public ResourceResponse publish(PublishResourceRequest request, String authorEmail) {
         var author = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new RuntimeException("User not found: " + authorEmail));
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + authorEmail));
 
         resourceFileRepository.findById(request.getFileId())
                 .orElseThrow(() -> new ResourceFileNotFoundException(
@@ -123,7 +124,7 @@ public class ResourceService implements IResourceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found: " + userEmail));
+                .orElseThrow(() -> new UserNotFoundException("Authenticated user not found: " + userEmail));
 
         checkAccessPermission(resource, user);
 

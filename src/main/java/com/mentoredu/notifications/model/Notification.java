@@ -25,13 +25,13 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(length = 30)
+    @Column(length = 30, nullable = false)
     private String type;
 
-    @Column(length = 120)
+    @Column(length = 120, nullable = false)
     private String title;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "text", nullable = false)
     private String message;
 
     @Column(name = "read_at")

@@ -1,6 +1,7 @@
 package com.mentoredu.config;
 
 import com.mentoredu.billing.exception.ActiveSubscriptionAlreadyExistsException;
+import com.mentoredu.notifications.exception.NotificationNotFoundException;
 import com.mentoredu.billing.exception.CoinPackageNotFoundException;
 import com.mentoredu.billing.exception.PaymentFailedException;
 import com.mentoredu.billing.exception.PlanNotFoundException;
@@ -558,6 +559,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CoinPackageNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleCoinPackageNotFound(CoinPackageNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(NotificationNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotificationNotFound(NotificationNotFoundException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", HttpStatus.NOT_FOUND.value());
