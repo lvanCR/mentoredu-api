@@ -4,9 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.moderation.dto.ReportRequest;
 import com.mentoredu.moderation.dto.ReportResponse;
+import com.mentoredu.moderation.dto.ResolveReportRequest;
+import com.mentoredu.moderation.dto.ResolveReportResponse;
 import com.mentoredu.moderation.exception.DuplicateReportException;
+import com.mentoredu.moderation.exception.ReportAlreadyResolvedException;
+import com.mentoredu.moderation.exception.ReportNotFoundException;
 import com.mentoredu.moderation.exception.ReportedContentNotFoundException;
 import com.mentoredu.moderation.exception.SelfReportException;
+import com.mentoredu.moderation.exception.UnauthorizedModerationException;
+import com.mentoredu.moderation.model.ModerationAction;
+import com.mentoredu.moderation.model.Report;
+import com.mentoredu.moderation.model.enums.ModerationActionType;
+import com.mentoredu.moderation.model.enums.ReportStatus;
 import com.mentoredu.moderation.model.enums.TargetType;
 import com.mentoredu.moderation.service.IReportService;
 import org.junit.jupiter.api.Test;
@@ -17,11 +26,13 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -168,6 +179,131 @@ class ReportControllerTest {
     }
 
     // =========================================================================
+    // US20 — resolve: PATCH /api/v1/moderation/reports/{id}/resolve
+    // =========================================================================
+
+    // Gherkin: Exitoso — moderador con permisos + resolución válida → 200 OK, estado cambiado
+    @Test
+    @WithMockUser(username = "moderator@example.com")
+    void resolve_asModerator_returns200WithResolvedStatus() throws Exception {
+        UUID reportId = UUID.randomUUID();
+        UUID targetId = UUID.randomUUID();
+        ResolveReportRequest request = buildResolveRequest(ReportStatus.RESOLVED, ModerationActionType.HIDE, "Contenido ocultado por spam");
+        ResolveReportResponse response = buildResolveResponse(reportId, targetId, ReportStatus.RESOLVED, ModerationActionType.HIDE, "Contenido ocultado por spam");
+
+        when(reportService.resolve(eq(reportId), any(ResolveReportRequest.class), eq("moderator@example.com")))
+                .thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", reportId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(reportId.toString()))
+                .andExpect(jsonPath("$.status").value("RESOLVED"))
+                .andExpect(jsonPath("$.actionType").value("HIDE"))
+                .andExpect(jsonPath("$.resolvedBy").isNotEmpty())
+                .andExpect(jsonPath("$.resolvedAt").isNotEmpty());
+    }
+
+    // Gherkin: Error — sin permisos → 403 Forbidden
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void resolve_withoutModerationRole_returns403() throws Exception {
+        UUID reportId = UUID.randomUUID();
+        ResolveReportRequest request = buildResolveRequest(ReportStatus.RESOLVED, ModerationActionType.WARN, null);
+
+        when(reportService.resolve(eq(reportId), any(ResolveReportRequest.class), eq("student@example.com")))
+                .thenThrow(new UnauthorizedModerationException("No tienes permisos para resolver reportes"));
+
+        mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", reportId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").value("No tienes permisos para resolver reportes"));
+    }
+
+    // Gherkin: Alternativo exitoso — admin cierra con REJECTED → 200 OK
+    @Test
+    @WithMockUser(username = "admin@example.com")
+    void resolve_asAdminReject_returns200WithRejectedStatus() throws Exception {
+        UUID reportId = UUID.randomUUID();
+        UUID targetId = UUID.randomUUID();
+        ResolveReportRequest request = buildResolveRequest(ReportStatus.REJECTED, ModerationActionType.RESTORE, "Reporte infundado");
+        ResolveReportResponse response = buildResolveResponse(reportId, targetId, ReportStatus.REJECTED, ModerationActionType.RESTORE, "Reporte infundado");
+
+        when(reportService.resolve(eq(reportId), any(ResolveReportRequest.class), eq("admin@example.com")))
+                .thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", reportId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJECTED"))
+                .andExpect(jsonPath("$.actionType").value("RESTORE"))
+                .andExpect(jsonPath("$.notes").value("Reporte infundado"));
+    }
+
+    // Gherkin: Alternativo error — reporte ya resuelto → 409 Conflict
+    @Test
+    @WithMockUser(username = "moderator@example.com")
+    void resolve_alreadyResolved_returns409() throws Exception {
+        UUID reportId = UUID.randomUUID();
+        ResolveReportRequest request = buildResolveRequest(ReportStatus.RESOLVED, ModerationActionType.DELETE, null);
+
+        when(reportService.resolve(eq(reportId), any(ResolveReportRequest.class), eq("moderator@example.com")))
+                .thenThrow(new ReportAlreadyResolvedException("El reporte ya fue resuelto con estado: RESOLVED"));
+
+        mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", reportId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("El reporte ya fue resuelto con estado: RESOLVED"));
+    }
+
+    // Extra: reporte no encontrado → 404 Not Found
+    @Test
+    @WithMockUser(username = "moderator@example.com")
+    void resolve_reportNotFound_returns404() throws Exception {
+        UUID reportId = UUID.randomUUID();
+        ResolveReportRequest request = buildResolveRequest(ReportStatus.RESOLVED, ModerationActionType.HIDE, null);
+
+        when(reportService.resolve(eq(reportId), any(ResolveReportRequest.class), eq("moderator@example.com")))
+                .thenThrow(new ReportNotFoundException("Reporte no encontrado: " + reportId));
+
+        mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", reportId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Reporte no encontrado: " + reportId));
+    }
+
+    // Extra: campos obligatorios ausentes → 400 Bad Request
+    @Test
+    @WithMockUser(username = "moderator@example.com")
+    void resolve_missingRequiredFields_returns400() throws Exception {
+        UUID reportId = UUID.randomUUID();
+
+        mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", reportId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Validation failed"));
+    }
+
+    // Extra: sin autenticación → 401 Unauthorized
+    @Test
+    void resolve_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                buildResolveRequest(ReportStatus.RESOLVED, ModerationActionType.HIDE, null))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
@@ -180,14 +316,44 @@ class ReportControllerTest {
     }
 
     private ReportResponse buildResponse(UUID targetId, TargetType targetType, String reason) {
-        com.mentoredu.moderation.model.Report report = com.mentoredu.moderation.model.Report.builder()
+        Report report = Report.builder()
                 .id(UUID.randomUUID())
                 .targetType(targetType)
                 .targetId(targetId)
                 .reason(reason)
-                .status(com.mentoredu.moderation.model.enums.ReportStatus.OPEN)
-                .createdAt(java.time.LocalDateTime.now())
+                .status(ReportStatus.OPEN)
+                .createdAt(LocalDateTime.now())
                 .build();
         return new ReportResponse(report);
+    }
+
+    private ResolveReportRequest buildResolveRequest(ReportStatus resolution, ModerationActionType actionType, String notes) {
+        ResolveReportRequest req = new ResolveReportRequest();
+        req.setResolution(resolution);
+        req.setActionType(actionType);
+        req.setNotes(notes);
+        return req;
+    }
+
+    private ResolveReportResponse buildResolveResponse(UUID reportId, UUID targetId, ReportStatus resolution,
+                                                        ModerationActionType actionType, String notes) {
+        UUID moderatorId = UUID.randomUUID();
+        Report report = Report.builder()
+                .id(reportId)
+                .targetType(TargetType.THREAD)
+                .targetId(targetId)
+                .reason("Contenido inapropiado")
+                .status(resolution)
+                .createdAt(LocalDateTime.now().minusHours(1))
+                .resolvedBy(moderatorId)
+                .resolvedAt(LocalDateTime.now())
+                .build();
+        ModerationAction action = ModerationAction.builder()
+                .id(UUID.randomUUID())
+                .report(report)
+                .actionType(actionType.name())
+                .notes(notes)
+                .build();
+        return new ResolveReportResponse(report, action);
     }
 }

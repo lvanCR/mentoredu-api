@@ -1,0 +1,33 @@
+{
+  "name": "MentorEduModerationHU20-ResolveReportPATCH",
+  "request": {
+    "method": "PATCH",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{moderator_token}}"
+      },
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "url": {
+      "raw": "{{api_v1}}/moderation/reports/{{report_id}}/resolve",
+      "host": ["{{api_v1}}"],
+      "path": ["moderation", "reports", "{{report_id}}", "resolve"]
+    },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"resolution\": \"RESOLVED\",\n  \"actionType\": \"HIDE\",\n  \"notes\": \"Contenido ocultado por incumplir normas de la comunidad\"\n}"
+    }
+  },
+  "description": "Caso 01 — Exitoso: Moderador resuelve un reporte OPEN. Espera 200 OK con status RESOLVED y actionType HIDE.",
+  "expectedStatus": 200,
+  "expectedBody": {
+    "status": "RESOLVED",
+    "actionType": "HIDE",
+    "resolvedBy": "<moderator-uuid>",
+    "resolvedAt": "<timestamp>"
+  }
+}
