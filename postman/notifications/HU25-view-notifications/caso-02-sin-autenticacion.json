@@ -1,0 +1,17 @@
+{
+  "name": "MentorEduNotificationsHU25-PendingNoAuthGET",
+  "description": "Caso 02 — Error: sin token JWT. Espera 401 Unauthorized.",
+  "request": {
+    "method": "GET",
+    "header": [],
+    "url": {
+      "raw": "{{api_v1}}/notifications/me/pending",
+      "host": ["{{api_v1}}"],
+      "path": ["notifications", "me", "pending"]
+    }
+  },
+  "response": {
+    "status": 401,
+    "body": ""
+  }
+}

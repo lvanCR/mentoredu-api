@@ -1,0 +1,23 @@
+{
+  "name": "MentorEduNotificationsHU25-PendingGET",
+  "description": "Caso 01 — Exitoso: usuario autenticado con notificaciones pendientes. Espera 200 OK con lista no vacía ordenada por fecha descendente.",
+  "request": {
+    "method": "GET",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}",
+        "type": "text"
+      }
+    ],
+    "url": {
+      "raw": "{{api_v1}}/notifications/me/pending",
+      "host": ["{{api_v1}}"],
+      "path": ["notifications", "me", "pending"]
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": "[{\"id\":\"...\",\"userId\":\"...\",\"type\":\"FORUM_REPLY\",\"title\":\"Alguien respondió tu hilo\",\"message\":\"...\",\"read\":false,\"createdAt\":\"...\"}]"
+  }
+}

@@ -43,8 +43,9 @@ public class GamificationService implements IGamificationService {
 
     @Override
     public CoinsResponse getCoins(UUID userId) {
-        CoinWallet wallet = getWalletOrThrow(userId);
-        return new CoinsResponse(userId, wallet.getBalance());
+        return coinWalletRepository.findById(userId)
+                .map(wallet -> new CoinsResponse(userId, wallet.getBalance()))
+                .orElse(new CoinsResponse(userId, 0));
     }
 
     @Override
@@ -53,7 +54,8 @@ public class GamificationService implements IGamificationService {
         if (request.getAmount() == null || request.getAmount() <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor a 0");
         }
-        CoinWallet wallet = getWalletOrThrow(userId);
+        CoinWallet wallet = coinWalletRepository.findById(userId)
+                .orElseGet(() -> CoinWallet.builder().userId(userId).balance(0).build());
         wallet.setBalance(wallet.getBalance() + request.getAmount());
         coinWalletRepository.save(wallet);
         return new CoinsResponse(userId, wallet.getBalance());
@@ -65,17 +67,13 @@ public class GamificationService implements IGamificationService {
         if (request.getAmount() == null || request.getAmount() <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor a 0");
         }
-        CoinWallet wallet = getWalletOrThrow(userId);
+        CoinWallet wallet = coinWalletRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Saldo insuficiente de monedas"));
         if (wallet.getBalance() < request.getAmount()) {
             throw new IllegalArgumentException("Saldo insuficiente de monedas");
         }
         wallet.setBalance(wallet.getBalance() - request.getAmount());
         coinWalletRepository.save(wallet);
         return new CoinsResponse(userId, wallet.getBalance());
-    }
-
-    private CoinWallet getWalletOrThrow(UUID userId) {
-        return coinWalletRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Wallet no encontrada para el usuario"));
     }
 }
