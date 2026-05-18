@@ -1,6 +1,8 @@
 package com.mentoredu.verification.model;
 
 import com.mentoredu.auth.entity.User;
+import com.mentoredu.verification.model.enums.EntityType;
+import com.mentoredu.verification.model.enums.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -25,11 +27,13 @@ public class VerificationRequest {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "entity_type", length = 20)
-    private String entityType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "entity_type", nullable = false, length = 20)
+    private EntityType entityType;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status = "PENDING";
+    private VerificationStatus status;
 
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
@@ -44,6 +48,6 @@ public class VerificationRequest {
     @PrePersist
     protected void onCreate() {
         if (submittedAt == null) submittedAt = LocalDateTime.now();
-        if (status == null) status = "PENDING";
+        if (status == null) status = VerificationStatus.PENDING;
     }
 }
