@@ -7,6 +7,9 @@ import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.exception.ThreadNotOwnedException;
 import com.mentoredu.forum.exception.UserNotFoundException;
 import com.mentoredu.moderation.exception.DuplicateReportException;
+import com.mentoredu.verification.exception.DuplicateVerificationRequestException;
+import com.mentoredu.verification.exception.UnauthorizedVerificationException;
+import com.mentoredu.verification.exception.VerificationRequestNotFoundException;
 import com.mentoredu.moderation.exception.ReportAlreadyResolvedException;
 import com.mentoredu.moderation.exception.ReportNotFoundException;
 import com.mentoredu.moderation.exception.ReportedContentNotFoundException;
@@ -484,6 +487,39 @@ public class GlobalExceptionHandler {
         body.put("message", "File size exceeds the maximum allowed limit.");
 
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(DuplicateVerificationRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateVerification(DuplicateVerificationRequestException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(UnauthorizedVerificationException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedVerification(UnauthorizedVerificationException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(VerificationRequestNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleVerificationRequestNotFound(VerificationRequestNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
