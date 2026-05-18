@@ -9,14 +9,13 @@ Colección de casos de prueba para el Bounded Context **Moderation** (EP-06).
 | HU | Descripción | Casos | Endpoint |
 |---|---|---|---|
 | [HU19](./HU19-report-content/) | Reportar contenido | 4 | `POST /api/v1/moderation/reports` |
+| [HU20](./HU20-resolve-report/) | Resolver un reporte | 4 | `PATCH /api/v1/moderation/reports/{id}/resolve` |
 
 ---
 
 ## Pendientes
 
-| HU | Descripción |
-|---|---|
-| HU20 | Resolver un reporte |
+*(EP-06 completo)*
 
 ---
 
