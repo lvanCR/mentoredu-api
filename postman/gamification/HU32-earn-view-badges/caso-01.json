@@ -1,0 +1,17 @@
+{
+  "name": "MentorEduGamificationHU32-GetBadgesGET",
+  "scenario": "Exitoso — usuario con insignia FIRST_ANSWER acreditada",
+  "gherkin": "Dado que alcancé el hito de publicar mi primera respuesta, cuando consulto mis insignias, entonces el sistema devuelve la insignia con nombre y fecha de obtención.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/gamification/users/{{userId}}/badges",
+    "headers": {
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": null
+  },
+  "expected_response": {
+    "status": 200,
+    "body_contains": ["FIRST_ANSWER", "Primera Respuesta", "earnedAt"]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "MentorEduGamificationHU32-GetBadgesNoAuthGET",
+  "scenario": "Error — sin autenticación JWT",
+  "gherkin": "Dado que no estoy autenticado, cuando intento consultar mis insignias, entonces el sistema rechaza el acceso.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/gamification/users/{{userId}}/badges",
+    "headers": {},
+    "body": null
+  },
+  "expected_response": {
+    "status": 401
+  }
+}
