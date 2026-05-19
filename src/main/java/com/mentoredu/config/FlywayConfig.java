@@ -18,7 +18,7 @@ public class FlywayConfig {
     // desactivado y este bean toma el control manual de las migraciones + el orden con JPA.
     // Cuando spring.flyway.enabled=true (producción) la autoconfigure de SB gestiona Flyway.
     @Bean
-    @ConditionalOnProperty(name = "spring.flyway.enabled", havingValue = "false")
+    @ConditionalOnProperty(name = "app.flyway.manual", havingValue = "true")
     public Flyway flyway(DataSource dataSource) {
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
@@ -31,7 +31,7 @@ public class FlywayConfig {
     // En Spring Boot 4.x la ordenación automática Flyway → JPA está rota; este post-processor
     // la restaura manualmente. Solo aplica cuando la autoconfigure de SB está desactivada.
     @Bean
-    @ConditionalOnProperty(name = "spring.flyway.enabled", havingValue = "false")
+    @ConditionalOnProperty(name = "app.flyway.manual", havingValue = "true")
     public static BeanFactoryPostProcessor flywayJpaDependencyPostProcessor() {
         return (ConfigurableListableBeanFactory factory) -> {
             String emfBean = "entityManagerFactory";
