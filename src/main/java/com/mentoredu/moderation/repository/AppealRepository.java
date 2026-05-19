@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface AppealRepository extends JpaRepository<Appeal, UUID> {
     List<Appeal> findByReportId(UUID reportId);
+    boolean existsByReportIdAndUserId(UUID reportId, UUID userId);
 }

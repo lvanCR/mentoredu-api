@@ -13,6 +13,7 @@ import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.exception.ThreadNotOwnedException;
 import com.mentoredu.forum.exception.UserNotFoundException;
+import com.mentoredu.moderation.exception.DuplicateAppealException;
 import com.mentoredu.moderation.exception.DuplicateReportException;
 import com.mentoredu.verification.exception.DuplicateVerificationRequestException;
 import com.mentoredu.verification.exception.UnauthorizedVerificationException;
@@ -475,6 +476,17 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
 
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(DuplicateAppealException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateAppeal(DuplicateAppealException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(DuplicateReportException.class)
