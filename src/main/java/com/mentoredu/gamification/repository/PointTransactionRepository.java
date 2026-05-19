@@ -11,4 +11,6 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
 
     @Query("SELECT COALESCE(SUM(pt.pointsDelta), 0) FROM PointTransaction pt WHERE pt.userId = :userId")
     Integer sumPointsByUserId(@Param("userId") UUID userId);
+
+    boolean existsBySourceTypeAndSourceId(String sourceType, UUID sourceId);
 }
