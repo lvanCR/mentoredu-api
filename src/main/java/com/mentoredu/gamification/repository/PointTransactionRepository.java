@@ -13,4 +13,6 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
     Integer sumPointsByUserId(@Param("userId") UUID userId);
 
     boolean existsBySourceTypeAndSourceId(String sourceType, UUID sourceId);
+
+    long countByUserIdAndSourceType(UUID userId, String sourceType);
 }

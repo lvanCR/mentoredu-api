@@ -1,5 +1,6 @@
 package com.mentoredu.gamification.controller;
 
+import com.mentoredu.gamification.dto.BadgeResponse;
 import com.mentoredu.gamification.dto.CoinsRequest;
 import com.mentoredu.gamification.dto.CoinsResponse;
 import com.mentoredu.gamification.dto.LevelProgressResponse;
@@ -16,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -86,5 +88,21 @@ public class GamificationController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(gamificationService.redeemCoins(userId, request));
+    }
+
+    @GetMapping("/badges")
+    @Operation(
+        summary = "Consultar insignias ganadas del usuario (US32)",
+        description = "Devuelve la lista de insignias acreditadas al usuario con nombre, código y fecha de obtención. "
+            + "Las insignias se otorgan automáticamente al alcanzar hitos definidos por el sistema (RN-31, RN-33). "
+            + "Devuelve lista vacía si el usuario aún no ha ganado ninguna. "
+            + "Requiere autenticación JWT."
+    )
+    public ResponseEntity<List<BadgeResponse>> getBadges(@PathVariable UUID userId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(gamificationService.getBadges(userId));
     }
 }

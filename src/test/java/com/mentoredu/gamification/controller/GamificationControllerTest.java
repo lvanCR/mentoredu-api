@@ -2,6 +2,7 @@ package com.mentoredu.gamification.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.gamification.dto.BadgeResponse;
 import com.mentoredu.gamification.dto.CoinsRequest;
 import com.mentoredu.gamification.dto.CoinsResponse;
 import com.mentoredu.gamification.dto.LevelProgressResponse;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -234,5 +236,65 @@ class GamificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.currentLevel").value(1))
                 .andExpect(jsonPath("$.experience").value(0));
+    }
+
+    // =========================================================================
+    // US32 — GET /api/v1/gamification/users/{userId}/badges
+    // =========================================================================
+
+    // Gherkin: Exitoso — hito alcanzado → sistema acredita insignia, consulta devuelve la insignia con nombre y fecha
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getBadges_withEarnedBadges_returns200WithBadgeList() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID badgeId = UUID.randomUUID();
+        LocalDateTime earnedAt = LocalDateTime.of(2026, 5, 18, 10, 0);
+        BadgeResponse badge = new BadgeResponse(badgeId, "FIRST_ANSWER", "Primera Respuesta",
+                "Otorgada al publicar tu primera respuesta en el foro.", earnedAt);
+        when(gamificationService.getBadges(userId)).thenReturn(List.of(badge));
+
+        mockMvc.perform(get("/api/v1/gamification/users/{userId}/badges", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].badgeId").value(badgeId.toString()))
+                .andExpect(jsonPath("$[0].code").value("FIRST_ANSWER"))
+                .andExpect(jsonPath("$[0].name").value("Primera Respuesta"))
+                .andExpect(jsonPath("$[0].earnedAt").exists());
+    }
+
+    // Gherkin: Error — no autenticado → 401 Unauthorized
+    @Test
+    void getBadges_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/gamification/users/{userId}/badges", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // Gherkin: Alternativo exitoso — consulta de insignias → lista con nombre y fecha de obtención
+    // RN-33: insignia duplicada descartada silenciosamente → el servicio devuelve solo una entrada
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getBadges_duplicatePrevented_returns200WithSingleEntry() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID badgeId = UUID.randomUUID();
+        BadgeResponse badge = new BadgeResponse(badgeId, "FIRST_RESOURCE", "Primer Recurso",
+                "Otorgada al publicar tu primer recurso académico.", LocalDateTime.now());
+        // El servicio ya deduplicó → solo una entrada en la lista
+        when(gamificationService.getBadges(userId)).thenReturn(List.of(badge));
+
+        mockMvc.perform(get("/api/v1/gamification/users/{userId}/badges", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].code").value("FIRST_RESOURCE"));
+    }
+
+    // Gherkin: Alternativo error — hito no alcanzado → el sistema no acredita insignia, no genera error
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getBadges_noMilestonesReached_returns200WithEmptyList() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(gamificationService.getBadges(userId)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/gamification/users/{userId}/badges", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }

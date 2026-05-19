@@ -1,21 +1,27 @@
 package com.mentoredu.gamification.service;
 
+import com.mentoredu.gamification.dto.BadgeResponse;
 import com.mentoredu.gamification.dto.CoinsRequest;
 import com.mentoredu.gamification.dto.CoinsResponse;
 import com.mentoredu.gamification.dto.LevelProgressResponse;
 import com.mentoredu.gamification.dto.PointsResponse;
+import com.mentoredu.gamification.model.Badge;
 import com.mentoredu.gamification.model.CoinWallet;
 import com.mentoredu.gamification.model.LevelProgress;
 import com.mentoredu.gamification.model.PointTransaction;
+import com.mentoredu.gamification.model.UserBadge;
 import com.mentoredu.gamification.model.enums.PointSourceType;
+import com.mentoredu.gamification.repository.BadgeRepository;
 import com.mentoredu.gamification.repository.CoinWalletRepository;
 import com.mentoredu.gamification.repository.LevelProgressRepository;
 import com.mentoredu.gamification.repository.PointTransactionRepository;
+import com.mentoredu.gamification.repository.UserBadgeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,6 +35,8 @@ public class GamificationService implements IGamificationService {
     private final CoinWalletRepository coinWalletRepository;
     private final PointTransactionRepository pointTransactionRepository;
     private final LevelProgressRepository levelProgressRepository;
+    private final BadgeRepository badgeRepository;
+    private final UserBadgeRepository userBadgeRepository;
 
     // -------------------------------------------------------------------------
     // US30 — Earn experience points
@@ -50,6 +58,8 @@ public class GamificationService implements IGamificationService {
                 .build());
         // RN-32: recalculate level automatically after new XP
         recalculateLevelProgress(userId);
+        // RN-31: check badge milestones after each XP event (US32)
+        checkAndAwardBadges(userId, sourceType);
     }
 
     // -------------------------------------------------------------------------
@@ -113,6 +123,22 @@ public class GamificationService implements IGamificationService {
     }
 
     // -------------------------------------------------------------------------
+    // US32 — Earn and view badges
+    // -------------------------------------------------------------------------
+
+    @Override
+    public List<BadgeResponse> getBadges(UUID userId) {
+        return userBadgeRepository.findByUserId(userId).stream()
+                .map(ub -> {
+                    Badge badge = badgeRepository.findById(ub.getBadgeId())
+                            .orElseThrow(() -> new IllegalStateException("Badge not found: " + ub.getBadgeId()));
+                    return new BadgeResponse(badge.getId(), badge.getCode(), badge.getName(),
+                            badge.getDescription(), ub.getEarnedAt());
+                })
+                .toList();
+    }
+
+    // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------
 
@@ -127,5 +153,32 @@ public class GamificationService implements IGamificationService {
         progress.setExperience(totalXP);
         progress.setProgressPercentage(new BigDecimal(progressInLevel));
         levelProgressRepository.save(progress);
+    }
+
+    // RN-31: badge milestones evaluated internally after each XP event.
+    // RN-33: each badge is awarded at most once per user (duplicate silently discarded).
+    private void checkAndAwardBadges(UUID userId, PointSourceType sourceType) {
+        long answerCount = pointTransactionRepository
+                .countByUserIdAndSourceType(userId, PointSourceType.ANSWER_GIVEN.name());
+        long resourceCount = pointTransactionRepository
+                .countByUserIdAndSourceType(userId, PointSourceType.RESOURCE_PUBLISHED.name());
+        int totalXP = pointTransactionRepository.sumPointsByUserId(userId);
+        int currentLevel = Math.min(totalXP / XP_PER_LEVEL + 1, MAX_LEVEL);
+
+        if (answerCount >= 1) tryAwardBadge(userId, "FIRST_ANSWER");
+        if (resourceCount >= 1) tryAwardBadge(userId, "FIRST_RESOURCE");
+        if (currentLevel >= 5) tryAwardBadge(userId, "LEVEL_5");
+        if (currentLevel >= 10) tryAwardBadge(userId, "LEVEL_10");
+    }
+
+    private void tryAwardBadge(UUID userId, String badgeCode) {
+        badgeRepository.findByCode(badgeCode).ifPresent(badge -> {
+            if (!userBadgeRepository.existsByUserIdAndBadgeId(userId, badge.getId())) {
+                userBadgeRepository.save(UserBadge.builder()
+                        .userId(userId)
+                        .badgeId(badge.getId())
+                        .build());
+            }
+        });
     }
 }

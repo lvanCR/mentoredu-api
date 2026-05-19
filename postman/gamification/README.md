@@ -10,14 +10,13 @@ Colección de casos de prueba para el Bounded Context **Gamification** (EP-10).
 |---|---|---|
 | HU30 | Acumular puntos de experiencia | Disparado internamente por eventos (sin endpoint directo) |
 | HU31 | Consultar nivel y progreso personal | `GET /api/v1/gamification/users/{userId}/level` |
+| HU32 | Ganar y ver insignias | `GET /api/v1/gamification/users/{userId}/badges` |
 
 ---
 
 ## Pendientes
 
-| HU | Descripción | Endpoint previsto |
-|---|---|---|
-| HU32 | Ganar y ver insignias | `GET /api/v1/gamification/users/{userId}/badges` |
+*(EP-10 completo)*
 
 ---
 
