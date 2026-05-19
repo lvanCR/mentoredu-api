@@ -1,0 +1,15 @@
+{
+  "name": "MentorEduFeedbackHU35-GetReceivedFeedbackEmptyGET",
+  "scenario": "Alternativo exitoso — sin retroalimentación registrada → 200 lista vacía sin error",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/feedback/me",
+    "headers": {
+      "Authorization": "Bearer {{student_token}}"
+    }
+  },
+  "expected_response": {
+    "status": 200,
+    "body": []
+  }
+}

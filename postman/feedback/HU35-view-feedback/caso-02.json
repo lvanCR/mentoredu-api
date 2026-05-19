@@ -1,0 +1,12 @@
+{
+  "name": "MentorEduFeedbackHU35-GetReceivedFeedbackUnauthorizedGET",
+  "scenario": "Error — no autenticado → 401 Unauthorized",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/feedback/me",
+    "headers": {}
+  },
+  "expected_response": {
+    "status": 401
+  }
+}

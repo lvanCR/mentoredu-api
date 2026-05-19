@@ -1,6 +1,8 @@
 package com.mentoredu.config;
 
 import com.mentoredu.billing.exception.ActiveSubscriptionAlreadyExistsException;
+import com.mentoredu.feedback.exception.FeedbackTargetNotFoundException;
+import com.mentoredu.feedback.exception.FeedbackUnauthorizedException;
 import com.mentoredu.notifications.exception.NotificationNotFoundException;
 import com.mentoredu.billing.exception.CoinPackageNotFoundException;
 import com.mentoredu.billing.exception.PaymentFailedException;
@@ -575,6 +577,26 @@ public class GlobalExceptionHandler {
         body.put("error", "Not Found");
         body.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(FeedbackTargetNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleFeedbackTargetNotFound(FeedbackTargetNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(FeedbackUnauthorizedException.class)
+    public ResponseEntity<Map<String, Object>> handleFeedbackUnauthorized(FeedbackUnauthorizedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
