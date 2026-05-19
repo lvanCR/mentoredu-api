@@ -2,6 +2,7 @@ package com.mentoredu.gamification.service;
 
 import com.mentoredu.gamification.dto.CoinsRequest;
 import com.mentoredu.gamification.dto.CoinsResponse;
+import com.mentoredu.gamification.dto.LevelProgressResponse;
 import com.mentoredu.gamification.dto.PointsResponse;
 import com.mentoredu.gamification.model.CoinWallet;
 import com.mentoredu.gamification.model.LevelProgress;
@@ -82,6 +83,33 @@ public class GamificationService implements IGamificationService {
         wallet.setBalance(wallet.getBalance() - request.getAmount());
         coinWalletRepository.save(wallet);
         return new CoinsResponse(userId, wallet.getBalance());
+    }
+
+    // -------------------------------------------------------------------------
+    // US31 — View personal level and progress
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public LevelProgressResponse getLevelProgress(UUID userId) {
+        LevelProgress progress = levelProgressRepository.findById(userId)
+                .orElseGet(() -> {
+                    // Gherkin alternativo error: registro no existe → inicializar y devolver estado base
+                    LevelProgress base = LevelProgress.builder()
+                            .userId(userId)
+                            .currentLevel(1)
+                            .experience(0)
+                            .progressPercentage(BigDecimal.ZERO)
+                            .build();
+                    return levelProgressRepository.save(base);
+                });
+        return new LevelProgressResponse(
+                progress.getUserId(),
+                progress.getCurrentLevel(),
+                progress.getExperience(),
+                progress.getProgressPercentage(),
+                progress.getUpdatedAt()
+        );
     }
 
     // -------------------------------------------------------------------------
