@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.gamification.dto.CoinsRequest;
 import com.mentoredu.gamification.dto.CoinsResponse;
+import com.mentoredu.gamification.dto.LevelProgressResponse;
 import com.mentoredu.gamification.dto.PointsResponse;
 import com.mentoredu.gamification.service.IGamificationService;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -168,5 +171,68 @@ class GamificationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // US31 — GET /api/v1/gamification/users/{userId}/level
+    // =========================================================================
+
+    // Gherkin: Exitoso — registro activo → 200 con nivel, experiencia y porcentaje
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getLevelProgress_withActiveProgress_returns200WithLevelInfo() throws Exception {
+        UUID userId = UUID.randomUUID();
+        LevelProgressResponse response = new LevelProgressResponse(
+                userId, 2, 105, new BigDecimal("5.00"), LocalDateTime.now()
+        );
+        when(gamificationService.getLevelProgress(userId)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/gamification/users/{userId}/level", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(userId.toString()))
+                .andExpect(jsonPath("$.currentLevel").value(2))
+                .andExpect(jsonPath("$.experience").value(105))
+                .andExpect(jsonPath("$.progressPercentage").value(5.00));
+    }
+
+    // Gherkin: Error — no autenticado → 401 Unauthorized
+    @Test
+    void getLevelProgress_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/gamification/users/{userId}/level", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // Gherkin: Alternativo exitoso — usuario nuevo sin experiencia → nivel 1 con 0 XP
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getLevelProgress_newUser_returns200WithInitialState() throws Exception {
+        UUID userId = UUID.randomUUID();
+        LevelProgressResponse response = new LevelProgressResponse(
+                userId, 1, 0, BigDecimal.ZERO, null
+        );
+        when(gamificationService.getLevelProgress(userId)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/gamification/users/{userId}/level", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentLevel").value(1))
+                .andExpect(jsonPath("$.experience").value(0))
+                .andExpect(jsonPath("$.progressPercentage").value(0));
+    }
+
+    // Gherkin: Alternativo error — registro no existe → sistema lo inicializa y devuelve estado base
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getLevelProgress_progressNotExists_returns200WithBaseState() throws Exception {
+        UUID userId = UUID.randomUUID();
+        // El servicio inicializa el registro y devuelve el estado base (nivel 1, 0 XP)
+        LevelProgressResponse response = new LevelProgressResponse(
+                userId, 1, 0, BigDecimal.ZERO, LocalDateTime.now()
+        );
+        when(gamificationService.getLevelProgress(userId)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/gamification/users/{userId}/level", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentLevel").value(1))
+                .andExpect(jsonPath("$.experience").value(0));
     }
 }

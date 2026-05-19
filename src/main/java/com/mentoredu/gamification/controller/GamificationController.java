@@ -2,6 +2,7 @@ package com.mentoredu.gamification.controller;
 
 import com.mentoredu.gamification.dto.CoinsRequest;
 import com.mentoredu.gamification.dto.CoinsResponse;
+import com.mentoredu.gamification.dto.LevelProgressResponse;
 import com.mentoredu.gamification.dto.PointsResponse;
 import com.mentoredu.gamification.service.IGamificationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,6 +55,21 @@ public class GamificationController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(gamificationService.getCoins(userId));
+    }
+
+    @GetMapping("/level")
+    @Operation(
+        summary = "Consultar nivel y progreso de experiencia del usuario (US31)",
+        description = "Devuelve el nivel actual, la experiencia acumulada y el porcentaje de avance al siguiente nivel. "
+            + "Si el usuario aún no tiene registro de progreso, el sistema lo inicializa con los valores base (nivel 1, 0 XP). "
+            + "Requiere autenticación JWT."
+    )
+    public ResponseEntity<LevelProgressResponse> getLevelProgress(@PathVariable UUID userId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(gamificationService.getLevelProgress(userId));
     }
 
     @PostMapping("/coins/redeem")

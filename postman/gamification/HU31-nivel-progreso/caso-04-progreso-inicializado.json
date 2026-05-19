@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduGamificationHU31-NivelProgresoInicializadoGET",
+  "request": {
+    "method": "GET",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ],
+    "url": {
+      "raw": "{{api_v1}}/gamification/users/{{user_id}}/level",
+      "host": ["{{api_v1}}"],
+      "path": ["gamification", "users", "{{user_id}}", "level"]
+    },
+    "description": "Usuario sin registro de progreso previo. El sistema lo inicializa en el momento de la consulta. Espera: 200 con currentLevel=1, experience=0."
+  }
+}
