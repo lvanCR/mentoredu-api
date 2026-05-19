@@ -57,8 +57,10 @@ postman/
 ├── gamification/                          ← EP-10 completo (HU30, HU31, HU32 ✅)
 │   ├── README.md
 │   ├── HU32-earn-view-badges/
-└── feedback/                              ← EP-11 pendiente (HU34, HU35)
-    └── README.md
+└── feedback/                              ← EP-11 completo (HU34 ✅ · HU35 ✅)
+    ├── README.md
+    ├── HU34-provide-feedback/
+    └── HU35-view-feedback/
 ```
 
 ---
@@ -180,4 +182,4 @@ Cuando una US quede implementada y testeada:
 | billing | Commerce | — | HU23, HU24 |
 | notifications | Engagement | — | HU25 |
 | gamification | Engagement | HU30, HU31, HU32 | — |
-| feedback | Feedback | — | HU34, HU35 |
+| feedback | Feedback | HU34, HU35 | — |

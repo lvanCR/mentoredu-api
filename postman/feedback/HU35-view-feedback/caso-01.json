@@ -1,0 +1,32 @@
+{
+  "name": "MentorEduFeedbackHU35-GetReceivedFeedbackGET",
+  "scenario": "Exitoso — tiene retroalimentación registrada → 200 con lista ordenada por fecha descendente",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/feedback/me",
+    "headers": {
+      "Authorization": "Bearer {{student_token}}"
+    }
+  },
+  "expected_response": {
+    "status": 200,
+    "body": [
+      {
+        "id": "<UUID>",
+        "authorUserId": "<UUID del docente>",
+        "targetUserId": "<UUID del estudiante autenticado>",
+        "body": "Retroalimentación más reciente.",
+        "score": 15.0,
+        "createdAt": "<timestamp más reciente>"
+      },
+      {
+        "id": "<UUID>",
+        "authorUserId": "<UUID del docente>",
+        "targetUserId": "<UUID del estudiante autenticado>",
+        "body": "Retroalimentación anterior.",
+        "score": null,
+        "createdAt": "<timestamp anterior>"
+      }
+    ]
+  }
+}
