@@ -15,7 +15,9 @@ Colección de casos de prueba para el Bounded Context **Moderation** (EP-06).
 
 ## Pendientes
 
-*(EP-06 completo)*
+| HU | Descripción | Endpoint esperado |
+|---|---|---|
+| HU38 | Presentar apelacion de moderacion | `POST /api/v1/moderation/appeals` |
 
 ---
 

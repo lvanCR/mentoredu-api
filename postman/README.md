@@ -182,10 +182,10 @@ Cuando una US quede implementada y testeada:
 |---|---|---|---|
 | auth | Identity & Access | HU01, HU02, HU03, HU26 | — |
 | profile | Identity & Access | HU04, HU05, HU06, HU07, HU08, HU09, HU10 | — |
-| academy | Academic Content | HU33, HU11 | — |
+| academy | Academic Content | HU33, HU11, HU36 | HU37 |
 | library | Academic Content | HU12, HU13, HU14, HU15 | — |
 | forum | Community | HU16, HU17, HU18, HU27, HU28, HU29 | — |
-| moderation | Trust & Safety | HU19, HU20 | — |
+| moderation | Trust & Safety | HU19, HU20 | HU38 |
 | verification | Trust & Safety | HU21, HU22 | — |
 | billing | Commerce | HU23, HU24 | — |
 | notifications | Engagement | HU25 | — |

@@ -24,6 +24,7 @@ import com.mentoredu.moderation.exception.SelfReportException;
 import com.mentoredu.moderation.exception.UnauthorizedModerationException;
 import com.mentoredu.academy.exception.AcademyAlreadyExistsException;
 import com.mentoredu.academy.exception.AcademyNotFoundException;
+import com.mentoredu.academy.exception.CampusAlreadyExistsException;
 import com.mentoredu.academy.exception.CycleAlreadyExistsException;
 import com.mentoredu.academy.exception.ProgramAlreadyExistsException;
 import com.mentoredu.auth.exception.EmailAlreadyExistsException;
@@ -245,6 +246,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CycleAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleCycleAlreadyExists(CycleAlreadyExistsException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(CampusAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleCampusAlreadyExists(CampusAlreadyExistsException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", HttpStatus.CONFLICT.value());

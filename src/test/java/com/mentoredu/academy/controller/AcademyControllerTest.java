@@ -2,16 +2,20 @@ package com.mentoredu.academy.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.academy.dto.AcademyResponse;
+import com.mentoredu.academy.dto.CampusResponse;
 import com.mentoredu.academy.dto.CreateAcademyRequest;
+import com.mentoredu.academy.dto.CreateCampusRequest;
 import com.mentoredu.academy.dto.CreateCycleRequest;
 import com.mentoredu.academy.dto.CreateProgramRequest;
 import com.mentoredu.academy.dto.CycleResponse;
 import com.mentoredu.academy.dto.ProgramResponse;
 import com.mentoredu.academy.exception.AcademyAlreadyExistsException;
 import com.mentoredu.academy.exception.AcademyNotFoundException;
+import com.mentoredu.academy.exception.CampusAlreadyExistsException;
 import com.mentoredu.academy.exception.CycleAlreadyExistsException;
 import com.mentoredu.academy.exception.ProgramAlreadyExistsException;
 import com.mentoredu.academy.model.Academy;
+import com.mentoredu.academy.model.Campus;
 import com.mentoredu.academy.model.Cycle;
 import com.mentoredu.academy.model.Program;
 import com.mentoredu.academy.service.IAcademyService;
@@ -447,6 +451,164 @@ class AcademyControllerTest {
     }
 
     // =========================================================================
+    // US36 — Register campus for academy
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario exitoso: sede con todos los campos → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createCampus_withValidRequest_returns201() throws Exception {
+        UUID academyId = UUID.randomUUID();
+        var request  = campusRequest("Sede Miraflores", "Av. Larco 1234", "Lima");
+        var response = buildCampusResponse(academyId, "Sede Miraflores", "Av. Larco 1234", "Lima");
+        when(academyService.createCampus(eq("org@example.com"), eq(academyId), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/campuses", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.academyId").value(academyId.toString()))
+                .andExpect(jsonPath("$.name").value("Sede Miraflores"))
+                .andExpect(jsonPath("$.address").value("Av. Larco 1234"))
+                .andExpect(jsonPath("$.city").value("Lima"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario alternativo exitoso: segunda sede con nombre distinto → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createCampus_secondCampusWithDifferentName_returns201() throws Exception {
+        UUID academyId = UUID.randomUUID();
+        var request  = campusRequest("Sede San Borja", "Av. Circunvalación 500", "Lima");
+        var response = buildCampusResponse(academyId, "Sede San Borja", "Av. Circunvalación 500", "Lima");
+        when(academyService.createCampus(eq("org@example.com"), eq(academyId), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/campuses", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Sede San Borja"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: nombre vacío → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createCampus_withBlankName_returns400() throws Exception {
+        UUID academyId = UUID.randomUUID();
+        var request = campusRequest("", "Av. Larco 1234", "Lima");
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/campuses", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.name").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: dirección faltante → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createCampus_withMissingAddress_returns400() throws Exception {
+        UUID   academyId = UUID.randomUUID();
+        String body      = "{\"name\":\"Sede Norte\",\"city\":\"Lima\"}";
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/campuses", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.address").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: ciudad vacía → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createCampus_withBlankCity_returns400() throws Exception {
+        UUID academyId = UUID.randomUUID();
+        var request = campusRequest("Sede Norte", "Av. Larco 1234", "");
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/campuses", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.city").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario alternativo error: sede duplicada → 409
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createCampus_whenDuplicate_returns409() throws Exception {
+        UUID academyId = UUID.randomUUID();
+        when(academyService.createCampus(eq("org@example.com"), eq(academyId), any()))
+                .thenThrow(new CampusAlreadyExistsException(
+                        "A campus with this name already exists in the academy: Sede Miraflores"));
+
+        var request = campusRequest("Sede Miraflores", "Av. Larco 1234", "Lima");
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/campuses", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value(
+                        "A campus with this name already exists in the academy: Sede Miraflores"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: academia no encontrada o no pertenece a la org → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void createCampus_whenAcademyNotFound_returns404() throws Exception {
+        UUID academyId = UUID.randomUUID();
+        when(academyService.createCampus(eq("org@example.com"), eq(academyId), any()))
+                .thenThrow(new AcademyNotFoundException(
+                        "Academy not found: " + academyId));
+
+        var request = campusRequest("Sede Miraflores", "Av. Larco 1234", "Lima");
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/campuses", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void createCampus_withoutAuth_returns401() throws Exception {
+        UUID academyId = UUID.randomUUID();
+        var request = campusRequest("Sede Miraflores", "Av. Larco 1234", "Lima");
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/campuses", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
@@ -524,5 +686,27 @@ class AcademyControllerTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
         return new CycleResponse(cycle);
+    }
+
+    private CreateCampusRequest campusRequest(String name, String address, String city) {
+        var r = new CreateCampusRequest();
+        r.setName(name);
+        r.setAddress(address);
+        r.setCity(city);
+        return r;
+    }
+
+    private CampusResponse buildCampusResponse(
+            UUID academyId, String name, String address, String city) {
+        Campus campus = Campus.builder()
+                .id(UUID.randomUUID())
+                .academyId(academyId)
+                .name(name)
+                .address(address)
+                .city(city)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        return new CampusResponse(campus);
     }
 }

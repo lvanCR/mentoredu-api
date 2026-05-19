@@ -1,19 +1,24 @@
 package com.mentoredu.academy.service;
 
 import com.mentoredu.academy.dto.AcademyResponse;
+import com.mentoredu.academy.dto.CampusResponse;
 import com.mentoredu.academy.dto.CreateAcademyRequest;
+import com.mentoredu.academy.dto.CreateCampusRequest;
 import com.mentoredu.academy.dto.CreateCycleRequest;
 import com.mentoredu.academy.dto.CreateProgramRequest;
 import com.mentoredu.academy.dto.CycleResponse;
 import com.mentoredu.academy.dto.ProgramResponse;
 import com.mentoredu.academy.exception.AcademyAlreadyExistsException;
 import com.mentoredu.academy.exception.AcademyNotFoundException;
+import com.mentoredu.academy.exception.CampusAlreadyExistsException;
 import com.mentoredu.academy.exception.CycleAlreadyExistsException;
 import com.mentoredu.academy.exception.ProgramAlreadyExistsException;
 import com.mentoredu.academy.model.Academy;
+import com.mentoredu.academy.model.Campus;
 import com.mentoredu.academy.model.Cycle;
 import com.mentoredu.academy.model.Program;
 import com.mentoredu.academy.repository.AcademyRepository;
+import com.mentoredu.academy.repository.CampusRepository;
 import com.mentoredu.academy.repository.CycleRepository;
 import com.mentoredu.academy.repository.ProgramRepository;
 import com.mentoredu.auth.entity.User;
@@ -39,6 +44,7 @@ public class AcademyService implements IAcademyService {
     private final AcademyRepository             academyRepository;
     private final ProgramRepository             programRepository;
     private final CycleRepository               cycleRepository;
+    private final CampusRepository              campusRepository;
     private final ProfileRepository             profileRepository;
     private final OrganizationProfileRepository organizationProfileRepository;
     private final UserRepository                userRepository;
@@ -141,6 +147,31 @@ public class AcademyService implements IAcademyService {
                 .build();
 
         return new CycleResponse(cycleRepository.save(cycle));
+    }
+
+    // -------------------------------------------------------------------------
+    // US36 — Register campus for academy
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public CampusResponse createCampus(String email, UUID academyId, CreateCampusRequest request) {
+        Profile profile = resolveOrganizationProfile(email);
+        Academy academy = resolveOwnedAcademy(academyId, profile.getId());
+
+        if (campusRepository.existsByNameAndAcademyId(request.getName(), academy.getId())) {
+            throw new CampusAlreadyExistsException(
+                    "A campus with this name already exists in the academy: " + request.getName());
+        }
+
+        Campus campus = Campus.builder()
+                .academyId(academy.getId())
+                .name(request.getName())
+                .address(request.getAddress())
+                .city(request.getCity())
+                .build();
+
+        return new CampusResponse(campusRepository.save(campus));
     }
 
     // -------------------------------------------------------------------------
