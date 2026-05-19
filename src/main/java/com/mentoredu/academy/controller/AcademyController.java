@@ -1,7 +1,9 @@
 package com.mentoredu.academy.controller;
 
 import com.mentoredu.academy.dto.AcademyResponse;
+import com.mentoredu.academy.dto.CampusResponse;
 import com.mentoredu.academy.dto.CreateAcademyRequest;
+import com.mentoredu.academy.dto.CreateCampusRequest;
 import com.mentoredu.academy.dto.CreateCycleRequest;
 import com.mentoredu.academy.dto.CreateProgramRequest;
 import com.mentoredu.academy.dto.CycleResponse;
@@ -97,5 +99,27 @@ public class AcademyController {
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(academyService.createCycle(auth.getName(), academyId, request));
+    }
+
+    // -------------------------------------------------------------------------
+    // US36 — Register campus for academy
+    // -------------------------------------------------------------------------
+
+    @PostMapping("/{academyId}/campuses")
+    @Operation(
+        summary = "US36 - Registrar sede de academia",
+        description = "Registra una nueva sede física para una academia. "
+            + "El nombre de la sede debe ser único por academia (RN-39). "
+            + "Requiere ser la organización propietaria de la academia (RN-40)."
+    )
+    public ResponseEntity<CampusResponse> createCampus(
+            @PathVariable UUID academyId,
+            @Valid @RequestBody CreateCampusRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(academyService.createCampus(auth.getName(), academyId, request));
     }
 }
