@@ -27,6 +27,8 @@ import com.mentoredu.academy.exception.AcademyNotFoundException;
 import com.mentoredu.academy.exception.CampusAlreadyExistsException;
 import com.mentoredu.academy.exception.CycleAlreadyExistsException;
 import com.mentoredu.academy.exception.ProgramAlreadyExistsException;
+import com.mentoredu.academy.exception.TeacherAlreadyAssociatedException;
+import com.mentoredu.academy.exception.TeacherProfileNotFoundException;
 import com.mentoredu.auth.exception.EmailAlreadyExistsException;
 import com.mentoredu.auth.exception.EmailNotFoundException;
 import com.mentoredu.auth.exception.InvalidCredentialsException;
@@ -257,6 +259,28 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CampusAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleCampusAlreadyExists(CampusAlreadyExistsException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(TeacherProfileNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleTeacherProfileNotFound(TeacherProfileNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(TeacherAlreadyAssociatedException.class)
+    public ResponseEntity<Map<String, Object>> handleTeacherAlreadyAssociated(TeacherAlreadyAssociatedException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", HttpStatus.CONFLICT.value());

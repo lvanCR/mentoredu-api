@@ -1,6 +1,7 @@
 package com.mentoredu.academy.service;
 
 import com.mentoredu.academy.dto.AcademyResponse;
+import com.mentoredu.academy.dto.AssociateTeacherRequest;
 import com.mentoredu.academy.dto.CampusResponse;
 import com.mentoredu.academy.dto.CreateAcademyRequest;
 import com.mentoredu.academy.dto.CreateCampusRequest;
@@ -8,19 +9,24 @@ import com.mentoredu.academy.dto.CreateCycleRequest;
 import com.mentoredu.academy.dto.CreateProgramRequest;
 import com.mentoredu.academy.dto.CycleResponse;
 import com.mentoredu.academy.dto.ProgramResponse;
+import com.mentoredu.academy.dto.TeacherAcademyResponse;
 import com.mentoredu.academy.exception.AcademyAlreadyExistsException;
 import com.mentoredu.academy.exception.AcademyNotFoundException;
 import com.mentoredu.academy.exception.CampusAlreadyExistsException;
 import com.mentoredu.academy.exception.CycleAlreadyExistsException;
 import com.mentoredu.academy.exception.ProgramAlreadyExistsException;
+import com.mentoredu.academy.exception.TeacherAlreadyAssociatedException;
+import com.mentoredu.academy.exception.TeacherProfileNotFoundException;
 import com.mentoredu.academy.model.Academy;
 import com.mentoredu.academy.model.Campus;
 import com.mentoredu.academy.model.Cycle;
 import com.mentoredu.academy.model.Program;
+import com.mentoredu.academy.model.TeacherAcademy;
 import com.mentoredu.academy.repository.AcademyRepository;
 import com.mentoredu.academy.repository.CampusRepository;
 import com.mentoredu.academy.repository.CycleRepository;
 import com.mentoredu.academy.repository.ProgramRepository;
+import com.mentoredu.academy.repository.TeacherAcademyRepository;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
@@ -29,6 +35,7 @@ import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.repository.OrganizationProfileRepository;
 import com.mentoredu.profile.repository.ProfileRepository;
+import com.mentoredu.profile.repository.TeacherProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -45,8 +52,10 @@ public class AcademyService implements IAcademyService {
     private final ProgramRepository             programRepository;
     private final CycleRepository               cycleRepository;
     private final CampusRepository              campusRepository;
+    private final TeacherAcademyRepository      teacherAcademyRepository;
     private final ProfileRepository             profileRepository;
     private final OrganizationProfileRepository organizationProfileRepository;
+    private final TeacherProfileRepository      teacherProfileRepository;
     private final UserRepository                userRepository;
 
     // -------------------------------------------------------------------------
@@ -172,6 +181,39 @@ public class AcademyService implements IAcademyService {
                 .build();
 
         return new CampusResponse(campusRepository.save(campus));
+    }
+
+    // -------------------------------------------------------------------------
+    // US37 — Associate teacher to academy
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public TeacherAcademyResponse associateTeacher(
+            String email, UUID academyId, AssociateTeacherRequest request) {
+        Profile profile = resolveOrganizationProfile(email);
+        Academy academy = resolveOwnedAcademy(academyId, profile.getId());
+
+        UUID teacherProfileId = request.getTeacherProfileId();
+
+        if (!teacherProfileRepository.existsById(teacherProfileId)) {
+            throw new TeacherProfileNotFoundException(
+                    "Teacher profile not found: " + teacherProfileId);
+        }
+
+        TeacherAcademy.TeacherAcademyId associationId =
+                new TeacherAcademy.TeacherAcademyId(teacherProfileId, academy.getId());
+
+        if (teacherAcademyRepository.existsById(associationId)) {
+            throw new TeacherAlreadyAssociatedException(
+                    "Teacher is already associated with this academy: " + teacherProfileId);
+        }
+
+        TeacherAcademy association = TeacherAcademy.builder()
+                .id(associationId)
+                .build();
+
+        return new TeacherAcademyResponse(teacherAcademyRepository.save(association));
     }
 
     // -------------------------------------------------------------------------

@@ -12,12 +12,11 @@ Gestiona las academias de preparación, sus sedes, programas y ciclos de estudio
 | HU11 | Registrar programa académico | `POST /api/v1/academies/{academyId}/programs` | `MentorEduAcademyHU11-CreateProgramPOST` | 2026-05-16 |
 | HU11 | Registrar ciclo académico | `POST /api/v1/academies/{academyId}/cycles` | `MentorEduAcademyHU11-CreateCyclePOST` | 2026-05-16 |
 | HU36 | Registrar sede de academia | `POST /api/v1/academies/{academyId}/campuses` | `MentorEduAcademyHU36-CreateCampusPOST` | 2026-05-19 |
+| HU37 | Asociar docente a academia | `POST /api/v1/academies/{academyId}/teachers` | `MentorEduAcademyHU37-AssociateTeacherPOST` | 2026-05-19 |
 
 ## Historias pendientes
 
-| HU | Descripción | Endpoint esperado |
-|---|---|---|
-| HU37 | Asociar docente a academia | `POST /api/v1/academies/{academyId}/teachers` |
+*(EP-03 completo)*
 
 ---
 
@@ -45,7 +44,14 @@ academy/
 │   ├── caso-02-campo-faltante.json
 │   ├── caso-03-segunda-sede.json
 │   └── caso-04-sede-duplicada.json
-└── HU37-associate-teacher/     ← pendiente de implementación
+└── HU37-associate-teacher/
+    ├── README.md
+    ├── caso-01-exitoso.json
+    ├── caso-02-docente-adicional.json
+    ├── caso-03-campo-faltante.json
+    ├── caso-04-perfil-no-encontrado.json
+    ├── caso-05-docente-duplicado.json
+    └── caso-06-sin-autenticacion.json
 ```
 
 ---
