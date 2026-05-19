@@ -8,6 +8,8 @@ import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.model.Answer;
 import com.mentoredu.forum.repository.AnswerRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
+import com.mentoredu.gamification.model.enums.PointSourceType;
+import com.mentoredu.gamification.service.IGamificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,9 @@ public class AnswerService implements IAnswerService {
     private final AnswerRepository answerRepository;
     private final ThreadRepository threadRepository;
     private final UserRepository userRepository;
+    private final IGamificationService gamificationService;
+
+    private static final int ANSWER_GIVEN_XP = 5;
 
     // -------------------------------------------------------------------------
     // US17 — Reply to forum thread
@@ -48,7 +53,10 @@ public class AnswerService implements IAnswerService {
                 .isAccepted(false)
                 .build();
 
-        return toResponse(answerRepository.save(answer));
+        Answer saved = answerRepository.save(answer);
+        // US30: award XP for contributing an answer (RN-31)
+        gamificationService.awardPoints(user.getId(), PointSourceType.ANSWER_GIVEN, saved.getId(), ANSWER_GIVEN_XP);
+        return toResponse(saved);
     }
 
     @Override

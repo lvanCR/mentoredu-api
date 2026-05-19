@@ -4,7 +4,9 @@ import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.billing.model.enums.SubscriptionStatus;
 import com.mentoredu.billing.repository.SubscriptionRepository;
+import com.mentoredu.gamification.model.enums.PointSourceType;
 import com.mentoredu.gamification.repository.CoinWalletRepository;
+import com.mentoredu.gamification.service.IGamificationService;
 import com.mentoredu.library.dto.DownloadResult;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
@@ -40,6 +42,7 @@ public class ResourceService implements IResourceService {
             Set.of("EXAM", "SOLUTION", "NOTES", "PRACTICE", "VIDEO", "OTHER");
     private static final Set<String> VALID_SEARCH_VISIBILITIES =
             Set.of("PUBLIC", "PREMIUM");
+    private static final int RESOURCE_PUBLISHED_XP = 10;
 
     private final AcademicResourceRepository resourceRepository;
     private final ResourceFileRepository resourceFileRepository;
@@ -47,6 +50,7 @@ public class ResourceService implements IResourceService {
     private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final CoinWalletRepository coinWalletRepository;
+    private final IGamificationService gamificationService;
 
     // -------------------------------------------------------------------------
     // US13 — Register resource metadata
@@ -82,7 +86,10 @@ public class ResourceService implements IResourceService {
                 .author(author)
                 .build();
 
-        return new ResourceResponse(resourceRepository.save(resource));
+        AcademicResource saved = resourceRepository.save(resource);
+        // US30: award XP for publishing a resource (RN-31)
+        gamificationService.awardPoints(author.getId(), PointSourceType.RESOURCE_PUBLISHED, saved.getId(), RESOURCE_PUBLISHED_XP);
+        return new ResourceResponse(saved);
     }
 
     // -------------------------------------------------------------------------
