@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduModerationHU38-SubmitAppealReportNotFoundPOST",
+  "description": "Caso 04 — Alternativo error: reporte inexistente → 404 Not Found.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/moderation/appeals",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"reportId\": \"{{nonexistent_id}}\",\n  \"reason\": \"Quiero apelar esta decisión.\"\n}"
+    }
+  },
+  "expectedStatus": 404,
+  "expectedFields": ["error", "message"]
+}
