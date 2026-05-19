@@ -1,0 +1,23 @@
+{
+  "name": "MentorEduBillingHU23-ActivarSuscripcionPOST",
+  "description": "Caso 02 — Error: pago rechazado, plan no habilitado (RN-28). Espera 400 Bad Request.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/billing/subscriptions",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "planId": "{{plan_id}}",
+      "paymentMethod": "SIMULATED_FAIL"
+    }
+  },
+  "expectedResponse": {
+    "status": 400,
+    "body": {
+      "error": "Bad Request",
+      "message": "El pago fue rechazado"
+    }
+  }
+}

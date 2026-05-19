@@ -45,19 +45,27 @@ postman/
 │   ├── HU27-react-to-forum-content/
 │   ├── HU28-comment-on-answer/
 │   └── HU29-follow-user/
-├── moderation/                            ← EP-06 parcial (HU19 ✅ · HU20 pendiente)
+├── moderation/                            ← EP-06 completo (HU19, HU20)
 │   ├── README.md
-│   └── HU19-report-content/
-├── verification/                          ← EP-07 pendiente (HU21, HU22)
-│   └── README.md
-├── billing/                               ← EP-08 pendiente (HU23, HU24)
-│   └── README.md
-├── notifications/                         ← EP-09 pendiente (HU25)
-│   └── README.md
-├── gamification/                          ← EP-10 completo (HU30, HU31, HU32 ✅)
+│   ├── HU19-report-content/
+│   └── HU20-resolve-report/
+├── verification/                          ← EP-07 completo (HU21, HU22)
 │   ├── README.md
-│   ├── HU32-earn-view-badges/
-└── feedback/                              ← EP-11 completo (HU34 ✅ · HU35 ✅)
+│   ├── HU21-teacher-verification/
+│   └── HU22-organization-verification/
+├── billing/                               ← EP-08 completo (HU23, HU24)
+│   ├── README.md
+│   ├── HU23-activate-premium-subscription/
+│   └── HU24-buy-coin-package/
+├── notifications/                         ← EP-09 completo (HU25)
+│   ├── README.md
+│   └── HU25-view-notifications/
+├── gamification/                          ← EP-10 completo (HU30, HU31, HU32)
+│   ├── README.md
+│   ├── HU30-earn-experience-points/
+│   ├── HU31-nivel-progreso/
+│   └── HU32-earn-view-badges/
+└── feedback/                              ← EP-11 completo (HU34, HU35)
     ├── README.md
     ├── HU34-provide-feedback/
     └── HU35-view-feedback/
@@ -177,9 +185,9 @@ Cuando una US quede implementada y testeada:
 | academy | Academic Content | HU33, HU11 | — |
 | library | Academic Content | HU12, HU13, HU14, HU15 | — |
 | forum | Community | HU16, HU17, HU18, HU27, HU28, HU29 | — |
-| moderation | Trust & Safety | HU19 | HU20 |
-| verification | Trust & Safety | — | HU21, HU22 |
-| billing | Commerce | — | HU23, HU24 |
-| notifications | Engagement | — | HU25 |
+| moderation | Trust & Safety | HU19, HU20 | — |
+| verification | Trust & Safety | HU21, HU22 | — |
+| billing | Commerce | HU23, HU24 | — |
+| notifications | Engagement | HU25 | — |
 | gamification | Engagement | HU30, HU31, HU32 | — |
 | feedback | Feedback | HU34, HU35 | — |

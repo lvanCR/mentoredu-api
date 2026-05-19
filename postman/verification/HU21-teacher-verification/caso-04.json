@@ -1,0 +1,24 @@
+{
+  "name": "MentorEduVerificationHU21-SubmitTeacherVerificationPOST",
+  "description": "Caso 04 — Alternativo error: solicitud duplicada mientras la anterior sigue PENDING (RN-24). Ejecutar DESPUÉS de caso-01. Espera 409 Conflict.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/verification/requests",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "entityType": "TEACHER",
+      "documentType": "DNI",
+      "fileUrl": "https://docs.example.com/docente-dni.pdf"
+    }
+  },
+  "expectedResponse": {
+    "status": 409,
+    "body": {
+      "error": "Conflict",
+      "message": "Ya tienes una solicitud de verificación pendiente para TEACHER"
+    }
+  }
+}

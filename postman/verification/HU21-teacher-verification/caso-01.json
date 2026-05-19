@@ -1,0 +1,30 @@
+{
+  "name": "MentorEduVerificationHU21-SubmitTeacherVerificationPOST",
+  "description": "Caso 01 — Exitoso: docente envía credencial válida. Espera 201 Created con status PENDING.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/verification/requests",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "entityType": "TEACHER",
+      "documentType": "DNI",
+      "fileUrl": "https://docs.example.com/docente-dni.pdf"
+    }
+  },
+  "expectedResponse": {
+    "status": 201,
+    "body": {
+      "id": "<uuid>",
+      "userId": "<uuid>",
+      "entityType": "TEACHER",
+      "status": "PENDING",
+      "documentType": "DNI",
+      "fileUrl": "https://docs.example.com/docente-dni.pdf",
+      "submittedAt": "<timestamp>",
+      "reviewedAt": null
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "MentorEduGamificationHU30-GetPointsGET",
+  "description": "Caso 04 — Sin autenticación: request sin header Authorization. Espera 401 Unauthorized.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/gamification/users/{{userId}}/points",
+    "header": []
+  },
+  "expectedResponse": {
+    "status": 401
+  }
+}

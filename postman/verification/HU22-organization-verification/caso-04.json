@@ -1,0 +1,24 @@
+{
+  "name": "MentorEduVerificationHU22-SubmitOrgVerificationPOST",
+  "description": "Caso 04 — Alternativo error: solicitud activa ya existente (RN-24). Ejecutar DESPUÉS de caso-01. Espera 409 Conflict.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/verification/requests",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{academy_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "entityType": "ACADEMY",
+      "documentType": "RUC",
+      "fileUrl": "https://docs.example.com/academia-ruc.pdf"
+    }
+  },
+  "expectedResponse": {
+    "status": 409,
+    "body": {
+      "error": "Conflict",
+      "message": "Ya tienes una solicitud de verificación pendiente para ACADEMY"
+    }
+  }
+}
