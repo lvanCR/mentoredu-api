@@ -1,6 +1,7 @@
 package com.mentoredu.academy.controller;
 
 import com.mentoredu.academy.dto.AcademyResponse;
+import com.mentoredu.academy.dto.AssociateTeacherRequest;
 import com.mentoredu.academy.dto.CampusResponse;
 import com.mentoredu.academy.dto.CreateAcademyRequest;
 import com.mentoredu.academy.dto.CreateCampusRequest;
@@ -8,6 +9,7 @@ import com.mentoredu.academy.dto.CreateCycleRequest;
 import com.mentoredu.academy.dto.CreateProgramRequest;
 import com.mentoredu.academy.dto.CycleResponse;
 import com.mentoredu.academy.dto.ProgramResponse;
+import com.mentoredu.academy.dto.TeacherAcademyResponse;
 import com.mentoredu.academy.service.IAcademyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -121,5 +123,28 @@ public class AcademyController {
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(academyService.createCampus(auth.getName(), academyId, request));
+    }
+
+    // -------------------------------------------------------------------------
+    // US37 — Associate teacher to academy
+    // -------------------------------------------------------------------------
+
+    @PostMapping("/{academyId}/teachers")
+    @Operation(
+        summary = "US37 - Asociar docente a academia",
+        description = "Asocia un docente existente a la academia. "
+            + "El perfil referenciado debe existir y ser de tipo TEACHER. "
+            + "Un docente no puede asociarse más de una vez a la misma academia (RN-42). "
+            + "Requiere ser la organización propietaria de la academia (RN-40)."
+    )
+    public ResponseEntity<TeacherAcademyResponse> associateTeacher(
+            @PathVariable UUID academyId,
+            @Valid @RequestBody AssociateTeacherRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(academyService.associateTeacher(auth.getName(), academyId, request));
     }
 }

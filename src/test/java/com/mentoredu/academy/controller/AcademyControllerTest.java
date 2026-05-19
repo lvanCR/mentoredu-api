@@ -2,6 +2,7 @@ package com.mentoredu.academy.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.academy.dto.AcademyResponse;
+import com.mentoredu.academy.dto.AssociateTeacherRequest;
 import com.mentoredu.academy.dto.CampusResponse;
 import com.mentoredu.academy.dto.CreateAcademyRequest;
 import com.mentoredu.academy.dto.CreateCampusRequest;
@@ -9,15 +10,19 @@ import com.mentoredu.academy.dto.CreateCycleRequest;
 import com.mentoredu.academy.dto.CreateProgramRequest;
 import com.mentoredu.academy.dto.CycleResponse;
 import com.mentoredu.academy.dto.ProgramResponse;
+import com.mentoredu.academy.dto.TeacherAcademyResponse;
 import com.mentoredu.academy.exception.AcademyAlreadyExistsException;
 import com.mentoredu.academy.exception.AcademyNotFoundException;
 import com.mentoredu.academy.exception.CampusAlreadyExistsException;
 import com.mentoredu.academy.exception.CycleAlreadyExistsException;
 import com.mentoredu.academy.exception.ProgramAlreadyExistsException;
+import com.mentoredu.academy.exception.TeacherAlreadyAssociatedException;
+import com.mentoredu.academy.exception.TeacherProfileNotFoundException;
 import com.mentoredu.academy.model.Academy;
 import com.mentoredu.academy.model.Campus;
 import com.mentoredu.academy.model.Cycle;
 import com.mentoredu.academy.model.Program;
+import com.mentoredu.academy.model.TeacherAcademy;
 import com.mentoredu.academy.service.IAcademyService;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
@@ -708,5 +713,170 @@ class AcademyControllerTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
         return new CampusResponse(campus);
+    }
+
+    // =========================================================================
+    // US37 — Associate teacher to academy
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario exitoso: docente válido asociado → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void associateTeacher_withValidRequest_returns201() throws Exception {
+        UUID academyId       = UUID.randomUUID();
+        UUID teacherProfileId = UUID.randomUUID();
+        var request  = teacherAssociationRequest(teacherProfileId);
+        var response = buildTeacherAcademyResponse(teacherProfileId, academyId);
+        when(academyService.associateTeacher(eq("org@example.com"), eq(academyId), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/teachers", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.teacherProfileId").value(teacherProfileId.toString()))
+                .andExpect(jsonPath("$.academyId").value(academyId.toString()))
+                .andExpect(jsonPath("$.createdAt").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario alternativo exitoso: academia con docentes previos → 201
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void associateTeacher_additionalTeacher_returns201() throws Exception {
+        UUID academyId        = UUID.randomUUID();
+        UUID teacherProfileId = UUID.randomUUID();
+        var request  = teacherAssociationRequest(teacherProfileId);
+        var response = buildTeacherAcademyResponse(teacherProfileId, academyId);
+        when(academyService.associateTeacher(eq("org@example.com"), eq(academyId), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/teachers", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.teacherProfileId").value(teacherProfileId.toString()));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: teacherProfileId nulo → 400
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void associateTeacher_withNullTeacherProfileId_returns400() throws Exception {
+        UUID academyId = UUID.randomUUID();
+        String body    = "{}";
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/teachers", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.teacherProfileId").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: perfil docente no existe → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void associateTeacher_whenTeacherProfileNotFound_returns404() throws Exception {
+        UUID academyId        = UUID.randomUUID();
+        UUID teacherProfileId = UUID.randomUUID();
+        when(academyService.associateTeacher(eq("org@example.com"), eq(academyId), any()))
+                .thenThrow(new TeacherProfileNotFoundException(
+                        "Teacher profile not found: " + teacherProfileId));
+
+        var request = teacherAssociationRequest(teacherProfileId);
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/teachers", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value(
+                        "Teacher profile not found: " + teacherProfileId));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario alternativo error: docente ya asociado → 409
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void associateTeacher_whenAlreadyAssociated_returns409() throws Exception {
+        UUID academyId        = UUID.randomUUID();
+        UUID teacherProfileId = UUID.randomUUID();
+        when(academyService.associateTeacher(eq("org@example.com"), eq(academyId), any()))
+                .thenThrow(new TeacherAlreadyAssociatedException(
+                        "Teacher is already associated with this academy: " + teacherProfileId));
+
+        var request = teacherAssociationRequest(teacherProfileId);
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/teachers", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value(
+                        "Teacher is already associated with this academy: " + teacherProfileId));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: academia no encontrada → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "org@example.com")
+    void associateTeacher_whenAcademyNotFound_returns404() throws Exception {
+        UUID academyId        = UUID.randomUUID();
+        UUID teacherProfileId = UUID.randomUUID();
+        when(academyService.associateTeacher(eq("org@example.com"), eq(academyId), any()))
+                .thenThrow(new AcademyNotFoundException(
+                        "Academy not found: " + academyId));
+
+        var request = teacherAssociationRequest(teacherProfileId);
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/teachers", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void associateTeacher_withoutAuth_returns401() throws Exception {
+        UUID academyId        = UUID.randomUUID();
+        UUID teacherProfileId = UUID.randomUUID();
+        var request = teacherAssociationRequest(teacherProfileId);
+
+        mockMvc.perform(post("/api/v1/academies/{academyId}/teachers", academyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private AssociateTeacherRequest teacherAssociationRequest(UUID teacherProfileId) {
+        var r = new AssociateTeacherRequest();
+        r.setTeacherProfileId(teacherProfileId);
+        return r;
+    }
+
+    private TeacherAcademyResponse buildTeacherAcademyResponse(UUID teacherProfileId, UUID academyId) {
+        TeacherAcademy association = TeacherAcademy.builder()
+                .id(new TeacherAcademy.TeacherAcademyId(teacherProfileId, academyId))
+                .createdAt(LocalDateTime.now())
+                .build();
+        return new TeacherAcademyResponse(association);
     }
 }
