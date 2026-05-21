@@ -41,4 +41,6 @@ public class PublishResourceRequest {
     private String description;
 
     private String examCycle;
+
+    private Boolean allowsSolutions;
 }

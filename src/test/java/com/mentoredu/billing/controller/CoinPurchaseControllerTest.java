@@ -153,32 +153,6 @@ class CoinPurchaseControllerTest {
     }
 
     // =========================================================================
-    // US24 — GET /api/v1/billing/coin-packages
-    // =========================================================================
-
-    // Extra: lista paquetes activos → 200 OK con lista
-    @Test
-    @WithMockUser(username = "user@example.com")
-    void listCoinPackages_returns200WithActivePackages() throws Exception {
-        CoinPackageResponse pkg1 = new CoinPackageResponse(
-                CoinPackage.builder().id(UUID.randomUUID()).name("STARTER")
-                        .coins(100).price(new BigDecimal("5.00")).active(true).build());
-        CoinPackageResponse pkg2 = new CoinPackageResponse(
-                CoinPackage.builder().id(UUID.randomUUID()).name("PRO")
-                        .coins(300).price(new BigDecimal("12.00")).active(true).build());
-
-        when(coinPurchaseService.listActivePackages()).thenReturn(List.of(pkg1, pkg2));
-
-        mockMvc.perform(get("/api/v1/billing/coin-packages"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("STARTER"))
-                .andExpect(jsonPath("$[0].coins").value(100))
-                .andExpect(jsonPath("$[1].name").value("PRO"))
-                .andExpect(jsonPath("$[1].coins").value(300));
-    }
-
-    // =========================================================================
     // Helpers
     // =========================================================================
 

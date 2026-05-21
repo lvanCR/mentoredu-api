@@ -48,6 +48,9 @@ public class AcademicResource {
     @Column(name = "exam_cycle", length = 30)
     private String examCycle;
 
+    @Column(name = "allows_solutions", nullable = false)
+    private boolean allowsSolutions = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

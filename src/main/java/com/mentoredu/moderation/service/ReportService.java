@@ -8,7 +8,9 @@ import com.mentoredu.forum.repository.AnswerRepository;
 import com.mentoredu.forum.repository.CommentRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
 import com.mentoredu.library.model.AcademicResource;
+import com.mentoredu.library.model.ResourceSolution;
 import com.mentoredu.library.repository.AcademicResourceRepository;
+import com.mentoredu.library.repository.ResourceSolutionRepository;
 import com.mentoredu.moderation.dto.ReportRequest;
 import com.mentoredu.moderation.dto.ReportResponse;
 import com.mentoredu.moderation.dto.ResolveReportRequest;
@@ -47,6 +49,7 @@ public class ReportService implements IReportService {
     private final AnswerRepository answerRepository;
     private final CommentRepository commentRepository;
     private final AcademicResourceRepository academicResourceRepository;
+    private final ResourceSolutionRepository resourceSolutionRepository;
 
     @Override
     @Transactional
@@ -165,6 +168,12 @@ public class ReportService implements IReportService {
                         .orElseThrow(() -> new ReportedContentNotFoundException(
                                 "Recurso no encontrado: " + targetId));
                 yield resource.getAuthor().getId();
+            }
+            case SOLUTION -> {
+                ResourceSolution solution = resourceSolutionRepository.findById(targetId)
+                        .orElseThrow(() -> new ReportedContentNotFoundException(
+                                "Solución no encontrada: " + targetId));
+                yield solution.getStudentId();
             }
         };
     }

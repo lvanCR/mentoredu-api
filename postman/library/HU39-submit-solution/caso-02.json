@@ -1,0 +1,23 @@
+{
+  "description": "US39 — Error: recurso con allows_solutions=false (RN-47)",
+  "scenario": "Dado que el recurso tiene allows_solutions=false, cuando el estudiante intenta enviar una resolución, entonces el sistema rechaza la operación con 403 Forbidden.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/resources/{{resourceId_no_solutions}}/solutions",
+    "headers": {
+      "Authorization": "Bearer {{student_token}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "fileId": "{{fileId}}"
+    }
+  },
+  "expected_response": {
+    "status": 403,
+    "body": {
+      "status": 403,
+      "error": "Forbidden",
+      "message": "Este recurso no acepta resoluciones (RN-47)"
+    }
+  }
+}
