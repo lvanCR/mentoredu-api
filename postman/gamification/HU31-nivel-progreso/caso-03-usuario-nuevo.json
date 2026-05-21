@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduGamificationHU31-NivelProgresoUsuarioNuevoGET",
+  "request": {
+    "method": "GET",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ],
+    "url": {
+      "raw": "{{api_v1}}/gamification/users/{{user_id}}/level",
+      "host": ["{{api_v1}}"],
+      "path": ["gamification", "users", "{{user_id}}", "level"]
+    },
+    "description": "Usuario nuevo sin acciones recompensadas. Espera: 200 con currentLevel=1, experience=0, progressPercentage=0."
+  }
+}

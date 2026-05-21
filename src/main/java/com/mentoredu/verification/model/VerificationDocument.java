@@ -24,10 +24,10 @@ public class VerificationDocument {
     @JoinColumn(name = "request_id", nullable = false)
     private VerificationRequest request;
 
-    @Column(name = "document_type", length = 50)
+    @Column(name = "document_type", nullable = false, length = 50)
     private String documentType;
 
-    @Column(name = "file_url", columnDefinition = "text")
+    @Column(name = "file_url", nullable = false, columnDefinition = "text")
     private String fileUrl;
 
     @Column(name = "uploaded_at")

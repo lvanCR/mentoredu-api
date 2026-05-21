@@ -1,0 +1,21 @@
+{
+  "name": "MentorEduLibraryHU15-DownloadResourceGET",
+  "description": "Caso 01 — Exitoso: recurso PUBLIC disponible en disco, usuario autenticado. Respuesta esperada: 200 OK con body application/pdf y header Content-Disposition attachment.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/resources/{{resource_id}}/download",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ]
+  },
+  "expectedResponse": {
+    "status": 200,
+    "contentType": "application/pdf",
+    "headers": {
+      "Content-Disposition": "attachment; filename=\"<nombre-del-archivo>.pdf\""
+    }
+  }
+}

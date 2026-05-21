@@ -23,7 +23,7 @@ public class PointTransaction {
     @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
     private UUID userId;
 
-    @Column(name = "source_type", length = 30)
+    @Column(name = "source_type", length = 30, nullable = false)
     private String sourceType;
 
     @Column(name = "source_id", columnDefinition = "uuid")

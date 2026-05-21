@@ -1,0 +1,30 @@
+{
+  "name": "MentorEduLibraryHU13-RegisterResourceFullPOST",
+  "description": "Caso 03 — Alternativo exitoso: todos los campos incluyendo opcionales. Recurso queda listo para búsqueda. Respuesta esperada: 201 Created.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/resources",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": {
+        "title": "Solucionario Examen UNI 2024-I — Matemática",
+        "fileId": "{{file_id}}",
+        "institutionId": "{{institution_id}}",
+        "subjectId": "{{subject_id}}",
+        "year": 2024,
+        "type": "SOLUTION",
+        "visibility": "PREMIUM",
+        "description": "Solucionario completo del examen de admisión UNI ciclo 2024-I, área de Matemática.",
+        "examCycle": "2024-I"
+      }
+    }
+  },
+  "expectedResponse": {
+    "status": 201,
+    "fields": ["id", "title", "type", "visibility", "fileId", "description", "examCycle", "createdAt"]
+  }
+}

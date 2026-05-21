@@ -1,0 +1,23 @@
+{
+  "scenario": "Alt exitoso — Solo specialty enviada; institutionName y bioProfessional conservan su valor previo",
+  "gherkin": "Dado que elijo una nueva especialidad válida, cuando confirmo la edición, entonces el sistema actualiza el perfil.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/profiles/teacher/me",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "specialty": "Física"
+    }
+  },
+  "expected_response": {
+    "status": 200,
+    "body": {
+      "profileId": "<uuid>",
+      "specialty": "Física"
+    }
+  },
+  "note": "institutionName y bioProfessional no se modifican al no estar presentes en el body."
+}

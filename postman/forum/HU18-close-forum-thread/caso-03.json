@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduForumHU18-CerrarHiloBloqueoRespuestasPATCH",
+  "description": "Escenario alternativo exitoso: el autor cierra el hilo y, al intentar responderlo a continuación, el sistema devuelve 409 (validar con HU17 caso-03). Este caso documenta el flujo completo de cierre.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/threads/{{thread_id}}/close",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "description": "Hilo cerrado. Ejecutar HU17 caso-03 con {{thread_id}} para confirmar que las respuestas quedan bloqueadas (409)."
+  }
+}

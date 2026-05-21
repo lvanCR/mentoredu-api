@@ -1,0 +1,13 @@
+{
+  "name": "MentorEduLibraryHU14-SearchResourcesInvalidYearGET",
+  "description": "Caso 04 — Alternativo error: filtros inconsistentes — año fuera del rango permitido (1900–2099). Respuesta esperada: 400 Bad Request con message.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/resources/search?year=1800",
+    "header": []
+  },
+  "expectedResponse": {
+    "status": 400,
+    "fields": ["error", "message"]
+  }
+}

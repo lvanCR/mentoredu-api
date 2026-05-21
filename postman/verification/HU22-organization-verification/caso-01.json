@@ -1,0 +1,30 @@
+{
+  "name": "MentorEduVerificationHU22-SubmitOrgVerificationPOST",
+  "description": "Caso 01 — Exitoso: academia envía documentación válida. Espera 201 Created con status PENDING.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/verification/requests",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{academy_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "entityType": "ACADEMY",
+      "documentType": "RUC",
+      "fileUrl": "https://docs.example.com/academia-ruc.pdf"
+    }
+  },
+  "expectedResponse": {
+    "status": 201,
+    "body": {
+      "id": "<uuid>",
+      "userId": "<uuid>",
+      "entityType": "ACADEMY",
+      "status": "PENDING",
+      "documentType": "RUC",
+      "fileUrl": "https://docs.example.com/academia-ruc.pdf",
+      "submittedAt": "<timestamp>",
+      "reviewedAt": null
+    }
+  }
+}

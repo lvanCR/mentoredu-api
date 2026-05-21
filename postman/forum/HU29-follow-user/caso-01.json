@@ -1,0 +1,23 @@
+{
+  "name": "MentorEduForumHU29-FollowUserPOST",
+  "description": "Caso 01 — Seguir a un usuario (nuevo follow). Espera 201 Created con datos del usuario seguido.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/users/{{target_user_id}}/follow",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ]
+  },
+  "expectedResponse": {
+    "status": 201,
+    "body": {
+      "id": "{{target_user_id}}",
+      "firstName": "<string>",
+      "lastName": "<string>",
+      "email": "<string>"
+    }
+  }
+}

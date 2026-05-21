@@ -1,0 +1,21 @@
+{
+  "name": "MentorEduAcademyHU33-CreateAcademyPOST",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"name\": \"Academia Preuniversitaria Sur\",\n  \"description\": \"Centro de preparación universitaria en Lima Sur con más de 10 años de experiencia.\",\n  \"website\": \"https://academia-sur.pe\",\n  \"email\": \"info@academia-sur.pe\"\n}"
+    },
+    "url": {
+      "raw": "{{api_v1}}/academies",
+      "host": ["{{api_v1}}"],
+      "path": ["academies"]
+    },
+    "description": "Caso 02 — Creación exitosa con todos los campos opcionales incluidos. La academia queda activa y lista para registrar sedes y oferta académica."
+  },
+  "response": []
+}

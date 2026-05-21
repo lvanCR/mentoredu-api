@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduModerationHU38-SubmitAppealDuplicatePOST",
+  "description": "Caso 03 — Alternativo error: ya existe una apelación activa para el mismo reporte → 409 Conflict (RN-43).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/moderation/appeals",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"reportId\": \"{{report_id}}\",\n  \"reason\": \"Intento de segunda apelación para el mismo reporte.\"\n}"
+    }
+  },
+  "note": "Ejecutar después de caso-01 con el mismo report_id y el mismo access_token.",
+  "expectedStatus": 409,
+  "expectedFields": ["error", "message"]
+}

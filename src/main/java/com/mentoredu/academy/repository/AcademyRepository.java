@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface AcademyRepository extends JpaRepository<Academy, UUID> {
     List<Academy> findByOwnerProfileId(UUID ownerProfileId);
+    boolean existsByNameAndOwnerProfileId(String name, UUID ownerProfileId);
 }

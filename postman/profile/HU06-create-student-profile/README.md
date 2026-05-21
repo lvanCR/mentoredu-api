@@ -22,6 +22,7 @@ El usuario debe haber ejecutado **HU04** con `profileType: STUDENT`. Sin perfil 
 
 - **RN-08**: Solo un perfil académico por estudiante. Segundo intento → 409.
 - La cuenta debe ser de tipo `STUDENT`. Tipo distinto → 409.
+- El criterio Gherkin menciona "área de preparación" — corresponde al campo `targetCareer` del DTO (opcional, nullable en BD según diagrama-er.puml).
 
 ## Casos
 

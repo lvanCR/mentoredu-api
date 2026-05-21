@@ -2,20 +2,36 @@ package com.mentoredu.profile.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
+<<<<<<< HEAD
 import com.mentoredu.profile.dto.ProfileMeResponse;
+=======
+import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
+import com.mentoredu.profile.dto.OrganizationProfileResponse;
+>>>>>>> 24b4d986245a45255516a1701b1bff348ed88e8e
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
+import com.mentoredu.profile.dto.TeacherProfileResponse;
 import com.mentoredu.profile.dto.UpdateProfileRequest;
 import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
+import com.mentoredu.profile.dto.UpdateTeacherProfileRequest;
+import com.mentoredu.profile.exception.OrganizationNameAlreadyExistsException;
+import com.mentoredu.profile.exception.OrganizationProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
+import com.mentoredu.profile.exception.TeacherProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.WrongProfileTypeException;
+import com.mentoredu.profile.model.OrganizationProfile;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.model.StudentProfile;
+<<<<<<< HEAD
+=======
+import com.mentoredu.profile.model.TeacherProfile;
+>>>>>>> 24b4d986245a45255516a1701b1bff348ed88e8e
 import com.mentoredu.profile.repository.OrganizationProfileRepository;
 import com.mentoredu.profile.repository.ProfileRepository;
 import com.mentoredu.profile.repository.StudentProfileRepository;
@@ -178,5 +194,109 @@ public class ProfileService implements IProfileService {
         if (request.getStudyShift() != null)        studentProfile.setStudyShift(request.getStudyShift());
 
         return new StudentProfileResponse(studentProfileRepository.save(studentProfile));
+    }
+
+    // -------------------------------------------------------------------------
+    // US09 — Update teacher specialty
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Profile not found for user: " + email));
+
+        TeacherProfile teacherProfile = teacherProfileRepository.findById(profile.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Teacher profile not found for user: " + email));
+
+        teacherProfile.setSpecialty(request.getSpecialty());
+        if (request.getInstitutionName() != null) teacherProfile.setInstitutionName(request.getInstitutionName());
+        if (request.getBioProfessional()  != null) teacherProfile.setBioProfessional(request.getBioProfessional());
+
+        return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
+    }
+
+    // -------------------------------------------------------------------------
+    // US10 — Create organization profile
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public OrganizationProfileResponse createOrganizationProfile(String email, CreateOrganizationProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Profile not found for user: " + email));
+
+        if (!ProfileType.ORGANIZATION.name().equals(profile.getProfileType())) {
+            throw new WrongProfileTypeException(
+                    "Account type is not ORGANIZATION. Current type: " + profile.getProfileType());
+        }
+
+        if (organizationProfileRepository.existsById(profile.getId())) {
+            throw new OrganizationProfileAlreadyExistsException(
+                    "Organization profile already exists for this account.");
+        }
+
+        if (organizationProfileRepository.existsByOrganizationName(request.getOrganizationName())) {
+            throw new OrganizationNameAlreadyExistsException(
+                    "An organization with this name already exists: " + request.getOrganizationName());
+        }
+
+        if (request.getRuc() != null && organizationProfileRepository.existsByRuc(request.getRuc())) {
+            throw new OrganizationNameAlreadyExistsException(
+                    "An organization with this RUC already exists: " + request.getRuc());
+        }
+
+        OrganizationProfile organizationProfile = OrganizationProfile.builder()
+                .profileId(profile.getId())
+                .organizationName(request.getOrganizationName())
+                .ruc(request.getRuc())
+                .website(request.getWebsite())
+                .contactEmail(request.getContactEmail())
+                .build();
+
+        return new OrganizationProfileResponse(organizationProfileRepository.save(organizationProfile));
+    }
+
+    // -------------------------------------------------------------------------
+    // US08 — Create teacher profile
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public TeacherProfileResponse createTeacherProfile(String email, CreateTeacherProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "Profile not found for user: " + email));
+
+        if (!ProfileType.TEACHER.name().equals(profile.getProfileType())) {
+            throw new WrongProfileTypeException(
+                    "Account type is not TEACHER. Current type: " + profile.getProfileType());
+        }
+
+        if (teacherProfileRepository.existsById(profile.getId())) {
+            throw new TeacherProfileAlreadyExistsException(
+                    "Teacher profile already exists for this account.");
+        }
+
+        TeacherProfile teacherProfile = TeacherProfile.builder()
+                .profileId(profile.getId())
+                .specialty(request.getSpecialty())
+                .institutionName(request.getInstitutionName())
+                .bioProfessional(request.getBioProfessional())
+                .build();
+
+        return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
     }
 }

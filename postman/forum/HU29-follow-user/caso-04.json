@@ -1,0 +1,21 @@
+{
+  "name": "MentorEduForumHU29-UserNotFoundPOST",
+  "description": "Caso 04 — Usuario objetivo no existe. Espera 404 Not Found.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/users/{{nonexistent_user_id}}/follow",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ]
+  },
+  "expectedResponse": {
+    "status": 404,
+    "body": {
+      "error": "Not Found",
+      "message": "User not found: {{nonexistent_user_id}}"
+    }
+  }
+}

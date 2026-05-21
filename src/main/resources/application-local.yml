@@ -19,6 +19,8 @@ server:
   port: 8080
 
 app:
+  flyway:
+    manual: true
   jwt:
     # Base64 de: mentoredu-local-dev-secret-key-must-be-at-least-256-bits-long-for-hs256 (73 bytes = 584 bits)
     # SOLO para desarrollo local — reemplazar con variable de entorno JWT_SECRET en producción

@@ -1,0 +1,25 @@
+{
+  "scenario": "Error — organizationName vacío (cadena en blanco)",
+  "gherkin": "Dado que falta un dato obligatorio, cuando intento crear el perfil, entonces el sistema rechaza la creación.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/profiles/organization",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "organizationName": ""
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Validation failed",
+      "details": {
+        "organizationName": "organizationName is required"
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "MentorEduLibraryHU12-SubirPdfPOST (archivo corrupto)",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ],
+    "body": {
+      "mode": "formdata",
+      "formdata": [
+        {
+          "key": "file",
+          "type": "file",
+          "src": "/path/to/corrupted.pdf",
+          "description": "Archivo con extensión .pdf pero contenido inválido (header sin %PDF)"
+        }
+      ]
+    },
+    "url": {
+      "raw": "{{api_v1}}/resources/files",
+      "host": ["{{api_v1}}"],
+      "path": ["resources", "files"]
+    },
+    "description": "Escenario alternativo error: archivo corrupto (magic bytes inválidos) → 400 Bad Request"
+  },
+  "response": [
+    {
+      "name": "400 Bad Request — Archivo corrupto",
+      "status": "Bad Request",
+      "code": 400,
+      "body": "{\n  \"timestamp\": \"2026-05-16T21:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"The file appears to be corrupted or is not a valid PDF.\"\n}"
+    }
+  ]
+}

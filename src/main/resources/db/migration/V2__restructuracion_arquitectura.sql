@@ -2,23 +2,54 @@
 -- community → forum | content → library | subscription → billing | notification → notifications
 -- Perfil: base profiles + subtypes por profile_id | Academy BC nuevo
 -- Eliminación de columnas legacy en academic_resources
+--
+-- NOTA: Idempotente. V1 fue actualizado para reflejar el schema final, por lo que en una
+-- BD fresh todos los objetos ya existen. Los bloques DO condicionales garantizan que V2
+-- funcione tanto en BD fresh como en BD legacy (donde V1 tenía universities, university_id, etc.)
 
 BEGIN;
 
 -- ===========================
--- LIBRARY BC: universities → institutions
+-- LIBRARY BC: universities → institutions (solo si universities aún existe)
 -- ===========================
-ALTER TABLE universities RENAME TO institutions;
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'universities') THEN
+        ALTER TABLE universities RENAME TO institutions;
+    END IF;
+END $$;
 
-ALTER TABLE academic_resources DROP CONSTRAINT IF EXISTS fk_resources_university;
-ALTER TABLE academic_resources RENAME COLUMN university_id TO institution_id;
-ALTER TABLE academic_resources ADD CONSTRAINT fk_resources_institution
-    FOREIGN KEY (institution_id) REFERENCES institutions(id);
+-- Renombrar university_id → institution_id solo si la columna legada existe
+DO $$ BEGIN
+    IF EXISTS (
+        SELECT FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'academic_resources' AND column_name = 'university_id'
+    ) THEN
+        ALTER TABLE academic_resources DROP CONSTRAINT IF EXISTS fk_resources_university;
+        ALTER TABLE academic_resources RENAME COLUMN university_id TO institution_id;
+        ALTER TABLE academic_resources ADD CONSTRAINT fk_resources_institution
+            FOREIGN KEY (institution_id) REFERENCES institutions(id);
+    END IF;
+END $$;
 
--- file_id: FK 1:1 a resource_files (reemplaza columnas inline de archivo)
-ALTER TABLE academic_resources ADD COLUMN file_id uuid;
-ALTER TABLE academic_resources ADD CONSTRAINT fk_resources_file
-    FOREIGN KEY (file_id) REFERENCES resource_files(id);
+-- file_id: agregar columna solo si no existe
+ALTER TABLE academic_resources ADD COLUMN IF NOT EXISTS file_id uuid;
+
+-- Agregar FK de file_id solo si no hay ninguna FK en esa columna todavía
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.referential_constraints rc
+        JOIN information_schema.key_column_usage kcu
+            ON rc.constraint_name = kcu.constraint_name
+            AND rc.constraint_schema = kcu.constraint_schema
+        WHERE kcu.table_schema = 'public'
+          AND kcu.table_name   = 'academic_resources'
+          AND kcu.column_name  = 'file_id'
+    ) THEN
+        ALTER TABLE academic_resources ADD CONSTRAINT fk_resources_file
+            FOREIGN KEY (file_id) REFERENCES resource_files(id);
+    END IF;
+END $$;
 
 -- Eliminar columnas legacy (archivo inline, versioning, campos de búsqueda redundantes)
 ALTER TABLE academic_resources
@@ -55,12 +86,19 @@ CREATE TABLE IF NOT EXISTS profiles (
     CONSTRAINT fk_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Eliminar subtables antiguas (usaban user_id como PK directo)
-DROP TABLE IF EXISTS student_profiles CASCADE;
-DROP TABLE IF EXISTS teacher_profiles CASCADE;
-DROP TABLE IF EXISTS academy_profiles CASCADE;
-DROP TABLE IF EXISTS moderator_profiles CASCADE;
-DROP TABLE IF EXISTS admin_profiles CASCADE;
+-- Eliminar subtables antiguas (usaban user_id como PK directo) solo si tienen ese esquema legado
+DO $$ BEGIN
+    IF EXISTS (
+        SELECT FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'student_profiles' AND column_name = 'user_id'
+    ) THEN
+        DROP TABLE IF EXISTS student_profiles CASCADE;
+        DROP TABLE IF EXISTS teacher_profiles CASCADE;
+        DROP TABLE IF EXISTS academy_profiles CASCADE;
+        DROP TABLE IF EXISTS moderator_profiles CASCADE;
+        DROP TABLE IF EXISTS admin_profiles CASCADE;
+    END IF;
+END $$;
 
 -- Recrear subtables con profile_id como PK/FK a profiles
 CREATE TABLE IF NOT EXISTS student_profiles (
@@ -151,7 +189,7 @@ CREATE TABLE IF NOT EXISTS teacher_academies (
 );
 
 -- ===========================
--- BILLING BC: premium_access (faltaba en V1)
+-- BILLING BC: premium_access (faltaba en V1 legacy)
 -- ===========================
 CREATE TABLE IF NOT EXISTS premium_access (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

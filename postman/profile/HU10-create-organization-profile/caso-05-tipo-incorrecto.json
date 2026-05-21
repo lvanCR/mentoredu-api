@@ -1,0 +1,24 @@
+{
+  "scenario": "Error — Cuenta no es de tipo ORGANIZATION",
+  "gherkin": "Dado que falta un dato obligatorio (tipo de cuenta incorrecto), cuando intento crear el perfil, entonces el sistema rechaza la creación.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/profiles/organization",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "organizationName": "Academia Lima"
+    }
+  },
+  "expected_response": {
+    "status": 409,
+    "body": {
+      "status": 409,
+      "error": "Conflict",
+      "message": "Account type is not ORGANIZATION. Current type: STUDENT"
+    }
+  },
+  "note": "Usar un token de una cuenta con tipo STUDENT o TEACHER."
+}

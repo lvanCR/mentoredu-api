@@ -1,0 +1,30 @@
+{
+  "name": "MentorEduBillingHU23-ActivarSuscripcionPOST",
+  "description": "Caso 01 — Exitoso: pago válido, suscripción activada. Espera 201 Created con status ACTIVE y registro de PremiumAccess (RN-27).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/billing/subscriptions",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "planId": "{{plan_id}}",
+      "paymentMethod": "CARD"
+    }
+  },
+  "expectedResponse": {
+    "status": 201,
+    "body": {
+      "id": "<uuid>",
+      "userId": "<uuid>",
+      "planId": "{{plan_id}}",
+      "planName": "MENSUAL",
+      "planPrice": 19.90,
+      "status": "ACTIVE",
+      "startsAt": "<timestamp>",
+      "endsAt": "<timestamp>",
+      "createdAt": "<timestamp>"
+    }
+  }
+}

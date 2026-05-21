@@ -1,0 +1,31 @@
+{
+  "name": "MentorEduModerationHU20-ResolveReportForbiddenPATCH",
+  "request": {
+    "method": "PATCH",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{student_token}}"
+      },
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "url": {
+      "raw": "{{api_v1}}/moderation/reports/{{report_id}}/resolve",
+      "host": ["{{api_v1}}"],
+      "path": ["moderation", "reports", "{{report_id}}", "resolve"]
+    },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"resolution\": \"RESOLVED\",\n  \"actionType\": \"WARN\",\n  \"notes\": \"Intento de resolución sin permisos\"\n}"
+    }
+  },
+  "description": "Caso 02 — Error: Usuario con rol STUDENT intenta resolver un reporte. Espera 403 Forbidden.",
+  "expectedStatus": 403,
+  "expectedBody": {
+    "error": "Forbidden",
+    "message": "No tienes permisos para resolver reportes"
+  }
+}

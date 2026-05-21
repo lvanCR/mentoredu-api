@@ -1,0 +1,24 @@
+{
+  "name": "MentorEduBillingHU24-ComprarMonedasPOST",
+  "description": "Caso 04 — Alternativo error: paquete de monedas no encontrado o inactivo. Espera 404 Not Found.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/billing/coin-purchases",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "coinPackageId": "00000000-0000-0000-0000-000000000000",
+      "quantity": 1,
+      "paymentMethod": "CARD"
+    }
+  },
+  "expectedResponse": {
+    "status": 404,
+    "body": {
+      "error": "Not Found",
+      "message": "Paquete de monedas no encontrado o inactivo: 00000000-0000-0000-0000-000000000000"
+    }
+  }
+}

@@ -42,6 +42,7 @@
 | EP-08 | Billing | Gestiona suscripciones, pagos y compra de beneficios premium. |
 | EP-09 | Notifications | Gestiona las notificaciones generadas por eventos del sistema. |
 | EP-10 | Gamification | Gestiona la acumulacion de puntos de experiencia, niveles, insignias y monedas del usuario. |
+| EP-11 | Feedback | Gestiona la retroalimentacion academica formal emitida por docentes hacia estudiantes y su consulta. |
 
 ## 2. User Stories
 
@@ -429,6 +430,30 @@
 | Alternativo exitoso | Dado que consulto mis insignias ganadas, cuando reviso el listado, entonces el sistema muestra cada insignia con su nombre y fecha de obtencion. |
 | Alternativo error | Dado que el hito requerido aun no fue alcanzado, cuando el sistema evalua mi actividad, entonces no acredita la insignia y no genera error. |
 
+### US34 — Provide academic feedback to student
+- **Epic**: EP-11
+- **Descripcion**: Como docente, quiero registrar retroalimentacion academica formal sobre el desempeño de un estudiante para que quede documentada en el sistema.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que soy un docente registrado y el estudiante existe, cuando envio retroalimentacion con cuerpo de texto valido, entonces el sistema la registra y la asocia al estudiante receptor. |
+| Error | Dado que el cuerpo de retroalimentacion esta vacio, cuando intento enviarla, entonces el sistema rechaza la operacion por validacion. |
+| Alternativo exitoso | Dado que incluyo una puntuacion junto al comentario de retroalimentacion, cuando confirmo el envio, entonces el sistema guarda ambos datos correctamente. |
+| Alternativo error | Dado que el estudiante objetivo no existe, cuando intento enviar retroalimentacion, entonces el sistema responde que el recurso no fue encontrado. |
+
+### US35 — View received academic feedback
+- **Epic**: EP-11
+- **Descripcion**: Como estudiante, quiero consultar la retroalimentacion academica que he recibido para conocer la evaluacion de mis docentes.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que tengo retroalimentacion registrada, cuando consulto mi historial de retroalimentacion, entonces el sistema devuelve el listado ordenado por fecha descendente. |
+| Error | Dado que no estoy autenticado, cuando intento consultar mi retroalimentacion, entonces el sistema rechaza el acceso. |
+| Alternativo exitoso | Dado que no tengo retroalimentacion registrada aun, cuando consulto el historial, entonces el sistema devuelve una lista vacia sin error. |
+| Alternativo error | Dado que intento modificar una retroalimentacion recibida, cuando envio el cambio, entonces el sistema rechaza la operacion porque las entradas son inmutables. |
+
 ### US33 — Create academy
 - **Epic**: EP-03
 - **Descripcion**: Como organizacion, quiero registrar mi academia en la plataforma para publicar oferta educativa.
@@ -440,6 +465,42 @@
 | Error | Dado que falta el nombre de la academia, cuando intento registrarla, entonces el sistema rechaza la creacion. |
 | Alternativo exitoso | Dado que completo todos los datos requeridos, cuando confirmo el registro, entonces el sistema deja la academia lista para publicar sedes y oferta academica. |
 | Alternativo error | Dado que ya existe una academia registrada con ese nombre por la misma organizacion, cuando intento crearla, entonces el sistema la rechaza por duplicidad. |
+
+### US36 — Register campus for academy
+- **Epic**: EP-03
+- **Descripcion**: Como organizacion, quiero registrar sedes fisicas de mi academia para que los estudiantes conozcan los puntos de atencion disponibles.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que soy la organizacion propietaria de la academia, cuando registro una sede con nombre, direccion y ciudad validos, entonces el sistema la crea y la asocia a la academia. |
+| Error | Dado que omito un campo obligatorio como nombre, direccion o ciudad, cuando intento registrar la sede, entonces el sistema rechaza la operacion por validacion. |
+| Alternativo exitoso | Dado que ya tengo sedes registradas, cuando agrego una nueva con nombre distinto, entonces el sistema la crea sin afectar las existentes. |
+| Alternativo error | Dado que ya existe una sede con ese nombre en la misma academia, cuando intento registrarla, entonces el sistema la rechaza por duplicidad. |
+
+### US37 — Associate teacher to academy
+- **Epic**: EP-03
+- **Descripcion**: Como organizacion, quiero asociar docentes a mi academia para mostrar el plantel de ensenanza disponible a los estudiantes.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que soy la organizacion propietaria de la academia y el perfil docente indicado existe, cuando registro la asociacion, entonces el sistema la crea correctamente. |
+| Error | Dado que el perfil indicado no existe o no es de tipo docente, cuando intento asociarlo, entonces el sistema rechaza la operacion. |
+| Alternativo exitoso | Dado que la academia ya tiene docentes asociados, cuando asocio uno nuevo valido, entonces el sistema lo agrega sin afectar las asociaciones existentes. |
+| Alternativo error | Dado que el docente ya esta asociado a la misma academia, cuando intento registrar la asociacion nuevamente, entonces el sistema la rechaza por duplicidad. |
+
+### US38 — Submit appeal for moderation decision
+- **Epic**: EP-06
+- **Descripcion**: Como usuario autenticado, quiero presentar una apelacion sobre una decision de moderacion para que mi caso sea revisado nuevamente.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que el reporte existe y no tengo una apelacion activa para ese reporte, cuando presento la apelacion con un motivo valido, entonces el sistema la registra con estado OPEN. |
+| Error | Dado que omito el motivo de la apelacion, cuando intento presentarla, entonces el sistema rechaza la operacion por validacion. |
+| Alternativo exitoso | Dado que presento mi apelacion correctamente, cuando consulto su estado, entonces el sistema la muestra como pendiente de revision. |
+| Alternativo error | Dado que ya presente una apelacion para el mismo reporte, cuando intento presentar otra, entonces el sistema la rechaza por duplicidad. |
 
 ## 3. Reglas de Negocio
 
@@ -498,6 +559,23 @@
 - RN-34: El historial de puntos de experiencia es de solo lectura y no puede modificarse manualmente.
 - RN-35: Los puntos de experiencia y las monedas virtuales son sistemas independientes.
 
+### Feedback
+- RN-36: Solo un usuario con rol TEACHER o ADMIN puede emitir retroalimentacion academica formal hacia un estudiante.
+- RN-37: Una entrada de retroalimentacion no puede modificarse ni eliminarse una vez registrada.
+- RN-38: El estudiante receptor puede consultar su retroalimentacion recibida pero no editarla ni eliminarla.
+
+### Sedes (EP-03)
+- RN-39: El nombre de sede debe ser unico por academia.
+- RN-40: Solo la organizacion propietaria de la academia puede registrar sedes en ella.
+
+### Asociacion Docente-Academia (EP-03)
+- RN-41: Un docente puede asociarse a multiples academias; una academia puede tener multiples docentes.
+- RN-42: Una asociacion docente-academia no puede registrarse mas de una vez.
+
+### Apelaciones (EP-06)
+- RN-43: Solo puede existir una apelacion activa por usuario por reporte.
+- RN-44: El motivo de la apelacion es obligatorio.
+
 ## 4. Bounded Contexts
 
 | Bounded Context | Descripcion |
@@ -512,6 +590,7 @@
 | billing | Gestiona suscripciones, pagos y compra de beneficios premium. |
 | notifications | Gestiona las notificaciones generadas por eventos del sistema. |
 | gamification | Gestiona la acumulacion de puntos de experiencia, niveles, insignias y monedas del usuario. |
+| feedback | Gestiona la retroalimentacion academica formal emitida por docentes hacia estudiantes. |
 
 ## 5. Relacion Epics → Bounded Contexts
 
@@ -529,3 +608,4 @@ Cada Epic agrupa funcionalidades de una sola capacidad de negocio. Ese mismo lim
 | EP-08 | Billing | billing | `billing/` |
 | EP-09 | Notifications | notifications | `notifications/` |
 | EP-10 | Gamification | gamification | `gamification/` |
+| EP-11 | Feedback | feedback | `feedback/` |

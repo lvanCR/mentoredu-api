@@ -1,0 +1,23 @@
+{
+  "name": "MentorEduNotificationsHU25-MarkAsReadPATCH",
+  "description": "Caso 04 — Marcar notificación como leída. Espera 200 OK con read=true. Idempotente: si ya estaba leída, responde igualmente 200.",
+  "request": {
+    "method": "PATCH",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}",
+        "type": "text"
+      }
+    ],
+    "url": {
+      "raw": "{{api_v1}}/notifications/{{notification_id}}/read",
+      "host": ["{{api_v1}}"],
+      "path": ["notifications", "{{notification_id}}", "read"]
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": "{\"id\":\"...\",\"userId\":\"...\",\"type\":\"FORUM_REPLY\",\"title\":\"...\",\"message\":\"...\",\"read\":true,\"createdAt\":\"...\"}"
+  }
+}

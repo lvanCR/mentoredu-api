@@ -1,0 +1,32 @@
+{
+  "name": "MentorEduModerationHU20-RejectReportPATCH",
+  "request": {
+    "method": "PATCH",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{admin_token}}"
+      },
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "url": {
+      "raw": "{{api_v1}}/moderation/reports/{{report_id}}/resolve",
+      "host": ["{{api_v1}}"],
+      "path": ["moderation", "reports", "{{report_id}}", "resolve"]
+    },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"resolution\": \"REJECTED\",\n  \"actionType\": \"RESTORE\",\n  \"notes\": \"El reporte fue revisado y el contenido no viola las normas\"\n}"
+    }
+  },
+  "description": "Caso 03 — Alternativo exitoso: Admin rechaza un reporte (REJECTED) y restaura el contenido. Espera 200 OK con status REJECTED.",
+  "expectedStatus": 200,
+  "expectedBody": {
+    "status": "REJECTED",
+    "actionType": "RESTORE",
+    "notes": "El reporte fue revisado y el contenido no viola las normas"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "MentorEduAcademyHU33-CreateAcademyPOST",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"name\": \"Academia Preuniversitaria Norte\"\n}"
+    },
+    "url": {
+      "raw": "{{api_v1}}/academies",
+      "host": ["{{api_v1}}"],
+      "path": ["academies"]
+    },
+    "description": "Caso 01 — Creación exitosa con solo el campo obligatorio (name). Requiere token de organización con perfil base y perfil de organización creados."
+  },
+  "response": []
+}

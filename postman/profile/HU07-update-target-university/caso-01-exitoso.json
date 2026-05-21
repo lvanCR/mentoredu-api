@@ -1,0 +1,22 @@
+{
+  "scenario": "Exitoso — Perfil de estudiante existe, universidad objetivo válida enviada",
+  "gherkin": "Dado que mi perfil de estudiante existe, cuando cambio la universidad objetivo, entonces el sistema guarda la actualización.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/profiles/student/me",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "targetUniversity": "Universidad Nacional Mayor de San Marcos"
+    }
+  },
+  "expected_response": {
+    "status": 200,
+    "body": {
+      "profileId": "<uuid>",
+      "targetUniversity": "Universidad Nacional Mayor de San Marcos"
+    }
+  }
+}

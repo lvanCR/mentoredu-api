@@ -1,0 +1,25 @@
+{
+  "scenario": "Error — specialty vacía (cadena en blanco)",
+  "gherkin": "Dado que la especialidad no está permitida, cuando intento actualizar, entonces el sistema rechaza la operación.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/profiles/teacher/me",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "specialty": ""
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Bad Request",
+      "details": {
+        "specialty": "specialty is required"
+      }
+    }
+  }
+}

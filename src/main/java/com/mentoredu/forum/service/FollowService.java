@@ -3,6 +3,7 @@ package com.mentoredu.forum.service;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.forum.dto.FollowResponse;
+import com.mentoredu.forum.exception.UserNotFoundException;
 import com.mentoredu.forum.model.FollowRelation;
 import com.mentoredu.forum.repository.FollowRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -22,34 +24,39 @@ public class FollowService implements IFollowService {
 
     @Override
     @Transactional
-    public void follow(UUID followerId, UUID followedId) {
-        if (followerId.equals(followedId)) {
+    public Optional<FollowResponse> toggleFollow(UUID targetUserId, String currentUserEmail) {
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + currentUserEmail));
+
+        if (currentUser.getId().equals(targetUserId)) {
             throw new IllegalArgumentException("No puedes seguirte a ti mismo");
         }
-        User follower = getUserOrThrow(followerId);
-        User followed = getUserOrThrow(followedId);
-        if (followRepository.existsByFollowerAndFollowed(follower, followed)) {
-            throw new IllegalArgumentException("Ya sigues a este usuario");
-        }
-        followRepository.save(FollowRelation.builder()
-                .follower(follower)
-                .followed(followed)
-                .build());
-    }
 
-    @Override
-    @Transactional
-    public void unfollow(UUID followerId, UUID followedId) {
-        User follower = getUserOrThrow(followerId);
-        User followed = getUserOrThrow(followedId);
-        FollowRelation relation = followRepository.findByFollowerAndFollowed(follower, followed)
-                .orElseThrow(() -> new IllegalArgumentException("No sigues a este usuario"));
-        followRepository.delete(relation);
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + targetUserId));
+
+        Optional<FollowRelation> existing = followRepository.findByFollowerAndFollowed(currentUser, targetUser);
+        if (existing.isPresent()) {
+            followRepository.delete(existing.get());
+            return Optional.empty();
+        }
+
+        followRepository.save(FollowRelation.builder()
+                .follower(currentUser)
+                .followed(targetUser)
+                .build());
+
+        return Optional.of(new FollowResponse(
+                targetUser.getId(),
+                targetUser.getFirstName(),
+                targetUser.getLastName(),
+                targetUser.getEmail()));
     }
 
     @Override
     public List<FollowResponse> getFollowing(UUID userId) {
-        User user = getUserOrThrow(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
         return followRepository.findByFollower(user).stream()
                 .map(f -> new FollowResponse(
                         f.getFollowed().getId(),
@@ -61,7 +68,8 @@ public class FollowService implements IFollowService {
 
     @Override
     public List<FollowResponse> getFollowers(UUID userId) {
-        User user = getUserOrThrow(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
         return followRepository.findByFollowed(user).stream()
                 .map(f -> new FollowResponse(
                         f.getFollower().getId(),
@@ -69,10 +77,5 @@ public class FollowService implements IFollowService {
                         f.getFollower().getLastName(),
                         f.getFollower().getEmail()))
                 .collect(Collectors.toList());
-    }
-
-    private User getUserOrThrow(UUID userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario inexistente"));
     }
 }
