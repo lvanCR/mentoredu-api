@@ -11,7 +11,8 @@
       "firstName": "María",
       "lastName": "López",
       "email": "esto-no-es-un-email",
-      "password": "Segura2024"
+      "password": "Segura2024",
+      "role": "STUDENT"
     }
   },
   "expected_response": {

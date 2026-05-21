@@ -3,6 +3,7 @@ package com.mentoredu.profile.service;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
+import com.mentoredu.profile.dto.ProfileMeResponse;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
@@ -15,8 +16,10 @@ import com.mentoredu.profile.exception.WrongProfileTypeException;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.model.StudentProfile;
+import com.mentoredu.profile.repository.OrganizationProfileRepository;
 import com.mentoredu.profile.repository.ProfileRepository;
 import com.mentoredu.profile.repository.StudentProfileRepository;
+import com.mentoredu.profile.repository.TeacherProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -28,9 +31,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProfileService implements IProfileService {
 
-    private final ProfileRepository        profileRepository;
-    private final StudentProfileRepository studentProfileRepository;
-    private final UserRepository           userRepository;
+    private final ProfileRepository             profileRepository;
+    private final StudentProfileRepository      studentProfileRepository;
+    private final TeacherProfileRepository      teacherProfileRepository;
+    private final OrganizationProfileRepository organizationProfileRepository;
+    private final UserRepository                userRepository;
 
     // -------------------------------------------------------------------------
     // US04 — Select account type
@@ -78,6 +83,29 @@ public class ProfileService implements IProfileService {
         if (request.getBio()       != null) profile.setBio(request.getBio());
 
         return new ProfileResponse(profileRepository.save(profile));
+    }
+
+    // -------------------------------------------------------------------------
+    // F0.4 — GET /profiles/me
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProfileMeResponse getMyProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
+
+        boolean complete = switch (profile.getProfileType()) {
+            case "STUDENT"      -> studentProfileRepository.existsById(profile.getId());
+            case "TEACHER"      -> teacherProfileRepository.existsById(profile.getId());
+            case "ORGANIZATION" -> organizationProfileRepository.existsById(profile.getId());
+            default             -> false;
+        };
+
+        return new ProfileMeResponse(profile, complete);
     }
 
     // -------------------------------------------------------------------------

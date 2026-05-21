@@ -12,7 +12,8 @@
       "firstName": "Carlos",
       "lastName": "Torres",
       "email": "ana.garcia@example.com",
-      "password": "OtraClave99"
+      "password": "OtraClave99",
+      "role": "STUDENT"
     }
   },
   "expected_response": {

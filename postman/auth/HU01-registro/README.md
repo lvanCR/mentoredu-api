@@ -34,6 +34,7 @@ No requiere autenticación.
 | `lastName` | String | No puede estar vacío (`@NotBlank`) |
 | `email` | String | Formato válido de correo (`@Email`), único en el sistema (RN-01) |
 | `password` | String | Mín 8 / máx 72 chars · al menos 1 mayúscula · 1 minúscula · 1 dígito |
+| `role` | String | Obligatorio · valores válidos: `STUDENT`, `TEACHER`, `ACADEMY` (US01-v2 / F0.3) |
 
 ### Política de contraseña (RN-03)
 
@@ -59,7 +60,7 @@ Al menos 1 dígito           (0–9)
 | Código | Regla |
 |---|---|
 | RN-01 | No puede existir más de una cuenta con el mismo correo. |
-| RN-02 | Cada usuario debe tener exactamente un rol activo. El rol asignado por defecto es `STUDENT`. |
+| RN-02 | Cada usuario debe tener exactamente un rol activo. El rol lo elige el usuario al registrarse (US01-v2): `STUDENT`, `TEACHER` o `ACADEMY`. Los roles `MODERATOR` y `ADMIN` solo los asigna un admin existente. |
 | RN-03 | La contraseña debe almacenarse cifrada con BCrypt. Nunca en texto plano. |
 
 ---
@@ -78,6 +79,8 @@ Al menos 1 dígito           (0–9)
   "status": "ACTIVE"
 }
 ```
+
+El campo `role` en la respuesta refleja el rol elegido al registrarse (puede ser `STUDENT`, `TEACHER` o `ACADEMY`).
 
 ---
 
@@ -134,7 +137,40 @@ Al menos 1 dígito           (0–9)
 > Dado que no completo un campo obligatorio, cuando intento registrar la cuenta, entonces el sistema devuelve un error de validación y no guarda datos.
 
 **Status esperado**: `400 Bad Request`  
-**Nota**: el campo `firstName` vacío no supera la validación `@NotBlank`. Aplica igual para `lastName`.
+**Nota**: el campo `firstName` vacío no supera la validación `@NotBlank`. Aplica igual para `lastName` y `role` ausente.
+
+---
+
+### Caso 6 — Registro exitoso con rol TEACHER
+
+**Archivo**: `caso-06-registro-teacher.json`  
+**Gherkin**:
+> Dado que soy un docente, cuando me registro con role=TEACHER, entonces el sistema crea la cuenta con rol TEACHER.
+
+**Status esperado**: `201 Created`  
+**Nota**: el campo `role` en la respuesta es `"TEACHER"`.
+
+---
+
+### Caso 7 — Registro exitoso con rol ACADEMY
+
+**Archivo**: `caso-07-registro-academy.json`  
+**Gherkin**:
+> Dado que represento una organización educativa, cuando me registro con role=ACADEMY, entonces el sistema crea la cuenta con rol ACADEMY.
+
+**Status esperado**: `201 Created`  
+**Nota**: el campo `role` en la respuesta es `"ACADEMY"`.
+
+---
+
+### Caso 8 — Rol no permitido en registro
+
+**Archivo**: `caso-08-rol-invalido.json`  
+**Gherkin**:
+> Dado que intento registrarme con un rol administrativo (MODERATOR o ADMIN), cuando envío el formulario, entonces el sistema rechaza el registro.
+
+**Status esperado**: `400 Bad Request`  
+**Nota**: la validación `@Pattern` en `role` rechaza cualquier valor fuera de `STUDENT`, `TEACHER`, `ACADEMY`.
 
 ---
 

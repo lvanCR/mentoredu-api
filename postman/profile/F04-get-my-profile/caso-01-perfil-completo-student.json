@@ -1,0 +1,30 @@
+{
+  "escenario": "Caso 1 — Perfil completo de estudiante",
+  "gherkin": "Dado que el usuario completó su perfil base (US04) y su perfil de estudiante (US06), cuando consulto GET /profiles/me, entonces el sistema devuelve el perfil con isProfileComplete=true.",
+  "prerequisito": "El usuario debe haber completado US04 (seleccionar tipo de cuenta STUDENT) y US06 (crear perfil de estudiante).",
+  "request": {
+    "method": "GET",
+    "url": "{{base_url}}/{{api_v1}}/profiles/me",
+    "headers": {
+      "Authorization": "Bearer {{token}}"
+    }
+  },
+  "expected_response": {
+    "status": 200,
+    "body": {
+      "id": "<uuid-perfil>",
+      "userId": "<uuid-usuario>",
+      "displayName": "Ana García",
+      "avatarUrl": null,
+      "city": null,
+      "bio": null,
+      "profileType": "STUDENT",
+      "isProfileComplete": true,
+      "createdAt": "<datetime>"
+    }
+  },
+  "notas": [
+    "isProfileComplete=true porque existe una fila en 'student_profiles' con el mismo UUID que el perfil base.",
+    "El frontend usa esta respuesta para redirigir al dashboard principal del estudiante."
+  ]
+}

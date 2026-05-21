@@ -12,24 +12,29 @@ postman/
 ├── README.md                              ← esta guía
 ├── environments/
 │   └── local.postman_environment.json     ← variables de entorno para local
-├── auth/                                  ← EP-01: registro, login, recuperación
+├── auth/                                  ← EP-01: registro, login, recuperación, refresh
 │   ├── README.md
-│   └── HU01-registro/
-│       ├── README.md                      ← escenarios + requests de ejemplo
-│       ├── caso-01-exitoso.json
-│       ├── caso-02-email-duplicado.json
-│       ├── caso-03-contrasena-debil.json
-│       ├── caso-04-email-invalido.json
-│       └── caso-05-campo-faltante.json
-├── profile/                               ← EP-02 (pendiente)
-├── academy/                               ← EP-03 (pendiente)
-├── library/                               ← EP-04 (pendiente)
-├── forum/                                 ← EP-05 (pendiente)
-├── moderation/                            ← EP-06 (pendiente)
-├── verification/                          ← EP-07 (pendiente)
-├── billing/                               ← EP-08 (pendiente)
-├── notifications/                         ← EP-09 (pendiente)
-└── gamification/                          ← EP-10 (pendiente)
+│   ├── HU01-registro/                     ← 8 casos (incluye rol TEACHER, ACADEMY, inválido)
+│   ├── HU02-login/
+│   ├── HU03-password-recovery/
+│   ├── HU26-reset-password/
+│   └── HU-refresh/                        ← F0.5: POST /auth/refresh
+├── profile/                               ← EP-02: perfiles
+│   ├── README.md
+│   ├── HU04-select-account-type/
+│   ├── HU05-update-profile/
+│   ├── HU06-create-student-profile/
+│   └── F04-get-my-profile/                ← F0.4: GET /profiles/me
+├── billing/                               ← EP-08: suscripciones, monedas
+│   ├── README.md
+│   └── F13-catalog/                       ← F1.3: GET /billing/plans y /coin-packages
+├── academy/                               ← EP-03 (pendiente de documentar)
+├── library/                               ← EP-04 (pendiente de documentar)
+├── forum/                                 ← EP-05 (pendiente de documentar)
+├── moderation/                            ← EP-06 (pendiente de documentar)
+├── verification/                          ← EP-07 (pendiente de documentar)
+├── notifications/                         ← EP-09 (pendiente de documentar)
+└── gamification/                          ← EP-10 (pendiente de documentar)
 ```
 
 ---
@@ -136,15 +141,18 @@ Cuando una US quede implementada y testeada:
 
 ## Estado actual por bounded context
 
-| Bounded Context | HUs implementadas | HUs pendientes |
+| Bounded Context | Implementados | Pendientes de documentar |
 |---|---|---|
-| auth | HU01, HU02, HU03, HU26 | — |
-| profile | HU04, HU05, HU06 | HU07, HU08, HU09, HU10 |
-| academy | — | HU33, HU11 |
+| auth | HU01 (v2+role), HU02, HU03, HU26, F0.5 (refresh) | — |
+| profile | HU04, HU05, HU06, F0.4 (GET /me) | HU07, HU08, HU09, HU10 |
+| academy | — | HU33, HU11, HU36, HU37 |
 | library | — | HU12, HU13, HU14, HU15 |
 | forum | — | HU16, HU17, HU18, HU27, HU28, HU29 |
-| moderation | — | HU19, HU20 |
+| moderation | — | HU19, HU20, HU38 |
 | verification | — | HU21, HU22 |
-| billing | — | HU23, HU24 |
+| billing | HU23, HU24, F1.3 (GET /plans, GET /coin-packages) | — |
 | notifications | — | HU25 |
 | gamification | — | HU30, HU31, HU32 |
+| feedback | — | HU34, HU35 |
+
+> **Nota**: Las columnas muestran el estado de la *documentación Postman*. El código de todas las HUs de las épicas EP-01 a EP-11 y EP-03 está implementado. Ver `CLAUDE.md` para el estado completo del código.

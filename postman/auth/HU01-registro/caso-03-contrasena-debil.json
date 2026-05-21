@@ -12,7 +12,8 @@
       "firstName": "Luis",
       "lastName": "Pérez",
       "email": "luis.perez@example.com",
-      "password": "sinmayuscula1"
+      "password": "sinmayuscula1",
+      "role": "STUDENT"
     }
   },
   "expected_response": {

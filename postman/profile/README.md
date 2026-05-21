@@ -4,13 +4,14 @@ Gestiona el perfil base y los perfiles específicos de cada tipo de usuario.
 
 ---
 
-## Historias implementadas
+## Implementados
 
-| HU | Descripción | Endpoint | Nombre en Postman | Fecha |
+| ID | Descripción | Endpoint | Nombre en Postman | Fecha |
 |---|---|---|---|---|
 | HU04 | Seleccionar tipo de cuenta | `POST /api/v1/profiles/account-type` | `MentorEduProfileHU04-SelectAccountTypePOST` | 2026-05-16 |
 | HU05 | Actualizar datos comunes del perfil | `PATCH /api/v1/profiles/me` | `MentorEduProfileHU05-UpdateProfilePATCH` | 2026-05-16 |
 | HU06 | Crear perfil de estudiante | `POST /api/v1/profiles/student` | `MentorEduProfileHU06-CreateStudentProfilePOST` | 2026-05-16 |
+| F0.4 | Obtener mi perfil completo (con isProfileComplete) | `GET /api/v1/profiles/me` | `MentorEduProfileF04-GetMyProfileGET` | 2026-05-21 |
 
 ## Historias pendientes
 
@@ -42,16 +43,22 @@ profile/
 │   ├── caso-03-displayname-vacio.json
 │   ├── caso-04-sin-displayname.json
 │   └── caso-05-sin-autenticacion.json
-└── HU06-create-student-profile/
+├── HU06-create-student-profile/
+│   ├── README.md
+│   ├── caso-01-exitoso-campos-obligatorios.json
+│   ├── caso-02-exitoso-todos-campos.json
+│   ├── caso-03-gradelevel-vacio.json
+│   ├── caso-04-targetuniversity-vacio.json
+│   ├── caso-05-perfil-ya-existe.json
+│   ├── caso-06-tipo-incorrecto.json
+│   ├── caso-07-sin-perfil-base.json
+│   └── caso-08-sin-autenticacion.json
+└── F04-get-my-profile/
     ├── README.md
-    ├── caso-01-exitoso-campos-obligatorios.json
-    ├── caso-02-exitoso-todos-campos.json
-    ├── caso-03-gradelevel-vacio.json
-    ├── caso-04-targetuniversity-vacio.json
-    ├── caso-05-perfil-ya-existe.json
-    ├── caso-06-tipo-incorrecto.json
-    ├── caso-07-sin-perfil-base.json
-    └── caso-08-sin-autenticacion.json
+    ├── caso-01-perfil-completo-student.json
+    ├── caso-02-perfil-sin-completar.json
+    ├── caso-03-sin-autenticacion.json
+    └── caso-04-sin-perfil-base.json
 ```
 
 ---

@@ -1,0 +1,33 @@
+{
+  "escenario": "Caso 6 — Registro exitoso con rol TEACHER",
+  "gherkin": "Dado que soy un docente, cuando me registro con role=TEACHER, entonces el sistema crea la cuenta con rol TEACHER.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/auth/register",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "firstName": "Carlos",
+      "lastName": "Mendoza",
+      "email": "carlos.mendoza@example.com",
+      "password": "Docente2024",
+      "role": "TEACHER"
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "id": "<uuid-generado-por-el-sistema>",
+      "firstName": "Carlos",
+      "lastName": "Mendoza",
+      "email": "carlos.mendoza@example.com",
+      "role": "TEACHER",
+      "status": "ACTIVE"
+    }
+  },
+  "notas": [
+    "El rol asignado en la respuesta es TEACHER (US01-v2, F0.3).",
+    "Este usuario podrá usar HU08 (crear perfil docente) y HU34 (dar feedback)."
+  ]
+}

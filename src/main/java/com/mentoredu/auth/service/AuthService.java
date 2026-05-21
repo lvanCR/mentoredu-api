@@ -4,6 +4,8 @@ import com.mentoredu.auth.dto.ForgotPasswordRequest;
 import com.mentoredu.auth.dto.ForgotPasswordResponse;
 import com.mentoredu.auth.dto.LoginRequest;
 import com.mentoredu.auth.dto.LoginResponse;
+import com.mentoredu.auth.dto.RefreshTokenRequest;
+import com.mentoredu.auth.dto.RefreshTokenResponse;
 import com.mentoredu.auth.dto.RegisterRequest;
 import com.mentoredu.auth.dto.RegisterResponse;
 import com.mentoredu.auth.dto.ResetPasswordRequest;
@@ -55,8 +57,8 @@ public class AuthService {
             throw new EmailAlreadyExistsException("Email already registered: " + normalizedEmail);
         }
 
-        var role = roleRepository.findByName("STUDENT")
-                .orElseThrow(() -> new IllegalStateException("Default role STUDENT not found. Run DB migrations."));
+        var role = roleRepository.findByName(request.getRole().toUpperCase())
+                .orElseThrow(() -> new IllegalStateException("Role not found: " + request.getRole() + ". Run DB migrations."));
 
         var user = User.builder()
                 .firstName(request.getFirstName().trim())
@@ -178,6 +180,31 @@ public class AuthService {
 
         return ResetPasswordResponse.builder()
                 .message("Password reset successfully. All active sessions have been closed.")
+                .build();
+    }
+
+    // -------------------------------------------------------------------------
+    // F0.5 — POST /auth/refresh
+    // -------------------------------------------------------------------------
+
+    @Transactional
+    public RefreshTokenResponse refresh(RefreshTokenRequest request) {
+        Session session = sessionRepository.findByRefreshToken(request.getRefreshToken())
+                .orElseThrow(() -> new InvalidCredentialsException("Refresh token not found or invalid"));
+
+        if (session.getRevokedAt() != null) {
+            throw new InvalidCredentialsException("Refresh token has been revoked");
+        }
+
+        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new InvalidCredentialsException("Refresh token has expired");
+        }
+
+        String accessToken = jwtUtil.generateAccessToken(session.getUser());
+
+        return RefreshTokenResponse.builder()
+                .accessToken(accessToken)
+                .expiresIn(jwtUtil.getAccessExpirationMs() / 1000)
                 .build();
     }
 

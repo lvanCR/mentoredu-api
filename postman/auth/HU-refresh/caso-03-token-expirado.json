@@ -1,0 +1,18 @@
+{
+  "escenario": "Caso 3 — Refresh token expirado",
+  "gherkin": "Dado que mi refresh token ha superado su tiempo de vida (7 días por defecto), cuando intento renovar el access token, entonces el sistema rechaza la solicitud.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/auth/refresh",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "refreshToken": "<refresh_token_expirado>"
+    }
+  },
+  "expected_response": {
+    "status": 401,
+    "notas": "El sistema responde 401 Unauthorized. El token tiene 'expiresAt < now' en la tabla 'sessions'. El usuario debe volver a autenticarse con sus credenciales."
+  }
+}
