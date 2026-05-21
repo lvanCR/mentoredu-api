@@ -1,0 +1,33 @@
+{
+  "name": "MentorEduLibraryHU41-GetMySolutionWithoutFeedbackOK",
+  "description": "US41 — Escenario exitoso: estudiante consulta su resolución que aún no tiene feedback. Retorna 200 con status=SUBMITTED y feedback=null.",
+  "request": {
+    "method": "GET",
+    "url": "{{baseUrl}}/api/v1/resources/{{resourceId}}/solutions/mine",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{studentToken}}"
+      }
+    ]
+  },
+  "expectedResponse": {
+    "status": 200,
+    "body": {
+      "solutionId": "{{solutionId}}",
+      "resourceId": "{{resourceId}}",
+      "resourceTitle": "Simulacro de Matemáticas UNI 2024",
+      "fileId": "{{fileId}}",
+      "fileUrl": "http://localhost:8080/uploads/resources/{{fileId}}.pdf",
+      "status": "SUBMITTED",
+      "submittedAt": "2026-05-21T10:30:00",
+      "feedback": null
+    }
+  },
+  "preConditions": [
+    "Estudiante autenticado con JWT válido (rol STUDENT)",
+    "Recurso existente con allows_solutions=true",
+    "Solución previamente enviada por el estudiante (US39)",
+    "Ningún feedback registrado aún para esa solución"
+  ]
+}

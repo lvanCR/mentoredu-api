@@ -2,6 +2,7 @@ package com.mentoredu.library.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.library.dto.MySolutionWithFeedbackResponse;
 import com.mentoredu.library.dto.SolutionDetailResponse;
 import com.mentoredu.library.dto.SolutionResponse;
 import com.mentoredu.library.dto.SubmitSolutionRequest;
@@ -10,9 +11,12 @@ import com.mentoredu.library.exception.ResourceNotFoundException;
 import com.mentoredu.library.exception.SolutionAccessDeniedException;
 import com.mentoredu.library.exception.SolutionNotFoundException;
 import com.mentoredu.library.exception.SolutionsNotAllowedException;
+import com.mentoredu.library.model.AcademicResource;
 import com.mentoredu.library.model.ResourceFile;
 import com.mentoredu.library.model.ResourceSolution;
 import com.mentoredu.library.service.IResourceSolutionService;
+import com.mentoredu.feedback.model.FeedbackEntry;
+import com.mentoredu.auth.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -21,6 +25,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -218,6 +223,88 @@ class ResourceSolutionControllerTest {
     }
 
     // =========================================================================
+    // US41 — View my solution and received feedback
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario exitoso: solución enviada + feedback ya registrado → 200 con feedback
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void getMySolution_withFeedback_returns200WithFeedback() throws Exception {
+        UUID resourceId = UUID.randomUUID();
+        UUID fileId = UUID.randomUUID();
+
+        MySolutionWithFeedbackResponse response = buildMySolutionResponse(resourceId, fileId, true);
+
+        when(solutionService.getMySubmittedSolution(eq(resourceId), eq("student@example.com")))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/resources/{resourceId}/solutions/mine", resourceId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.solutionId").exists())
+                .andExpect(jsonPath("$.resourceId").value(resourceId.toString()))
+                .andExpect(jsonPath("$.resourceTitle").value("Simulacro UNI 2024"))
+                .andExpect(jsonPath("$.status").value("REVIEWED"))
+                .andExpect(jsonPath("$.feedback").exists())
+                .andExpect(jsonPath("$.feedback.body").value("Buen desarrollo en los primeros pasos."))
+                .andExpect(jsonPath("$.feedback.score").value(8.5))
+                .andExpect(jsonPath("$.feedback.authorName").value("Juan Quispe"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario exitoso: solución enviada pero aún sin feedback → 200 con feedback=null
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void getMySolution_withoutFeedback_returns200WithNullFeedback() throws Exception {
+        UUID resourceId = UUID.randomUUID();
+        UUID fileId = UUID.randomUUID();
+
+        MySolutionWithFeedbackResponse response = buildMySolutionResponse(resourceId, fileId, false);
+
+        when(solutionService.getMySubmittedSolution(eq(resourceId), eq("student@example.com")))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/resources/{resourceId}/solutions/mine", resourceId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUBMITTED"))
+                .andExpect(jsonPath("$.feedback").doesNotExist());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: estudiante no envió ninguna resolución → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void getMySolution_whenNoSolutionExists_returns404() throws Exception {
+        UUID resourceId = UUID.randomUUID();
+
+        when(solutionService.getMySubmittedSolution(eq(resourceId), eq("student@example.com")))
+                .thenThrow(new SolutionNotFoundException(
+                        "No has enviado ninguna resolución para este recurso"));
+
+        mockMvc.perform(get("/api/v1/resources/{resourceId}/solutions/mine", resourceId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario error: no autenticado → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getMySolution_withoutAuthentication_returns401() throws Exception {
+        UUID resourceId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/v1/resources/{resourceId}/solutions/mine", resourceId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
@@ -245,5 +332,40 @@ class ResourceSolutionControllerTest {
         file.setId(fileId);
         file.setFileUrl("http://localhost/uploads/" + fileId + ".pdf");
         return new SolutionDetailResponse(solution, file);
+    }
+
+    private MySolutionWithFeedbackResponse buildMySolutionResponse(UUID resourceId, UUID fileId, boolean withFeedback) {
+        ResourceSolution solution = new ResourceSolution();
+        solution.setId(UUID.randomUUID());
+        solution.setResourceId(resourceId);
+        solution.setStudentId(UUID.randomUUID());
+        solution.setFileId(fileId);
+        solution.setStatus(withFeedback ? "REVIEWED" : "SUBMITTED");
+        solution.setSubmittedAt(LocalDateTime.now());
+
+        AcademicResource resource = new AcademicResource();
+        resource.setId(resourceId);
+        resource.setTitle("Simulacro UNI 2024");
+
+        ResourceFile file = new ResourceFile();
+        file.setId(fileId);
+        file.setFileUrl("http://localhost/uploads/" + fileId + ".pdf");
+
+        FeedbackEntry feedbackEntry = null;
+        if (withFeedback) {
+            User author = new User();
+            author.setId(UUID.randomUUID());
+            author.setFirstName("Juan");
+            author.setLastName("Quispe");
+
+            feedbackEntry = new FeedbackEntry();
+            feedbackEntry.setId(UUID.randomUUID());
+            feedbackEntry.setAuthor(author);
+            feedbackEntry.setBody("Buen desarrollo en los primeros pasos.");
+            feedbackEntry.setScore(new BigDecimal("8.5"));
+            feedbackEntry.setCreatedAt(LocalDateTime.now());
+        }
+
+        return new MySolutionWithFeedbackResponse(solution, resource, file, feedbackEntry);
     }
 }

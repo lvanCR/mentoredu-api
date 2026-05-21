@@ -1,5 +1,6 @@
 package com.mentoredu.library.controller;
 
+import com.mentoredu.library.dto.MySolutionWithFeedbackResponse;
 import com.mentoredu.library.dto.SolutionDetailResponse;
 import com.mentoredu.library.dto.SolutionResponse;
 import com.mentoredu.library.dto.SubmitSolutionRequest;
@@ -54,6 +55,32 @@ public class ResourceSolutionController {
 
         SolutionResponse response = solutionService.submitSolution(resourceId, request, auth.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    // -------------------------------------------------------------------------
+    // US41 — View my solution and received feedback
+    // -------------------------------------------------------------------------
+
+    @GetMapping("/{resourceId}/solutions/mine")
+    @Operation(
+        summary = "US41 - Consultar mi resolución y feedback recibido",
+        description = "Devuelve la resolución enviada por el estudiante autenticado para el recurso indicado, "
+            + "junto con el feedback del docente si ya fue evaluada (status=REVIEWED). "
+            + "Si aún no hay feedback, devuelve status=SUBMITTED y feedback=null. "
+            + "Responde 404 si el estudiante no ha enviado ninguna resolución para ese recurso. "
+            + "Solo el propio estudiante puede llamar este endpoint (RN-46). "
+            + "Requiere autenticación JWT."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<MySolutionWithFeedbackResponse> getMySolution(
+            @PathVariable UUID resourceId) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(solutionService.getMySubmittedSolution(resourceId, auth.getName()));
     }
 
     // -------------------------------------------------------------------------

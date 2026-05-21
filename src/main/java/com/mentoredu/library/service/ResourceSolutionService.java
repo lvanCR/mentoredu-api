@@ -2,9 +2,12 @@ package com.mentoredu.library.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.feedback.model.FeedbackEntry;
+import com.mentoredu.feedback.repository.FeedbackRepository;
 import com.mentoredu.forum.exception.UserNotFoundException;
 import com.mentoredu.gamification.model.enums.PointSourceType;
 import com.mentoredu.gamification.service.IGamificationService;
+import com.mentoredu.library.dto.MySolutionWithFeedbackResponse;
 import com.mentoredu.library.dto.SolutionDetailResponse;
 import com.mentoredu.library.dto.SolutionResponse;
 import com.mentoredu.library.dto.SubmitSolutionRequest;
@@ -38,6 +41,7 @@ public class ResourceSolutionService implements IResourceSolutionService {
     private final ResourceFileRepository resourceFileRepository;
     private final UserRepository userRepository;
     private final IGamificationService gamificationService;
+    private final FeedbackRepository feedbackRepository;
 
     @Override
     @Transactional
@@ -140,6 +144,30 @@ public class ResourceSolutionService implements IResourceSolutionService {
 
         ResourceFile file = resourceFileRepository.findById(solution.getFileId()).orElse(null);
         return new SolutionDetailResponse(solution, file);
+    }
+
+    // -------------------------------------------------------------------------
+    // US41 — View my solution and received feedback (RN-46)
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public MySolutionWithFeedbackResponse getMySubmittedSolution(UUID resourceId, String studentEmail) {
+        AcademicResource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
+
+        User student = userRepository.findByEmail(studentEmail)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + studentEmail));
+
+        ResourceSolution solution = solutionRepository.findByResourceIdAndStudentId(resourceId, student.getId())
+                .orElseThrow(() -> new SolutionNotFoundException(
+                        "No has enviado ninguna resolución para este recurso"));
+
+        ResourceFile file = resourceFileRepository.findById(solution.getFileId()).orElse(null);
+
+        FeedbackEntry feedback = feedbackRepository.findBySolutionId(solution.getId()).orElse(null);
+
+        return new MySolutionWithFeedbackResponse(solution, resource, file, feedback);
     }
 
     // RN-46: visible to solution author, resource author, moderators, and admins

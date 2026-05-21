@@ -1,0 +1,27 @@
+{
+  "name": "MentorEduLibraryHU41-GetMySolutionNotFound",
+  "description": "US41 — Error: el estudiante no ha enviado ninguna resolución para ese recurso. Retorna 404.",
+  "request": {
+    "method": "GET",
+    "url": "{{baseUrl}}/api/v1/resources/{{resourceId}}/solutions/mine",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{studentToken}}"
+      }
+    ]
+  },
+  "expectedResponse": {
+    "status": 404,
+    "body": {
+      "status": 404,
+      "error": "Not Found",
+      "message": "No has enviado ninguna resolución para este recurso"
+    }
+  },
+  "preConditions": [
+    "Estudiante autenticado con JWT válido (rol STUDENT)",
+    "Recurso existente con allows_solutions=true",
+    "El estudiante NO ha enviado ninguna resolución para ese recurso"
+  ]
+}

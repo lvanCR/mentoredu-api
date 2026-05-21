@@ -1,5 +1,6 @@
 package com.mentoredu.library.service;
 
+import com.mentoredu.library.dto.MySolutionWithFeedbackResponse;
 import com.mentoredu.library.dto.SolutionDetailResponse;
 import com.mentoredu.library.dto.SolutionResponse;
 import com.mentoredu.library.dto.SubmitSolutionRequest;
@@ -14,4 +15,6 @@ public interface IResourceSolutionService {
     List<SolutionDetailResponse> getSolutionsForResource(UUID resourceId, String requesterEmail);
 
     SolutionDetailResponse getSolutionById(UUID resourceId, UUID solutionId, String requesterEmail);
+
+    MySolutionWithFeedbackResponse getMySubmittedSolution(UUID resourceId, String studentEmail);
 }
