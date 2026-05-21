@@ -13,6 +13,7 @@ import java.util.UUID;
 public interface IGamificationService {
     PointsResponse getPoints(UUID userId);
     void awardPoints(UUID userId, PointSourceType sourceType, UUID sourceId, int pointsDelta);
+    void awardBadge(UUID userId, String badgeCode);
     CoinsResponse getCoins(UUID userId);
     CoinsResponse redeemCoins(UUID userId, CoinsRequest request);
     LevelProgressResponse getLevelProgress(UUID userId);

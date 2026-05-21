@@ -14,6 +14,8 @@ public class FeedbackResponse {
     private final UUID targetUserId;
     private final UUID programId;
     private final UUID cycleId;
+    private final UUID solutionId;
+    private final UUID resourceId;
     private final String body;
     private final BigDecimal score;
     private final LocalDateTime createdAt;
@@ -24,6 +26,8 @@ public class FeedbackResponse {
         this.targetUserId = entry.getTarget().getId();
         this.programId = entry.getProgramId();
         this.cycleId = entry.getCycleId();
+        this.solutionId = entry.getSolutionId();
+        this.resourceId = entry.getResourceId();
         this.body = entry.getBody();
         this.score = entry.getScore();
         this.createdAt = entry.getCreatedAt();

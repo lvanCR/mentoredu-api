@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface FeedbackRepository extends JpaRepository<FeedbackEntry, UUID> {
     List<FeedbackEntry> findByTargetIdOrderByCreatedAtDesc(UUID targetUserId);
+    List<FeedbackEntry> findByAuthorIdOrderByCreatedAtDesc(UUID authorId);
 }

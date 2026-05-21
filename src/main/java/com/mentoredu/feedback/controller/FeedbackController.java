@@ -74,4 +74,25 @@ public class FeedbackController {
 
         return ResponseEntity.ok(feedbackService.getReceivedFeedback(auth.getName()));
     }
+
+    // -------------------------------------------------------------------------
+    // F1.2 — View given academic feedback (for teachers/academies)
+    // -------------------------------------------------------------------------
+
+    @GetMapping("/given")
+    @Operation(
+        summary = "F1.2 - Consultar retroalimentación emitida",
+        description = "Devuelve el historial de retroalimentación académica emitida por el usuario autenticado "
+            + "(docente, academia o admin), ordenado por fecha descendente. "
+            + "Si no hay entradas, devuelve lista vacía. "
+            + "Requiere autenticación JWT."
+    )
+    public ResponseEntity<List<FeedbackResponse>> getGivenFeedback() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(feedbackService.getGivenFeedback(auth.getName()));
+    }
 }

@@ -29,7 +29,7 @@ public class Appeal {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "text", nullable = false)
     private String reason;
 
     @Column(nullable = false, length = 20)

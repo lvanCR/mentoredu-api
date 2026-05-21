@@ -6,6 +6,8 @@ import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.feedback.dto.FeedbackRequest;
 import com.mentoredu.feedback.dto.FeedbackResponse;
+import com.mentoredu.feedback.exception.FeedbackResourceAuthorshipException;
+import com.mentoredu.feedback.exception.FeedbackSolutionNotFoundException;
 import com.mentoredu.feedback.exception.FeedbackTargetNotFoundException;
 import com.mentoredu.feedback.exception.FeedbackUnauthorizedException;
 import com.mentoredu.feedback.model.FeedbackEntry;
@@ -224,6 +226,111 @@ class FeedbackControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message").value("Usuario no encontrado: ghost@example.com"));
+    }
+
+    // =========================================================================
+    // US40 — POST /api/v1/feedback (with solutionId)
+    // =========================================================================
+
+    // US40: exitoso — docente vincula feedback a una resolución → 201
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void provideFeedback_withSolutionId_returns201() throws Exception {
+        UUID targetUserId = UUID.randomUUID();
+        UUID solutionId = UUID.randomUUID();
+        FeedbackRequest request = buildRequest(targetUserId, "Excelente resolución.", new BigDecimal("9.5"));
+        request.setSolutionId(solutionId);
+
+        FeedbackResponse response = buildResponse(targetUserId, "Excelente resolución.", new BigDecimal("9.5"));
+
+        when(feedbackService.provideFeedback(eq("teacher@example.com"), any(FeedbackRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/feedback")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.body").value("Excelente resolución."))
+                .andExpect(jsonPath("$.score").value(9.5));
+    }
+
+    // US40: solución no existe → 404 (RN-48 prerequisite)
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void provideFeedback_withSolutionId_solutionNotFound_returns404() throws Exception {
+        UUID targetUserId = UUID.randomUUID();
+        UUID solutionId = UUID.randomUUID();
+        FeedbackRequest request = buildRequest(targetUserId, "Feedback válido.", null);
+        request.setSolutionId(solutionId);
+
+        when(feedbackService.provideFeedback(eq("teacher@example.com"), any(FeedbackRequest.class)))
+                .thenThrow(new FeedbackSolutionNotFoundException("Resolución no encontrada: " + solutionId));
+
+        mockMvc.perform(post("/api/v1/feedback")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Resolución no encontrada: " + solutionId));
+    }
+
+    // US40: docente no es autor del recurso → 403 (RN-48)
+    @Test
+    @WithMockUser(username = "other-teacher@example.com")
+    void provideFeedback_withSolutionId_notResourceAuthor_returns403() throws Exception {
+        UUID targetUserId = UUID.randomUUID();
+        UUID solutionId = UUID.randomUUID();
+        FeedbackRequest request = buildRequest(targetUserId, "Feedback no autorizado.", null);
+        request.setSolutionId(solutionId);
+
+        when(feedbackService.provideFeedback(eq("other-teacher@example.com"), any(FeedbackRequest.class)))
+                .thenThrow(new FeedbackResourceAuthorshipException(
+                        "Solo el autor del recurso puede dar feedback a sus resoluciones (RN-48)"));
+
+        mockMvc.perform(post("/api/v1/feedback")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").value("Solo el autor del recurso puede dar feedback a sus resoluciones (RN-48)"));
+    }
+
+    // =========================================================================
+    // F1.2 — GET /api/v1/feedback/given
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void getGivenFeedback_withFeedback_returns200WithList() throws Exception {
+        UUID targetId = UUID.randomUUID();
+        List<FeedbackResponse> responses = List.of(
+                buildResponse(targetId, "Retroalimentación emitida.", new BigDecimal("14.0"))
+        );
+
+        when(feedbackService.getGivenFeedback("teacher@example.com")).thenReturn(responses);
+
+        mockMvc.perform(get("/api/v1/feedback/given"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].body").value("Retroalimentación emitida."));
+    }
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void getGivenFeedback_emptyList_returns200() throws Exception {
+        when(feedbackService.getGivenFeedback("teacher@example.com")).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/feedback/given"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void getGivenFeedback_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/feedback/given"))
+                .andExpect(status().isUnauthorized());
     }
 
     // =========================================================================

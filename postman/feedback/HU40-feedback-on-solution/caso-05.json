@@ -1,0 +1,24 @@
+{
+  "description": "US40 — Retrocompatibilidad US34: feedback sin solutionId sigue funcionando",
+  "scenario": "Dado que el docente no especifica solutionId, cuando registra retroalimentación académica general, entonces el sistema crea el FeedbackEntry sin vínculo de resolución (retrocompatibilidad US34/US35).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/feedback",
+    "headers": {
+      "Authorization": "Bearer {{teacher_token}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "targetUserId": "{{student_id}}",
+      "body": "Retroalimentación general del ciclo académico.",
+      "score": 14.0
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "solutionId": null,
+      "resourceId": null
+    }
+  }
+}
