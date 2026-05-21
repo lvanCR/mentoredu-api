@@ -213,8 +213,20 @@ package "library" {
     *visibility : VARCHAR(20)
     exam_year : INT
     exam_cycle : VARCHAR(30)
+    *allows_solutions : BOOLEAN
     created_at : TIMESTAMP
     updated_at : TIMESTAMP
+  }
+
+  entity "resource_solutions" as resource_solutions {
+    *id : UUID <<PK>>
+    --
+    *resource_id : UUID <<FK>>
+    *student_id : UUID <<FK>>
+    *file_id : UUID <<FK>>
+    *status : VARCHAR(20)
+    submitted_at : TIMESTAMP
+    <<UNIQUE (resource_id, student_id)>>
   }
 
   entity "resource_tags" as resource_tags {
@@ -490,6 +502,8 @@ package "feedback" {
     *target_user_id : UUID <<FK>>
     program_id : UUID <<FK>>
     cycle_id : UUID <<FK>>
+    solution_id : UUID <<FK>>
+    resource_id : UUID <<FK>>
     *body : TEXT
     score : DECIMAL(4,2)
     created_at : TIMESTAMP
@@ -543,6 +557,9 @@ academic_resources ||--o{ resource_tags : resource_id
 tags ||--o{ resource_tags : tag_id
 users ||--o{ download_logs : user_id
 academic_resources ||--o{ download_logs : resource_id
+academic_resources ||--o{ resource_solutions : resource_id
+users ||--o{ resource_solutions : student_id
+resource_files ||--o{ resource_solutions : file_id
 
 users ||--o{ threads : author_user_id
 subjects ||--o{ threads : subject_id
@@ -591,5 +608,7 @@ users ||--o{ feedback_entries : author_user_id
 users ||--o{ feedback_entries : target_user_id
 programs ||--o{ feedback_entries : program_id
 cycles ||--o{ feedback_entries : cycle_id
+resource_solutions ||--o{ feedback_entries : solution_id
+academic_resources ||--o{ feedback_entries : resource_id
 
 @enduml

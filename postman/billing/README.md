@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Bounded Context: Billing (EP-08)
 
 Gestiona suscripciones premium, paquetes de monedas y compras de los usuarios.
@@ -25,39 +24,13 @@ Todas las HUs del bounded context **billing** han sido implementadas.
 ```
 billing/
 ├── README.md           ← este archivo
+├── HU23-activate-premium-subscription/
+├── HU24-buy-coin-package/
 └── F13-catalog/
     ├── README.md
     ├── caso-01-planes-sin-auth.json
     └── caso-02-paquetes-sin-auth.json
 ```
-
----
-
-## Notas del bounded context
-
-- `GET /billing/plans` y `GET /billing/coin-packages` son **públicos** (no requieren auth).
-- `POST /billing/subscriptions` y `POST /billing/coin-purchases` requieren `Authorization: Bearer <token>`.
-- Las monedas (`coin_wallet`) son distintas de los puntos de experiencia (`point_transactions`).
-- Los datos de planes y paquetes provienen del seed de la migración V5.
-=======
-# Billing — Postman
-
-Colección de casos de prueba para el Bounded Context **Billing** (EP-08).
-
----
-
-## Implementadas
-
-| HU | Descripción | Endpoint |
-|---|---|---|
-| HU23 | Activar suscripción premium | `POST /api/v1/billing/subscriptions` |
-| HU24 | Comprar paquete de monedas | `POST /api/v1/billing/coin-purchases` |
-
----
-
-## Pendientes
-
-_EP-08 completo._
 
 ---
 
@@ -73,10 +46,9 @@ _EP-08 completo._
 
 | Método | Ruta | US | Descripción |
 |---|---|---|---|
+| `GET`  | `/api/v1/billing/plans` | F1.3 | Listar planes disponibles (público) |
+| `GET`  | `/api/v1/billing/coin-packages` | F1.3 | Listar paquetes de monedas activos (público) |
 | `POST` | `/api/v1/billing/subscriptions` | US23 | Activar suscripción premium |
-| `GET`  | `/api/v1/billing/subscriptions/me` | US23 | Listar mis suscripciones |
-| `GET`  | `/api/v1/billing/subscriptions/me/active` | US23 | Suscripción activa |
-| `GET`  | `/api/v1/billing/coin-packages` | US24 | Listar paquetes de monedas activos |
 | `POST` | `/api/v1/billing/coin-purchases` | US24 | Comprar paquete de monedas |
 
 ---
@@ -89,4 +61,10 @@ _EP-08 completo._
 | `{{access_token}}` | JWT del usuario comprador | HU23, HU24 |
 | `{{plan_id}}` | UUID del plan premium elegido (seed: V5) | HU23 |
 | `{{coin_package_id}}` | UUID del paquete de monedas elegido (seed: V5) | HU24 |
->>>>>>> 24b4d986245a45255516a1701b1bff348ed88e8e
+
+## Notas del bounded context
+
+- `GET /billing/plans` y `GET /billing/coin-packages` son **públicos** (no requieren auth).
+- `POST /billing/subscriptions` y `POST /billing/coin-purchases` requieren `Authorization: Bearer <token>`.
+- Las monedas (`coin_wallet`) son distintas de los puntos de experiencia (`point_transactions`).
+- Los datos de planes y paquetes provienen del seed de la migración V5.

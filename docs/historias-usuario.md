@@ -502,6 +502,45 @@
 | Alternativo exitoso | Dado que presento mi apelacion correctamente, cuando consulto su estado, entonces el sistema la muestra como pendiente de revision. |
 | Alternativo error | Dado que ya presente una apelacion para el mismo reporte, cuando intento presentar otra, entonces el sistema la rechaza por duplicidad. |
 
+### US39 — Submit solution to academic resource
+- **Epic**: EP-04
+- **Descripcion**: Como estudiante, quiero enviar mi resolucion de un recurso academico para que el docente pueda evaluarla.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que el recurso tiene habilitadas las soluciones y no he enviado una resolucion antes, cuando envio un archivo PDF valido previamente subido, entonces el sistema registra mi solucion con estado SUBMITTED y me otorga 3 puntos de experiencia. |
+| Error — recurso no acepta soluciones | Dado que el recurso tiene allows_solutions en false, cuando intento enviar una resolucion, entonces el sistema rechaza la operacion con 403 Forbidden (RN-47). |
+| Error — solucion duplicada | Dado que ya envie una resolucion para ese recurso, cuando intento enviar otra, entonces el sistema la rechaza con 409 Conflict (RN-45). |
+| Error — recurso no existe | Dado que el resourceId no corresponde a ningun recurso registrado, cuando intento enviar la resolucion, entonces el sistema responde con 404 Not Found. |
+| Error — no autenticado | Dado que no estoy autenticado, cuando intento enviar una resolucion, entonces el sistema rechaza el acceso con 401 Unauthorized. |
+
+### US40 — Provide feedback on student solution
+- **Epic**: EP-11
+- **Descripcion**: Como docente o academia, quiero evaluar la resolucion enviada por un estudiante para registrar retroalimentacion academica formal sobre su trabajo.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso | Dado que soy el autor del recurso y la solucion del estudiante existe, cuando registro retroalimentacion con cuerpo de texto valido, entonces el sistema crea la entrada de feedback, cambia el estado de la solucion a REVIEWED automaticamente y me otorga 5 puntos de experiencia (RN-49). |
+| Error — rol no autorizado | Dado que mi rol no es TEACHER, ACADEMY ni ADMIN, cuando intento registrar feedback sobre una solucion, entonces el sistema rechaza la operacion con 403 Forbidden (RN-36). |
+| Error — no soy autor del recurso | Dado que soy docente pero no soy el autor del recurso al que pertenece la solucion, cuando intento evaluarla, entonces el sistema rechaza la operacion con 403 Forbidden (RN-48). |
+| Error — solucion no existe | Dado que el solutionId no corresponde a ninguna solucion registrada, cuando intento evaluarla, entonces el sistema responde con 404 Not Found. |
+| Alternativo exitoso — insignia HIGHLY_RATED | Dado que el score registrado es mayor o igual a 8.0, cuando el sistema procesa el feedback, entonces concede la insignia HIGHLY_RATED al estudiante receptor si aun no la tiene. |
+| Alternativo error — body vacio | Dado que omito el cuerpo del mensaje de retroalimentacion, cuando intento registrarlo, entonces el sistema rechaza la operacion con 400 Bad Request por validacion. |
+
+### US41 — View my solution and received feedback
+- **Epic**: EP-04
+- **Descripcion**: Como estudiante, quiero consultar la resolucion que envie para un recurso y el feedback que recibi sobre ella, para conocer la evaluacion de mi docente.
+- **Criterios de aceptacion**:
+
+| Escenario | Dado / Cuando / Entonces |
+|---|---|
+| Exitoso — con feedback | Dado que envie una resolucion y el docente ya la evaluo, cuando consulto mi solucion del recurso, entonces el sistema devuelve los datos de la solucion junto con el feedback recibido (cuerpo, score, autor y fecha). |
+| Exitoso — sin feedback aun | Dado que envie una resolucion pero aun no hay feedback registrado, cuando consulto mi solucion, entonces el sistema devuelve los datos de la solucion con status SUBMITTED y el campo feedback en null. |
+| Error — sin resolucion enviada | Dado que no he enviado ninguna resolucion para ese recurso, cuando intento consultarla, entonces el sistema responde con 404 Not Found. |
+| Error — no autenticado | Dado que no estoy autenticado, cuando intento consultar mi resolucion, entonces el sistema rechaza el acceso con 401 Unauthorized. |
+
 ## 3. Reglas de Negocio
 
 ### Auth
@@ -560,7 +599,7 @@
 - RN-35: Los puntos de experiencia y las monedas virtuales son sistemas independientes.
 
 ### Feedback
-- RN-36: Solo un usuario con rol TEACHER o ADMIN puede emitir retroalimentacion academica formal hacia un estudiante.
+- RN-36: Solo un usuario con rol TEACHER, ACADEMY o ADMIN puede emitir retroalimentacion academica formal hacia un estudiante.
 - RN-37: Una entrada de retroalimentacion no puede modificarse ni eliminarse una vez registrada.
 - RN-38: El estudiante receptor puede consultar su retroalimentacion recibida pero no editarla ni eliminarla.
 
@@ -576,6 +615,15 @@
 - RN-43: Solo puede existir una apelacion activa por usuario por reporte.
 - RN-44: El motivo de la apelacion es obligatorio.
 
+### Ciclo Pedagogico (US39-US41)
+- RN-45: Solo puede existir una solucion por par (resource_id, student_id). Restriccion UNIQUE en la base de datos.
+- RN-46: Una solucion solo es visible para su autor, el autor del recurso original, moderadores y administradores.
+- RN-47: El campo allows_solutions=true solo puede activarlo un usuario con rol TEACHER o ACADEMY. Los estudiantes no pueden activarlo.
+- RN-48: Solo el autor del recurso puede dar feedback a las soluciones de ese recurso.
+- RN-49: El estado de la solucion en resource_solutions pasa de SUBMITTED a REVIEWED automaticamente al registrar una feedback_entry con ese solution_id.
+- RN-50: El feedback de una solucion es inmutable una vez registrado (igual que RN-37).
+- RN-51: Las soluciones son privadas. No aparecen en busquedas publicas ni se referencian desde el foro.
+
 ## 4. Bounded Contexts
 
 | Bounded Context | Descripcion |
@@ -590,7 +638,7 @@
 | billing | Gestiona suscripciones, pagos y compra de beneficios premium. |
 | notifications | Gestiona las notificaciones generadas por eventos del sistema. |
 | gamification | Gestiona la acumulacion de puntos de experiencia, niveles, insignias y monedas del usuario. |
-| feedback | Gestiona la retroalimentacion academica formal emitida por docentes hacia estudiantes. |
+| feedback | Gestiona la retroalimentacion academica formal emitida por docentes y academias hacia estudiantes, incluyendo evaluaciones de resoluciones de recursos academicos. |
 
 ## 5. Relacion Epics → Bounded Contexts
 

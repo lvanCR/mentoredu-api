@@ -2,12 +2,9 @@ package com.mentoredu.profile.controller;
 
 import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
-<<<<<<< HEAD
-import com.mentoredu.profile.dto.ProfileMeResponse;
-=======
 import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
 import com.mentoredu.profile.dto.OrganizationProfileResponse;
->>>>>>> 24b4d986245a45255516a1701b1bff348ed88e8e
+import com.mentoredu.profile.dto.ProfileMeResponse;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;

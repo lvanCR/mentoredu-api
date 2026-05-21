@@ -37,7 +37,7 @@ public class FeedbackController {
             + "sobre el desempeño de un estudiante. "
             + "El cuerpo del mensaje es obligatorio (RN-36). "
             + "La puntuación es opcional (rango 0.0–20.0). "
-            + "Solo usuarios con rol TEACHER o ADMIN pueden emitir retroalimentación (RN-36). "
+            + "Solo usuarios con rol TEACHER, ACADEMY o ADMIN pueden emitir retroalimentación (RN-36). "
             + "Las entradas son inmutables una vez registradas (RN-37). "
             + "Requiere autenticación JWT."
     )

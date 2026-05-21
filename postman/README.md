@@ -12,49 +12,29 @@ postman/
 ├── README.md                              ← esta guía
 ├── environments/
 │   └── local.postman_environment.json     ← variables de entorno para local
-<<<<<<< HEAD
-├── auth/                                  ← EP-01: registro, login, recuperación, refresh
+├── auth/                                  ← EP-01 completo (HU01 v2+role, HU02, HU03, HU26, F0.5 refresh)
 │   ├── README.md
 │   ├── HU01-registro/                     ← 8 casos (incluye rol TEACHER, ACADEMY, inválido)
 │   ├── HU02-login/
 │   ├── HU03-password-recovery/
 │   ├── HU26-reset-password/
 │   └── HU-refresh/                        ← F0.5: POST /auth/refresh
-├── profile/                               ← EP-02: perfiles
-=======
-├── auth/                                  ← EP-01 completo (HU01, HU02, HU03, HU26)
-│   ├── README.md
-│   ├── HU01-registro/
-│   ├── HU02-login/
-│   ├── HU03-password-recovery/
-│   └── HU26-reset-password/
-├── profile/                               ← EP-02 completo (HU04–HU10)
->>>>>>> 24b4d986245a45255516a1701b1bff348ed88e8e
+├── profile/                               ← EP-02 completo (HU04–HU10, F0.4)
 │   ├── README.md
 │   ├── HU04-select-account-type/
 │   ├── HU05-update-profile/
 │   ├── HU06-create-student-profile/
-<<<<<<< HEAD
-│   └── F04-get-my-profile/                ← F0.4: GET /profiles/me
-├── billing/                               ← EP-08: suscripciones, monedas
-│   ├── README.md
-│   └── F13-catalog/                       ← F1.3: GET /billing/plans y /coin-packages
-├── academy/                               ← EP-03 (pendiente de documentar)
-├── library/                               ← EP-04 (pendiente de documentar)
-├── forum/                                 ← EP-05 (pendiente de documentar)
-├── moderation/                            ← EP-06 (pendiente de documentar)
-├── verification/                          ← EP-07 (pendiente de documentar)
-├── notifications/                         ← EP-09 (pendiente de documentar)
-└── gamification/                          ← EP-10 (pendiente de documentar)
-=======
 │   ├── HU07-update-target-university/
 │   ├── HU08-create-teacher-profile/
 │   ├── HU09-update-teacher-specialty/
-│   └── HU10-create-organization-profile/
-├── academy/                               ← EP-03 completo (HU33, HU11)
+│   ├── HU10-create-organization-profile/
+│   └── F04-get-my-profile/                ← F0.4: GET /profiles/me
+├── academy/                               ← EP-03 completo (HU33, HU11, HU36, HU37)
 │   ├── README.md
 │   ├── HU33-create-academy/
-│   └── HU11-register-academic-offering/
+│   ├── HU11-register-academic-offering/
+│   ├── HU36-register-campus/
+│   └── HU37-associate-teacher/
 ├── library/                               ← EP-04 completo (HU12–HU15)
 │   ├── README.md
 │   ├── HU12-upload-pdf-resource/
@@ -69,18 +49,20 @@ postman/
 │   ├── HU27-react-to-forum-content/
 │   ├── HU28-comment-on-answer/
 │   └── HU29-follow-user/
-├── moderation/                            ← EP-06 completo (HU19, HU20)
+├── moderation/                            ← EP-06 completo (HU19, HU20, HU38)
 │   ├── README.md
 │   ├── HU19-report-content/
-│   └── HU20-resolve-report/
+│   ├── HU20-resolve-report/
+│   └── HU38-submit-appeal/
 ├── verification/                          ← EP-07 completo (HU21, HU22)
 │   ├── README.md
 │   ├── HU21-teacher-verification/
 │   └── HU22-organization-verification/
-├── billing/                               ← EP-08 completo (HU23, HU24)
+├── billing/                               ← EP-08 completo (HU23, HU24, F1.3)
 │   ├── README.md
 │   ├── HU23-activate-premium-subscription/
-│   └── HU24-buy-coin-package/
+│   ├── HU24-buy-coin-package/
+│   └── F13-catalog/                       ← F1.3: GET /billing/plans y /coin-packages
 ├── notifications/                         ← EP-09 completo (HU25)
 │   ├── README.md
 │   └── HU25-view-notifications/
@@ -93,7 +75,6 @@ postman/
     ├── README.md
     ├── HU34-provide-feedback/
     └── HU35-view-feedback/
->>>>>>> 24b4d986245a45255516a1701b1bff348ed88e8e
 ```
 
 ---
@@ -203,34 +184,16 @@ Cuando una US quede implementada y testeada:
 
 ## Estado actual por bounded context
 
-<<<<<<< HEAD
-| Bounded Context | Implementados | Pendientes de documentar |
-|---|---|---|
-| auth | HU01 (v2+role), HU02, HU03, HU26, F0.5 (refresh) | — |
-| profile | HU04, HU05, HU06, F0.4 (GET /me) | HU07, HU08, HU09, HU10 |
-| academy | — | HU33, HU11, HU36, HU37 |
-| library | — | HU12, HU13, HU14, HU15 |
-| forum | — | HU16, HU17, HU18, HU27, HU28, HU29 |
-| moderation | — | HU19, HU20, HU38 |
-| verification | — | HU21, HU22 |
-| billing | HU23, HU24, F1.3 (GET /plans, GET /coin-packages) | — |
-| notifications | — | HU25 |
-| gamification | — | HU30, HU31, HU32 |
-| feedback | — | HU34, HU35 |
-
-> **Nota**: Las columnas muestran el estado de la *documentación Postman*. El código de todas las HUs de las épicas EP-01 a EP-11 y EP-03 está implementado. Ver `CLAUDE.md` para el estado completo del código.
-=======
 | Bounded Context | Dominio | HUs implementadas | HUs pendientes |
 |---|---|---|---|
-| auth | Identity & Access | HU01, HU02, HU03, HU26 | — |
-| profile | Identity & Access | HU04, HU05, HU06, HU07, HU08, HU09, HU10 | — |
+| auth | Identity & Access | HU01 (v2+role), HU02, HU03, HU26, F0.5 (refresh) | — |
+| profile | Identity & Access | HU04, HU05, HU06, HU07, HU08, HU09, HU10, F0.4 (GET /me) | — |
 | academy | Academic Content | HU33, HU11, HU36, HU37 | — |
-| library | Academic Content | HU12, HU13, HU14, HU15 | — |
+| library | Academic Content | HU12, HU13, HU14, HU15 | HU39 (solutions) |
 | forum | Community | HU16, HU17, HU18, HU27, HU28, HU29 | — |
 | moderation | Trust & Safety | HU19, HU20, HU38 | — |
 | verification | Trust & Safety | HU21, HU22 | — |
-| billing | Commerce | HU23, HU24 | — |
+| billing | Commerce | HU23, HU24, F1.3 (GET /plans, GET /coin-packages) | — |
 | notifications | Engagement | HU25 | — |
-| gamification | Engagement | HU30, HU31, HU32 | — |
-| feedback | Feedback | HU34, HU35 | — |
->>>>>>> 24b4d986245a45255516a1701b1bff348ed88e8e
+| gamification | Engagement | HU30, HU31, HU32 | HU39 (SOLUTION_SUBMITTED XP), HU40 (FEEDBACK_GIVEN XP) |
+| feedback | Feedback | HU34, HU35 | HU40 (feedback on solution) |

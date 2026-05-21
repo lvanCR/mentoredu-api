@@ -49,6 +49,11 @@ package "library" {
     PREMIUM
     PRIVATE
   }
+
+  enum ResourceSolutionStatus {
+    SUBMITTED
+    REVIEWED
+  }
 }
 
 package "forum" {
@@ -297,6 +302,7 @@ package "library" {
     +visibility: ResourceVisibility
     +examYear: Integer
     +examCycle: String
+    +allowsSolutions: Boolean
     +createdAt: LocalDateTime
     +updatedAt: LocalDateTime
 
@@ -304,6 +310,15 @@ package "library" {
     +editMetadata(): void
     +archive(): void
     +download(): void
+  }
+
+  class ResourceSolution {
+    +id: UUID
+    +status: ResourceSolutionStatus
+    +submittedAt: LocalDateTime
+
+    +submit(): void
+    +markAsReviewed(): void
   }
 
   class Tag {
@@ -580,6 +595,8 @@ package "feedback" {
     +targetUserId: UUID
     +programId: UUID
     +cycleId: UUID
+    +solutionId: UUID
+    +resourceId: UUID
     +body: String
     +score: BigDecimal
     +createdAt: LocalDateTime
@@ -635,6 +652,9 @@ AcademicResource "1" *-- "1" ResourceFile : contains >
 AcademicResource "0..*" -- "0..*" Tag : classified by >
 User "1" -- "0..*" DownloadLog : generates >
 AcademicResource "1" -- "0..*" DownloadLog : logged in >
+AcademicResource "1" -- "0..*" ResourceSolution : receives >
+User "1" -- "0..*" ResourceSolution : submits >
+ResourceFile "1" -- "0..*" ResourceSolution : attached as >
 
 ' Forum
 Subject "1" -- "0..*" Thread : categorizes >
@@ -694,5 +714,7 @@ Notification ..> Answer : notifies about
 ' Feedback
 User "1" -- "0..*" FeedbackEntry : provides >
 User "1" -- "0..*" FeedbackEntry : receives >
+ResourceSolution "0..1" -- "0..1" FeedbackEntry : evaluated by >
+AcademicResource "1" -- "0..*" FeedbackEntry : referenced in >
 
 @enduml

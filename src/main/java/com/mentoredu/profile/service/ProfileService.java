@@ -4,12 +4,9 @@ import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
-<<<<<<< HEAD
-import com.mentoredu.profile.dto.ProfileMeResponse;
-=======
 import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
 import com.mentoredu.profile.dto.OrganizationProfileResponse;
->>>>>>> 24b4d986245a45255516a1701b1bff348ed88e8e
+import com.mentoredu.profile.dto.ProfileMeResponse;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
@@ -28,10 +25,7 @@ import com.mentoredu.profile.model.OrganizationProfile;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.model.StudentProfile;
-<<<<<<< HEAD
-=======
 import com.mentoredu.profile.model.TeacherProfile;
->>>>>>> 24b4d986245a45255516a1701b1bff348ed88e8e
 import com.mentoredu.profile.repository.OrganizationProfileRepository;
 import com.mentoredu.profile.repository.ProfileRepository;
 import com.mentoredu.profile.repository.StudentProfileRepository;
