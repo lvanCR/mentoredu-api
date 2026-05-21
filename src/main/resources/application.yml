@@ -20,13 +20,15 @@ spring:
       max-request-size: 21MB
 
 app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+  password-reset:
+    expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:60}
   file:
     upload-dir: ${FILE_UPLOAD_DIR:uploads/resources}
     max-size-mb: ${FILE_MAX_SIZE_MB:20}
 
 server:
   port: 8080
-
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:3600000}

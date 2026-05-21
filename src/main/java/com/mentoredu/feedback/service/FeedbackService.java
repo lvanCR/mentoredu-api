@@ -29,9 +29,9 @@ public class FeedbackService implements IFeedbackService {
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + authorEmail));
 
         String roleName = author.getRole().getName();
-        if (!"TEACHER".equals(roleName) && !"ADMIN".equals(roleName)) {
+        if (!"TEACHER".equals(roleName) && !"ACADEMY".equals(roleName) && !"ADMIN".equals(roleName)) {
             throw new FeedbackUnauthorizedException(
-                    "Solo los docentes y administradores pueden emitir retroalimentación académica (RN-36)");
+                    "Solo los docentes, academias y administradores pueden emitir retroalimentación académica (RN-36)");
         }
 
         User target = userRepository.findById(request.getTargetUserId())
@@ -56,6 +56,7 @@ public class FeedbackService implements IFeedbackService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FeedbackResponse> getReceivedFeedback(String targetEmail) {
         User target = userRepository.findByEmail(targetEmail)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + targetEmail));

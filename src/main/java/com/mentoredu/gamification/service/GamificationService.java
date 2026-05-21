@@ -22,7 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -67,12 +71,14 @@ public class GamificationService implements IGamificationService {
     // -------------------------------------------------------------------------
 
     @Override
+    @Transactional(readOnly = true)
     public PointsResponse getPoints(UUID userId) {
         Integer total = pointTransactionRepository.sumPointsByUserId(userId);
         return new PointsResponse(userId, total == null ? 0 : total);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CoinsResponse getCoins(UUID userId) {
         return coinWalletRepository.findById(userId)
                 .map(wallet -> new CoinsResponse(userId, wallet.getBalance()))
@@ -127,11 +133,16 @@ public class GamificationService implements IGamificationService {
     // -------------------------------------------------------------------------
 
     @Override
+    @Transactional(readOnly = true)
     public List<BadgeResponse> getBadges(UUID userId) {
-        return userBadgeRepository.findByUserId(userId).stream()
+        List<UserBadge> userBadges = userBadgeRepository.findByUserId(userId);
+        Set<UUID> badgeIds = userBadges.stream().map(UserBadge::getBadgeId).collect(Collectors.toSet());
+        Map<UUID, Badge> badgeMap = badgeRepository.findAllById(badgeIds).stream()
+                .collect(Collectors.toMap(Badge::getId, Function.identity()));
+        return userBadges.stream()
                 .map(ub -> {
-                    Badge badge = badgeRepository.findById(ub.getBadgeId())
-                            .orElseThrow(() -> new IllegalStateException("Badge not found: " + ub.getBadgeId()));
+                    Badge badge = badgeMap.get(ub.getBadgeId());
+                    if (badge == null) throw new IllegalStateException("Badge not found: " + ub.getBadgeId());
                     return new BadgeResponse(badge.getId(), badge.getCode(), badge.getName(),
                             badge.getDescription(), ub.getEarnedAt());
                 })

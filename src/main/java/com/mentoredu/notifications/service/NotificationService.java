@@ -23,6 +23,7 @@ public class NotificationService implements INotificationService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<NotificationResponse> getPendingNotifications(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userEmail));
