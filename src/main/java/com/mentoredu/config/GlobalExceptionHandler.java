@@ -1,6 +1,8 @@
 package com.mentoredu.config;
 
 import com.mentoredu.billing.exception.ActiveSubscriptionAlreadyExistsException;
+import com.mentoredu.feedback.exception.FeedbackResourceAuthorshipException;
+import com.mentoredu.feedback.exception.FeedbackSolutionNotFoundException;
 import com.mentoredu.feedback.exception.FeedbackTargetNotFoundException;
 import com.mentoredu.feedback.exception.FeedbackUnauthorizedException;
 import com.mentoredu.notifications.exception.NotificationNotFoundException;
@@ -42,6 +44,8 @@ import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceFileNotFoundException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
 import com.mentoredu.library.exception.ResourceNotAvailableException;
+import com.mentoredu.library.exception.SolutionAccessDeniedException;
+import com.mentoredu.library.exception.SolutionNotFoundException;
 import com.mentoredu.library.exception.SolutionsNotAllowedException;
 import com.mentoredu.profile.exception.OrganizationNameAlreadyExistsException;
 import com.mentoredu.profile.exception.OrganizationProfileAlreadyExistsException;
@@ -649,6 +653,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
+    @ExceptionHandler(FeedbackSolutionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleFeedbackSolutionNotFound(FeedbackSolutionNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(FeedbackResourceAuthorshipException.class)
+    public ResponseEntity<Map<String, Object>> handleFeedbackResourceAuthorship(FeedbackResourceAuthorshipException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
     @ExceptionHandler(SolutionsNotAllowedException.class)
     public ResponseEntity<Map<String, Object>> handleSolutionsNotAllowed(SolutionsNotAllowedException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -667,6 +691,26 @@ public class GlobalExceptionHandler {
         body.put("error", "Conflict");
         body.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(SolutionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleSolutionNotFound(SolutionNotFoundException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(SolutionAccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleSolutionAccessDenied(SolutionAccessDeniedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

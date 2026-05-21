@@ -2,11 +2,15 @@ package com.mentoredu.library.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.library.dto.SolutionDetailResponse;
 import com.mentoredu.library.dto.SolutionResponse;
 import com.mentoredu.library.dto.SubmitSolutionRequest;
 import com.mentoredu.library.exception.DuplicateSolutionException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
+import com.mentoredu.library.exception.SolutionAccessDeniedException;
+import com.mentoredu.library.exception.SolutionNotFoundException;
 import com.mentoredu.library.exception.SolutionsNotAllowedException;
+import com.mentoredu.library.model.ResourceFile;
 import com.mentoredu.library.model.ResourceSolution;
 import com.mentoredu.library.service.IResourceSolutionService;
 import org.junit.jupiter.api.Test;
@@ -18,11 +22,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -162,6 +168,56 @@ class ResourceSolutionControllerTest {
     }
 
     // =========================================================================
+    // F2.2 — GET /api/v1/resources/{resourceId}/solutions
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void getSolutions_asTeacherAuthor_returns200WithList() throws Exception {
+        UUID resourceId = UUID.randomUUID();
+        UUID solutionId = UUID.randomUUID();
+        UUID fileId = UUID.randomUUID();
+
+        when(solutionService.getSolutionsForResource(eq(resourceId), eq("teacher@example.com")))
+                .thenReturn(List.of(buildSolutionDetailResponse(solutionId, resourceId, fileId)));
+
+        mockMvc.perform(get("/api/v1/resources/{resourceId}/solutions", resourceId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].solutionId").value(solutionId.toString()))
+                .andExpect(jsonPath("$[0].status").value("SUBMITTED"));
+    }
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void getSolutions_whenNotResourceAuthor_returns403() throws Exception {
+        UUID resourceId = UUID.randomUUID();
+
+        when(solutionService.getSolutionsForResource(eq(resourceId), eq("teacher@example.com")))
+                .thenThrow(new SolutionAccessDeniedException(
+                        "Solo el autor del recurso puede ver sus resoluciones (RN-46)"));
+
+        mockMvc.perform(get("/api/v1/resources/{resourceId}/solutions", resourceId))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Forbidden"));
+    }
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void getSolutionById_whenNotFound_returns404() throws Exception {
+        UUID resourceId = UUID.randomUUID();
+        UUID solutionId = UUID.randomUUID();
+
+        when(solutionService.getSolutionById(eq(resourceId), eq(solutionId), eq("teacher@example.com")))
+                .thenThrow(new SolutionNotFoundException("Solución no encontrada: " + solutionId));
+
+        mockMvc.perform(get("/api/v1/resources/{resourceId}/solutions/{solutionId}", resourceId, solutionId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
@@ -174,5 +230,20 @@ class ResourceSolutionControllerTest {
         solution.setStatus("SUBMITTED");
         solution.setSubmittedAt(LocalDateTime.now());
         return new SolutionResponse(solution);
+    }
+
+    private SolutionDetailResponse buildSolutionDetailResponse(UUID solutionId, UUID resourceId, UUID fileId) {
+        ResourceSolution solution = new ResourceSolution();
+        solution.setId(solutionId);
+        solution.setResourceId(resourceId);
+        solution.setStudentId(UUID.randomUUID());
+        solution.setFileId(fileId);
+        solution.setStatus("SUBMITTED");
+        solution.setSubmittedAt(LocalDateTime.now());
+
+        ResourceFile file = new ResourceFile();
+        file.setId(fileId);
+        file.setFileUrl("http://localhost/uploads/" + fileId + ".pdf");
+        return new SolutionDetailResponse(solution, file);
     }
 }

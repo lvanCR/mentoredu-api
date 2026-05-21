@@ -20,6 +20,9 @@ public class FeedbackRequest {
 
     private UUID cycleId;
 
+    /** Opcional: si se proporciona, el feedback queda vinculado a una resolución específica (US40). */
+    private UUID solutionId;
+
     @NotBlank(message = "El cuerpo de la retroalimentación no puede estar vacío")
     private String body;
 

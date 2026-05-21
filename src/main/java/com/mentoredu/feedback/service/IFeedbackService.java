@@ -8,4 +8,5 @@ import java.util.List;
 public interface IFeedbackService {
     FeedbackResponse provideFeedback(String authorEmail, FeedbackRequest request);
     List<FeedbackResponse> getReceivedFeedback(String targetEmail);
+    List<FeedbackResponse> getGivenFeedback(String authorEmail);
 }

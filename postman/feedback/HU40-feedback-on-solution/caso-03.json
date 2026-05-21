@@ -1,0 +1,26 @@
+{
+  "description": "US40 — Error: docente no es autor del recurso (RN-48)",
+  "scenario": "Dado que el docente autenticado no es el autor del recurso al que pertenece la solución, cuando intenta registrar feedback con ese solutionId, entonces el sistema responde con 403 Forbidden (RN-48).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/feedback",
+    "headers": {
+      "Authorization": "Bearer {{other_teacher_token}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "targetUserId": "{{student_id}}",
+      "solutionId": "{{solution_id}}",
+      "body": "Intento de feedback no autorizado.",
+      "score": 7.0
+    }
+  },
+  "expected_response": {
+    "status": 403,
+    "body": {
+      "status": 403,
+      "error": "Forbidden",
+      "message": "Solo el autor del recurso puede dar feedback a sus resoluciones (RN-48)"
+    }
+  }
+}

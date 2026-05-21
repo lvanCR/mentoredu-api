@@ -185,6 +185,12 @@ public class GamificationService implements IGamificationService {
         if (currentLevel >= 10) tryAwardBadge(userId, "LEVEL_10");
     }
 
+    @Override
+    @Transactional
+    public void awardBadge(UUID userId, String badgeCode) {
+        tryAwardBadge(userId, badgeCode);
+    }
+
     private void tryAwardBadge(UUID userId, String badgeCode) {
         badgeRepository.findByCode(badgeCode).ifPresent(badge -> {
             if (!userBadgeRepository.existsByUserIdAndBadgeId(userId, badge.getId())) {

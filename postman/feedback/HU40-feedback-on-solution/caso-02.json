@@ -1,0 +1,25 @@
+{
+  "description": "US40 — Error: rol no autorizado (estudiante intenta dar feedback)",
+  "scenario": "Dado que el usuario autenticado tiene rol STUDENT, cuando intenta registrar retroalimentación con solutionId, entonces el sistema responde con 403 Forbidden (RN-36).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/feedback",
+    "headers": {
+      "Authorization": "Bearer {{student_token}}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "targetUserId": "{{other_student_id}}",
+      "solutionId": "{{solution_id}}",
+      "body": "Intento no autorizado.",
+      "score": 5.0
+    }
+  },
+  "expected_response": {
+    "status": 403,
+    "body": {
+      "status": 403,
+      "error": "Forbidden"
+    }
+  }
+}
