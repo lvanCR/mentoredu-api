@@ -12,6 +12,7 @@ Colección de casos de prueba para el Bounded Context **Library** (EP-04).
 | [HU13](./HU13-register-resource-metadata/) | Registrar metadatos del recurso | 4 | `POST /api/v1/resources` |
 | [HU14](./HU14-search-resources/) | Buscar recursos por filtros | 4 | `GET /api/v1/resources/search` |
 | [HU15](./HU15-download-resource/) | Descargar recurso académico | 4 | `GET /api/v1/resources/{id}/download` |
+| [HU39](./HU39-submit-solution/) | Enviar resolución de recurso académico | 5 | `POST /api/v1/resources/{resourceId}/solutions` |
 
 ---
 

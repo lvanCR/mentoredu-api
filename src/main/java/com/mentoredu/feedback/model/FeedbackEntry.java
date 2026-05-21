@@ -36,6 +36,12 @@ public class FeedbackEntry {
     @Column(name = "cycle_id", columnDefinition = "uuid")
     private UUID cycleId;
 
+    @Column(name = "solution_id", columnDefinition = "uuid")
+    private UUID solutionId;
+
+    @Column(name = "resource_id", columnDefinition = "uuid")
+    private UUID resourceId;
+
     @Column(columnDefinition = "text", nullable = false)
     private String body;
 

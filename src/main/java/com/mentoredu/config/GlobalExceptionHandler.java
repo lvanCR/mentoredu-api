@@ -35,12 +35,14 @@ import com.mentoredu.auth.exception.EmailNotFoundException;
 import com.mentoredu.auth.exception.InvalidCredentialsException;
 import com.mentoredu.auth.exception.InvalidTokenException;
 import com.mentoredu.library.exception.DuplicateResourceException;
+import com.mentoredu.library.exception.DuplicateSolutionException;
 import com.mentoredu.library.exception.FileSizeLimitExceededException;
 import com.mentoredu.library.exception.InvalidFileTypeException;
 import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceFileNotFoundException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
 import com.mentoredu.library.exception.ResourceNotAvailableException;
+import com.mentoredu.library.exception.SolutionsNotAllowedException;
 import com.mentoredu.profile.exception.OrganizationNameAlreadyExistsException;
 import com.mentoredu.profile.exception.OrganizationProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
@@ -645,6 +647,26 @@ public class GlobalExceptionHandler {
         body.put("error", "Forbidden");
         body.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(SolutionsNotAllowedException.class)
+    public ResponseEntity<Map<String, Object>> handleSolutionsNotAllowed(SolutionsNotAllowedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(DuplicateSolutionException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateSolution(DuplicateSolutionException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

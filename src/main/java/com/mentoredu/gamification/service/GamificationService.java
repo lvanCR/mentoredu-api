@@ -173,11 +173,14 @@ public class GamificationService implements IGamificationService {
                 .countByUserIdAndSourceType(userId, PointSourceType.ANSWER_GIVEN.name());
         long resourceCount = pointTransactionRepository
                 .countByUserIdAndSourceType(userId, PointSourceType.RESOURCE_PUBLISHED.name());
+        long solutionCount = pointTransactionRepository
+                .countByUserIdAndSourceType(userId, PointSourceType.SOLUTION_SUBMITTED.name());
         int totalXP = pointTransactionRepository.sumPointsByUserId(userId);
         int currentLevel = Math.min(totalXP / XP_PER_LEVEL + 1, MAX_LEVEL);
 
         if (answerCount >= 1) tryAwardBadge(userId, "FIRST_ANSWER");
         if (resourceCount >= 1) tryAwardBadge(userId, "FIRST_RESOURCE");
+        if (solutionCount >= 1) tryAwardBadge(userId, "FIRST_SOLUTION");
         if (currentLevel >= 5) tryAwardBadge(userId, "LEVEL_5");
         if (currentLevel >= 10) tryAwardBadge(userId, "LEVEL_10");
     }

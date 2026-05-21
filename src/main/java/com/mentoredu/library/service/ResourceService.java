@@ -70,6 +70,16 @@ public class ResourceService implements IResourceService {
                     "A resource already exists for file: " + request.getFileId());
         }
 
+        // F1.5 / RN-47: solo TEACHER, ACADEMY o ADMIN pueden activar allows_solutions
+        boolean allowsSolutions = Boolean.TRUE.equals(request.getAllowsSolutions());
+        if (allowsSolutions) {
+            String role = author.getRole().getName();
+            if (!"TEACHER".equals(role) && !"ACADEMY".equals(role) && !"ADMIN".equals(role)) {
+                throw new ResourceAccessDeniedException(
+                        "Solo docentes, academias y administradores pueden activar allows_solutions (RN-47)");
+            }
+        }
+
         String visibility = (request.getVisibility() != null && !request.getVisibility().isBlank())
                 ? request.getVisibility() : "PUBLIC";
 
@@ -83,6 +93,7 @@ public class ResourceService implements IResourceService {
                 .fileId(request.getFileId())
                 .year(request.getYear())
                 .examCycle(request.getExamCycle())
+                .allowsSolutions(allowsSolutions)
                 .author(author)
                 .build();
 

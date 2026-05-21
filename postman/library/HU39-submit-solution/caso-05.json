@@ -1,0 +1,17 @@
+{
+  "description": "US39 — Error: no autenticado",
+  "scenario": "Dado que el usuario no está autenticado, cuando intenta enviar una resolución, entonces el sistema rechaza el acceso con 401 Unauthorized.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/resources/{{resourceId}}/solutions",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "fileId": "{{fileId}}"
+    }
+  },
+  "expected_response": {
+    "status": 401
+  }
+}

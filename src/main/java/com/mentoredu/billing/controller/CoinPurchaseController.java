@@ -1,7 +1,6 @@
 package com.mentoredu.billing.controller;
 
 import com.mentoredu.billing.dto.BuyCoinPackageRequest;
-import com.mentoredu.billing.dto.CoinPackageResponse;
 import com.mentoredu.billing.dto.CoinPurchaseResponse;
 import com.mentoredu.billing.service.ICoinPurchaseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,11 +15,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Billing — Monedas", description = "Compra de paquetes de monedas y listado de paquetes disponibles (US24).")
+@Tag(name = "Billing — Monedas", description = "Compra de paquetes de monedas (US24).")
 @SecurityRequirement(name = "bearerAuth")
 public class CoinPurchaseController {
 
@@ -45,15 +42,5 @@ public class CoinPurchaseController {
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(coinPurchaseService.buy(auth.getName(), request));
-    }
-
-    @GetMapping("/api/v1/billing/coin-packages")
-    @Operation(
-        summary = "US24 - Listar paquetes de monedas disponibles",
-        description = "Devuelve todos los paquetes de monedas activos que el usuario puede comprar. "
-            + "Requiere autenticación JWT."
-    )
-    public ResponseEntity<List<CoinPackageResponse>> listPackages() {
-        return ResponseEntity.ok(coinPurchaseService.listActivePackages());
     }
 }
