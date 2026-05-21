@@ -28,4 +28,11 @@ public class RegisterRequest {
         message = "Password must contain at least one uppercase letter, one lowercase letter, and one digit"
     )
     private String password;
+
+    @NotBlank(message = "Role is required")
+    @Pattern(
+        regexp = "^(STUDENT|TEACHER|ACADEMY)$",
+        message = "Role must be one of: STUDENT, TEACHER, ACADEMY"
+    )
+    private String role;
 }

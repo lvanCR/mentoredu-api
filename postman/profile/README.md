@@ -4,9 +4,9 @@ Gestiona el perfil base y los perfiles específicos de cada tipo de usuario.
 
 ---
 
-## Historias implementadas
+## Implementados
 
-| HU | Descripción | Endpoint | Nombre en Postman | Fecha |
+| ID | Descripción | Endpoint | Nombre en Postman | Fecha |
 |---|---|---|---|---|
 | HU04 | Seleccionar tipo de cuenta | `POST /api/v1/profiles/account-type` | `MentorEduProfileHU04-SelectAccountTypePOST` | 2026-05-16 |
 | HU05 | Actualizar datos comunes del perfil | `PATCH /api/v1/profiles/me` | `MentorEduProfileHU05-UpdateProfilePATCH` | 2026-05-16 |
@@ -15,6 +15,7 @@ Gestiona el perfil base y los perfiles específicos de cada tipo de usuario.
 | HU08 | Crear perfil de docente | `POST /api/v1/profiles/teacher` | `MentorEduProfileHU08-CreateTeacherProfilePOST` | 2026-05-16 |
 | HU09 | Actualizar especialidad del docente | `PATCH /api/v1/profiles/teacher/me` | `MentorEduProfileHU09-UpdateTeacherSpecialtyPATCH` | 2026-05-16 |
 | HU10 | Crear perfil de organización | `POST /api/v1/profiles/organization` | `MentorEduProfileHU10-CreateOrganizationProfilePOST` | 2026-05-16 |
+| F0.4 | Obtener mi perfil completo (con isProfileComplete) | `GET /api/v1/profiles/me` | `MentorEduProfileF04-GetMyProfileGET` | 2026-05-21 |
 
 ## Historias pendientes
 
@@ -85,6 +86,12 @@ profile/
     ├── caso-06-perfil-ya-existe.json
     ├── caso-07-sin-perfil-base.json
     └── caso-08-sin-autenticacion.json
+└── F04-get-my-profile/
+    ├── README.md
+    ├── caso-01-perfil-completo-student.json
+    ├── caso-02-perfil-sin-completar.json
+    ├── caso-03-sin-autenticacion.json
+    └── caso-04-sin-perfil-base.json
 ```
 
 ---

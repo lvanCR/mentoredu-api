@@ -5,6 +5,8 @@ import com.mentoredu.auth.dto.ForgotPasswordRequest;
 import com.mentoredu.auth.dto.ForgotPasswordResponse;
 import com.mentoredu.auth.dto.LoginRequest;
 import com.mentoredu.auth.dto.LoginResponse;
+import com.mentoredu.auth.dto.RefreshTokenRequest;
+import com.mentoredu.auth.dto.RefreshTokenResponse;
 import com.mentoredu.auth.dto.RegisterRequest;
 import com.mentoredu.auth.dto.RegisterResponse;
 import com.mentoredu.auth.dto.ResetPasswordRequest;
@@ -144,12 +146,87 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // F0.3 — Registrar como TEACHER → 201 con rol TEACHER
+    @Test
+    void register_asTeacher_returns201WithTeacherRole() throws Exception {
+        var response = RegisterResponse.builder()
+                .id(UUID.randomUUID())
+                .firstName("Ana")
+                .lastName("García")
+                .email("ana@example.com")
+                .role("TEACHER")
+                .status("ACTIVE")
+                .build();
+
+        when(authService.register(any())).thenReturn(response);
+
+        var request = validRequest();
+        request.setRole("TEACHER");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.role").value("TEACHER"));
+    }
+
+    // F0.3 — Registrar como ACADEMY → 201 con rol ACADEMY
+    @Test
+    void register_asAcademy_returns201WithAcademyRole() throws Exception {
+        var response = RegisterResponse.builder()
+                .id(UUID.randomUUID())
+                .firstName("Corp")
+                .lastName("SA")
+                .email("corp@example.com")
+                .role("ACADEMY")
+                .status("ACTIVE")
+                .build();
+
+        when(authService.register(any())).thenReturn(response);
+
+        var request = validRequest();
+        request.setRole("ACADEMY");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.role").value("ACADEMY"));
+    }
+
+    // F0.3 — Rol prohibido (MODERATOR) → 400 Bad Request
+    @Test
+    void register_withForbiddenRole_returns400() throws Exception {
+        var request = validRequest();
+        request.setRole("MODERATOR");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.role").exists());
+    }
+
+    // F0.3 — Sin campo role → 400 Bad Request
+    @Test
+    void register_withMissingRole_returns400() throws Exception {
+        var request = validRequest();
+        request.setRole(null);
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.role").exists());
+    }
+
     private RegisterRequest validRequest() {
         var r = new RegisterRequest();
         r.setFirstName("Juan");
         r.setLastName("Pérez");
         r.setEmail("juan@example.com");
         r.setPassword("Password123");
+        r.setRole("STUDENT");
         return r;
     }
 
@@ -418,5 +495,70 @@ class AuthControllerTest {
         r.setToken("a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2");
         r.setNewPassword("NewPassword123");
         return r;
+    }
+
+    // -------------------------------------------------------------------------
+    // F0.5 — POST /auth/refresh
+    // -------------------------------------------------------------------------
+
+    @Test
+    void refresh_withValidToken_returns200WithNewAccessToken() throws Exception {
+        var response = RefreshTokenResponse.builder()
+                .accessToken("eyJhbGciOiJIUzI1NiJ9.new.token")
+                .expiresIn(900L)
+                .build();
+
+        when(authService.refresh(any())).thenReturn(response);
+
+        var request = new RefreshTokenRequest();
+        request.setRefreshToken("550e8400-e29b-41d4-a716-446655440000");
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.expiresIn").value(900));
+    }
+
+    @Test
+    void refresh_withRevokedToken_returns401() throws Exception {
+        when(authService.refresh(any()))
+                .thenThrow(new InvalidCredentialsException("Refresh token has been revoked"));
+
+        var request = new RefreshTokenRequest();
+        request.setRefreshToken("revoked-token");
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Refresh token has been revoked"));
+    }
+
+    @Test
+    void refresh_withExpiredToken_returns401() throws Exception {
+        when(authService.refresh(any()))
+                .thenThrow(new InvalidCredentialsException("Refresh token has expired"));
+
+        var request = new RefreshTokenRequest();
+        request.setRefreshToken("expired-token");
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Refresh token has expired"));
+    }
+
+    @Test
+    void refresh_withMissingToken_returns400() throws Exception {
+        var request = new RefreshTokenRequest();
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.refreshToken").exists());
     }
 }

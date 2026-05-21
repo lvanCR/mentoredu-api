@@ -11,7 +11,8 @@
       "firstName": "Ana",
       "lastName": "García",
       "email": "ana.garcia@example.com",
-      "password": "Segura2024"
+      "password": "Segura2024",
+      "role": "STUDENT"
     }
   },
   "expected_response": {
@@ -26,7 +27,7 @@
     }
   },
   "notas": [
-    "El rol asignado siempre es STUDENT en el registro (RN-02).",
+    "El campo 'role' es obligatorio desde US01-v2 (F0.3). Valores válidos: STUDENT, TEACHER, ACADEMY.",
     "La contraseña no aparece en la respuesta; se almacena cifrada con BCrypt (RN-03).",
     "Guarda el 'email' y 'password' del body para usarlos en HU02 (login)."
   ]

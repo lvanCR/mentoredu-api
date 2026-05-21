@@ -4,8 +4,7 @@ import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
-import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
-import com.mentoredu.profile.dto.OrganizationProfileResponse;
+import com.mentoredu.profile.dto.ProfileMeResponse;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
@@ -24,7 +23,6 @@ import com.mentoredu.profile.model.OrganizationProfile;
 import com.mentoredu.profile.model.Profile;
 import com.mentoredu.profile.model.ProfileType;
 import com.mentoredu.profile.model.StudentProfile;
-import com.mentoredu.profile.model.TeacherProfile;
 import com.mentoredu.profile.repository.OrganizationProfileRepository;
 import com.mentoredu.profile.repository.ProfileRepository;
 import com.mentoredu.profile.repository.StudentProfileRepository;
@@ -92,6 +90,29 @@ public class ProfileService implements IProfileService {
         if (request.getBio()       != null) profile.setBio(request.getBio());
 
         return new ProfileResponse(profileRepository.save(profile));
+    }
+
+    // -------------------------------------------------------------------------
+    // F0.4 — GET /profiles/me
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProfileMeResponse getMyProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
+
+        boolean complete = switch (profile.getProfileType()) {
+            case "STUDENT"      -> studentProfileRepository.existsById(profile.getId());
+            case "TEACHER"      -> teacherProfileRepository.existsById(profile.getId());
+            case "ORGANIZATION" -> organizationProfileRepository.existsById(profile.getId());
+            default             -> false;
+        };
+
+        return new ProfileMeResponse(profile, complete);
     }
 
     // -------------------------------------------------------------------------

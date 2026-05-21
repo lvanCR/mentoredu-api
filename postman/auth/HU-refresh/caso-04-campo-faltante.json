@@ -1,0 +1,25 @@
+{
+  "escenario": "Caso 4 — Campo refreshToken ausente",
+  "gherkin": "Dado que no incluyo el campo refreshToken en el body, cuando envío la solicitud, entonces el sistema rechaza con error de validación.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/auth/refresh",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {}
+  },
+  "expected_response": {
+    "status": 400,
+    "campo_fallido": "refreshToken",
+    "notas": "El campo 'refreshToken' no supera la validación @NotBlank. El body puede estar vacío o el campo puede tener valor null o cadena vacía."
+  },
+  "variantes": [
+    {
+      "descripcion": "refreshToken vacío",
+      "body": {
+        "refreshToken": ""
+      }
+    }
+  ]
+}

@@ -12,13 +12,14 @@ postman/
 ├── README.md                              ← esta guía
 ├── environments/
 │   └── local.postman_environment.json     ← variables de entorno para local
-├── auth/                                  ← EP-01 completo (HU01, HU02, HU03, HU26)
+├── auth/                                  ← EP-01: registro, login, recuperación, refresh
 │   ├── README.md
-│   ├── HU01-registro/
+│   ├── HU01-registro/                     ← 8 casos (incluye rol TEACHER, ACADEMY, inválido)
 │   ├── HU02-login/
 │   ├── HU03-password-recovery/
-│   └── HU26-reset-password/
-├── profile/                               ← EP-02 completo (HU04–HU10)
+│   ├── HU26-reset-password/
+│   └── HU-refresh/                        ← F0.5: POST /auth/refresh
+├── profile/                               ← EP-02: perfiles
 │   ├── README.md
 │   ├── HU04-select-account-type/
 │   ├── HU05-update-profile/
@@ -69,6 +70,17 @@ postman/
     ├── README.md
     ├── HU34-provide-feedback/
     └── HU35-view-feedback/
+│   └── F04-get-my-profile/                ← F0.4: GET /profiles/me
+├── billing/                               ← EP-08: suscripciones, monedas
+│   ├── README.md
+│   └── F13-catalog/                       ← F1.3: GET /billing/plans y /coin-packages
+├── academy/                               ← EP-03 (pendiente de documentar)
+├── library/                               ← EP-04 (pendiente de documentar)
+├── forum/                                 ← EP-05 (pendiente de documentar)
+├── moderation/                            ← EP-06 (pendiente de documentar)
+├── verification/                          ← EP-07 (pendiente de documentar)
+├── notifications/                         ← EP-09 (pendiente de documentar)
+└── gamification/                          ← EP-10 (pendiente de documentar)
 ```
 
 ---
@@ -191,3 +203,18 @@ Cuando una US quede implementada y testeada:
 | notifications | Engagement | HU25 | — |
 | gamification | Engagement | HU30, HU31, HU32 | — |
 | feedback | Feedback | HU34, HU35 | — |
+| Bounded Context | Implementados | Pendientes de documentar |
+|---|---|---|
+| auth | HU01 (v2+role), HU02, HU03, HU26, F0.5 (refresh) | — |
+| profile | HU04, HU05, HU06, F0.4 (GET /me) | HU07, HU08, HU09, HU10 |
+| academy | — | HU33, HU11, HU36, HU37 |
+| library | — | HU12, HU13, HU14, HU15 |
+| forum | — | HU16, HU17, HU18, HU27, HU28, HU29 |
+| moderation | — | HU19, HU20, HU38 |
+| verification | — | HU21, HU22 |
+| billing | HU23, HU24, F1.3 (GET /plans, GET /coin-packages) | — |
+| notifications | — | HU25 |
+| gamification | — | HU30, HU31, HU32 |
+| feedback | — | HU34, HU35 |
+
+> **Nota**: Las columnas muestran el estado de la *documentación Postman*. El código de todas las HUs de las épicas EP-01 a EP-11 y EP-03 está implementado. Ver `CLAUDE.md` para el estado completo del código.

@@ -1,0 +1,33 @@
+{
+  "escenario": "Caso 7 — Registro exitoso con rol ACADEMY",
+  "gherkin": "Dado que represento una organización educativa, cuando me registro con role=ACADEMY, entonces el sistema crea la cuenta con rol ACADEMY.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/auth/register",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "firstName": "Institución",
+      "lastName": "Educativa Lima",
+      "email": "academia.lima@example.com",
+      "password": "Academia2024",
+      "role": "ACADEMY"
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "id": "<uuid-generado-por-el-sistema>",
+      "firstName": "Institución",
+      "lastName": "Educativa Lima",
+      "email": "academia.lima@example.com",
+      "role": "ACADEMY",
+      "status": "ACTIVE"
+    }
+  },
+  "notas": [
+    "El rol asignado en la respuesta es ACADEMY (US01-v2, F0.3).",
+    "Este usuario podrá usar HU10 (crear perfil organización) y HU33 (crear academia)."
+  ]
+}

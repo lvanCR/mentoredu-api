@@ -11,7 +11,8 @@
       "firstName": "",
       "lastName": "Torres",
       "email": "pedro.torres@example.com",
-      "password": "Segura2024"
+      "password": "Segura2024",
+      "role": "STUDENT"
     }
   },
   "expected_response": {
@@ -25,6 +26,16 @@
       "body": {
         "firstName": "Pedro",
         "lastName": "",
+        "email": "pedro.torres@example.com",
+        "password": "Segura2024",
+        "role": "STUDENT"
+      }
+    },
+    {
+      "descripcion": "role ausente",
+      "body": {
+        "firstName": "Pedro",
+        "lastName": "Torres",
         "email": "pedro.torres@example.com",
         "password": "Segura2024"
       }

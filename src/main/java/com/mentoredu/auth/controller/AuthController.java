@@ -4,6 +4,8 @@ import com.mentoredu.auth.dto.ForgotPasswordRequest;
 import com.mentoredu.auth.dto.ForgotPasswordResponse;
 import com.mentoredu.auth.dto.LoginRequest;
 import com.mentoredu.auth.dto.LoginResponse;
+import com.mentoredu.auth.dto.RefreshTokenRequest;
+import com.mentoredu.auth.dto.RefreshTokenResponse;
 import com.mentoredu.auth.dto.RegisterRequest;
 import com.mentoredu.auth.dto.RegisterResponse;
 import com.mentoredu.auth.dto.ResetPasswordRequest;
@@ -43,5 +45,10 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<ResetPasswordResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         return ResponseEntity.ok(authService.resetPassword(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshTokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refresh(request));
     }
 }

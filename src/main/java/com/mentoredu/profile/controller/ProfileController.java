@@ -2,8 +2,7 @@ package com.mentoredu.profile.controller;
 
 import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
-import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
-import com.mentoredu.profile.dto.OrganizationProfileResponse;
+import com.mentoredu.profile.dto.ProfileMeResponse;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
 import com.mentoredu.profile.dto.StudentProfileResponse;
@@ -34,6 +33,25 @@ import java.util.UUID;
 public class ProfileController {
 
     private final IProfileService profileService;
+
+    // -------------------------------------------------------------------------
+    // F0.4 — GET /profiles/me
+    // -------------------------------------------------------------------------
+
+    @GetMapping("/me")
+    @Operation(
+        summary = "F0.4 - Obtener mi perfil completo",
+        description = "Devuelve el perfil base del usuario autenticado junto con isProfileComplete, "
+            + "que indica si ya completó su perfil específico (student/teacher/organization). "
+            + "Usado por el frontend justo después del login para decidir el dashboard."
+    )
+    public ResponseEntity<ProfileMeResponse> getMyProfile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(profileService.getMyProfile(auth.getName()));
+    }
 
     // -------------------------------------------------------------------------
     // US04 — Select account type
