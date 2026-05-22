@@ -206,21 +206,14 @@ Cuando envío PATCH /api/v1/profiles/teacher/me
 Entonces recibo 200 OK con el perfil actualizado
 ```
 
-**Escenario 3 — Agregar especialidad**
+**Escenario 3 — Rol incorrecto**
 ```gherkin
-Dado que tengo teacher_profile
-Cuando envío POST /api/v1/profiles/teacher/me/specialties con {universityId, areaId, courseId}
-Entonces recibo 201 Created con la especialidad registrada en teacher_specialties
+Dado que tengo rol STUDENT o ACADEMY
+Cuando intento acceder a POST /api/v1/profiles/teacher
+Entonces recibo 403 Forbidden
 ```
 
-**Escenario 4 — Especialidad duplicada**
-```gherkin
-Dado que ya tengo esa combinación universidad+área+curso
-Cuando intento agregar la misma especialidad
-Entonces recibo 409 Conflict
-```
-
-**Reglas:** RN-03, RN-04
+**Reglas:** RN-03
 **Notificación:** ninguna
 
 ---
@@ -308,7 +301,8 @@ Entonces recibo 403 Forbidden o 401 Unauthorized
 **Escenario 1 — Registro exitoso**
 ```gherkin
 Dado que tengo un fileId válido y envío metadatos completos
-Cuando envío POST /api/v1/resources con {fileId, title, type, universityId, areaId, courseId}
+Cuando envío POST /api/v1/resources con {fileId, title, type, universityId, areaId}
+  y opcionalmente {careerId, courseId} según el tipo
 Entonces recibo 201 Created con el recurso completo
 Y el recurso queda con acepta_resoluciones=false por defecto
 ```
@@ -320,21 +314,29 @@ Cuando envío POST /api/v1/resources
 Entonces recibo 400 Bad Request
 ```
 
-**Escenario 3 — Universidad/área/curso no en catálogo**
+**Escenario 3 — Universidad/área/curso/carrera no en catálogo**
 ```gherkin
 Dado que algún ID no existe en el catálogo
 Cuando envío POST /api/v1/resources
 Entonces recibo 400 Bad Request especificando el campo que falló
 ```
 
-**Escenario 4 — Campo obligatorio faltante**
+**Escenario 4 — Campo obligatorio faltante según tipo**
 ```gherkin
-Dado que omito title, type, universityId, areaId o courseId
+Dado que omito title, type, universityId o areaId
+  o que envío type=EXAMEN_SECCION, PRACTICA u OTRO sin courseId
 Cuando envío POST /api/v1/resources
 Entonces recibo 400 Bad Request con la lista de campos faltantes
 ```
 
-**Reglas:** RN-05, RN-06, RN-07
+**Escenario 5 — career_id inconsistente con area_id**
+```gherkin
+Dado que envío un careerId cuya carrera no pertenece al areaId enviado
+Cuando envío POST /api/v1/resources
+Entonces recibo 400 Bad Request con "La carrera no pertenece al área seleccionada"
+```
+
+**Reglas:** RN-05, RN-06, RN-07, RN-23
 **Notificación:** ninguna
 
 ---
@@ -348,8 +350,9 @@ Entonces recibo 400 Bad Request con la lista de campos faltantes
 **Escenario 1 — Búsqueda con filtros**
 ```gherkin
 Dado que soy usuario autenticado
-Cuando envío GET /api/v1/resources?universityId=X&areaId=Y&type=EXAMEN
+Cuando envío GET /api/v1/resources?universityId=X&areaId=Y&careerId=Z&type=EXAMEN_COMPLETO
 Entonces recibo 200 OK con lista paginada de recursos que coinciden con los filtros
+Y si careerId está presente, solo se devuelven recursos de esa carrera o del área completa
 ```
 
 **Escenario 2 — Sin filtros (listado general)**
@@ -441,17 +444,32 @@ Entonces recibo 200 OK con lista vacía []
 ### US12 — Crear un hilo en el foro
 
 **Como** usuario autenticado,
-**quiero** publicar una pregunta o duda en el foro asociada a un curso,
-**para** que otros usuarios me puedan ayudar.
+**quiero** publicar una pregunta o duda en el foro con al menos una categoría de contexto,
+**para** que otros usuarios con el mismo interés lo encuentren y puedan ayudarme.
 
-**Escenario 1 — Creación exitosa**
+**Escenario 1 — Creación exitosa (modo académico global)**
 ```gherkin
-Dado que soy usuario autenticado y el courseId existe en el catálogo
+Dado que soy usuario autenticado y envío solo courseId válido
 Cuando envío POST /api/v1/threads con {courseId, title, body, isAnonymous}
 Entonces recibo 201 Created con el hilo creado con status=OPEN
 ```
 
-**Escenario 2 — Publicación anónima**
+**Escenario 2 — Creación exitosa (modo institucional con área)**
+```gherkin
+Dado que soy usuario autenticado y envío universityId y areaId válidos
+Cuando envío POST /api/v1/threads con {universityId, areaId, title, body, isAnonymous}
+Entonces recibo 201 Created con el hilo creado
+Y el área pertenece a la universidad enviada
+```
+
+**Escenario 3 — Creación exitosa (modo vocacional)**
+```gherkin
+Dado que soy usuario autenticado y envío solo careerId válido
+Cuando envío POST /api/v1/threads con {careerId, title, body, isAnonymous}
+Entonces recibo 201 Created con el hilo creado
+```
+
+**Escenario 4 — Publicación anónima**
 ```gherkin
 Dado que envío isAnonymous=true
 Cuando el hilo se crea y se consulta
@@ -459,18 +477,46 @@ Entonces la respuesta muestra author como null o "Anónimo"
 Pero internamente se almacena el author_id para moderación
 ```
 
-**Escenario 3 — Curso no existe en catálogo**
+**Escenario 5 — Área enviada sin universidad**
 ```gherkin
-Dado que el courseId enviado no existe en la tabla courses
+Dado que envío areaId pero omito universityId
 Cuando envío POST /api/v1/threads
-Entonces recibo 400 Bad Request
+Entonces recibo 400 Bad Request con "El área requiere una universidad seleccionada"
 ```
 
-**Escenario 4 — Campos obligatorios faltantes**
+**Escenario 6 — Carrera y curso enviados simultáneamente**
+```gherkin
+Dado que envío tanto careerId como courseId
+Cuando envío POST /api/v1/threads
+Entonces recibo 400 Bad Request con "No puedes combinar carrera y curso en el mismo hilo"
+```
+
+**Escenario 7 — Área no pertenece a la universidad enviada**
+```gherkin
+Dado que envío universityId=PUCP y areaId=Área-Ingeniería-UNI
+Cuando envío POST /api/v1/threads
+Entonces recibo 400 Bad Request con "El área no pertenece a la universidad seleccionada"
+```
+
+**Escenario 8 — Sin ninguna categoría**
+```gherkin
+Dado que envío solo title y body sin ningún ID de clasificación
+Cuando envío POST /api/v1/threads
+Entonces recibo 400 Bad Request con "El hilo requiere al menos una categoría"
+```
+
+**Escenario 9 — Campos obligatorios faltantes**
 ```gherkin
 Dado que omito title o body
 Cuando envío POST /api/v1/threads
 Entonces recibo 400 Bad Request
+```
+
+**Escenario 10 — Carrera no pertenece a la universidad enviada**
+```gherkin
+Dado que envío universityId=UNMSM y careerId=Medicina-PUCP
+Cuando envío POST /api/v1/threads
+Entonces recibo 400 Bad Request con "La carrera no pertenece a la universidad seleccionada"
 ```
 
 **Reglas:** RN-12, RN-13
@@ -627,6 +673,13 @@ Cuando envío GET /api/v1/resources/{id}/solutions
 Entonces recibo 200 OK con la lista de resoluciones enviadas por los estudiantes
 ```
 
+**Escenario 5 — Tipo incorrecto para acepta_resoluciones**
+```gherkin
+Dado que soy TEACHER o ACADEMY y envío acepta_resoluciones=true con resource_type != PRACTICA
+Cuando envío POST /api/v1/resources o PATCH /api/v1/resources/{id}/settings
+Entonces recibo 400 Bad Request con "Solo los recursos de tipo PRACTICA aceptan resoluciones"
+```
+
 **Reglas:** RN-05, RN-08
 **Notificación:** `solution_submitted` → autor del ejercicio (disparado en US18)
 
@@ -726,11 +779,20 @@ Y la resolución cambia automáticamente a status=REVIEWED
 Y se dispara notificación tipo "feedback_received" al estudiante autor de la resolución
 ```
 
-**Escenario 2 — No soy el autor del ejercicio**
+**Escenario 2 — No estoy autorizado para dar feedback**
 ```gherkin
-Dado que no soy el autor del recurso base del ejercicio
+Dado que no soy el autor del recurso ni un TEACHER con TeacherAcademyLink ACCEPTED a la academia autora
 Cuando intento dar feedback a una de sus resoluciones
 Entonces recibo 403 Forbidden
+```
+
+**Escenario 6 — Docente vinculado a academia puede dar feedback**
+```gherkin
+Dado que el ejercicio fue subido por una ACADEMY
+  y soy un TEACHER con TeacherAcademyLink en status=ACCEPTED a esa academia
+Cuando envío POST /api/v1/solutions/{solutionId}/feedback con {body, score}
+Entonces recibo 201 Created con el feedback registrado bajo mi usuario
+Y se dispara notificación tipo "feedback_received" al estudiante
 ```
 
 **Escenario 3 — Score fuera de rango**
@@ -1158,15 +1220,14 @@ Entonces recibo 200 OK con los datos del catálogo sin necesitar token
 | RN-01 | Cada usuario tiene exactamente un rol asignado en el registro (STUDENT, TEACHER o ACADEMY). No cambia. |
 | RN-02 | Las contraseñas se almacenan cifradas con BCrypt. Nunca en texto plano. |
 | RN-03 | Universidad, área, curso y carrera solo se pueden seleccionar desde el catálogo. No se admite texto libre. |
-| RN-04 | Un docente puede tener múltiples especialidades (universidad + área + curso). Sin límite en el MVP. |
 | RN-05 | Solo TEACHER, ACADEMY o ADMIN pueden subir recursos y activar `acepta_resoluciones`. STUDENT → 403. |
-| RN-06 | Tipos de recurso válidos: `EXAMEN`, `GUIA`, `APUNTES`, `PRACTICA`, `OTRO`. |
-| RN-07 | Un recurso requiere obligatoriamente: universidad, área, curso, tipo y título. |
-| RN-08 | Un ejercicio es un recurso con `acepta_resoluciones = true`. No es una entidad separada. |
+| RN-06 | Tipos de recurso válidos: `EXAMEN_COMPLETO`, `EXAMEN_SECCION`, `GUIA`, `APUNTES`, `PRACTICA`, `OTRO`. |
+| RN-07 | Un recurso requiere: universidad, área, tipo y título. `course_id` es obligatorio excepto para `EXAMEN_COMPLETO`, `GUIA` y `APUNTES` (abarca el área completa). `career_id` es siempre opcional. |
+| RN-08 | `acepta_resoluciones = true` solo es válido para `resource_type = PRACTICA`. Cualquier otro tipo → 400. |
 | RN-09 | Un estudiante puede enviar exactamente una resolución por ejercicio. Segunda solicitud → 409. |
-| RN-10 | Solo el autor del ejercicio puede ver las resoluciones y dar feedback. Acceso por otro usuario → 403. |
+| RN-10 | Pueden ver resoluciones y dar feedback: (a) el autor directo del recurso, o (b) si el autor es ACADEMY, cualquier TEACHER con TeacherAcademyLink en status=ACCEPTED a esa academia. Cualquier otro usuario → 403. |
 | RN-11 | El feedback es inmutable una vez enviado. No se edita, no se elimina. Segunda solicitud → 409. |
-| RN-12 | Los hilos del foro deben estar asociados a un curso existente en el catálogo. |
+| RN-12 | Un hilo requiere al menos uno de: `university_id`, `course_id` o `career_id`. Combinaciones prohibidas: (a) `area_id` sin `university_id`, (b) `career_id` + `course_id`, (c) `area_id` cuya universidad no coincida con `university_id`, (d) `career_id` cuya universidad no coincida con `university_id` si ambos están presentes. Todos los IDs deben existir en el catálogo. |
 | RN-13 | Posts anónimos guardan `author_id` internamente. Solo MODERATOR/ADMIN puede ver la identidad real. |
 | RN-14 | Solo el autor del hilo o un MODERATOR/ADMIN puede cerrarlo. Otro rol → 403. |
 | RN-15 | Las reacciones son únicas por usuario por contenido. Funcionan como toggle (segunda llamada elimina la primera). |
@@ -1177,3 +1238,4 @@ Entonces recibo 200 OK con los datos del catálogo sin necesitar token
 | RN-20 | Solo ADMIN puede crear o modificar entidades del catálogo (universidades, áreas, cursos, carreras). |
 | RN-21 | Un usuario no puede seguirse a sí mismo. CHECK constraint en BD y validación en servicio → 400. |
 | RN-22 | El score del feedback está entre 0.0 y 10.0 inclusive. Fuera de rango → 400. |
+| RN-23 | Si `career_id` está presente en un recurso, la carrera debe pertenecer al `area_id` del mismo recurso. Violación → 400. |

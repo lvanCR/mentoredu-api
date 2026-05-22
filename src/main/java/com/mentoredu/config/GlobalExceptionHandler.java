@@ -1,63 +1,46 @@
 package com.mentoredu.config;
 
-import com.mentoredu.billing.exception.ActiveSubscriptionAlreadyExistsException;
-import com.mentoredu.feedback.exception.FeedbackResourceAuthorshipException;
-import com.mentoredu.feedback.exception.FeedbackSolutionNotFoundException;
-import com.mentoredu.feedback.exception.FeedbackTargetNotFoundException;
-import com.mentoredu.feedback.exception.FeedbackUnauthorizedException;
-import com.mentoredu.notifications.exception.NotificationNotFoundException;
-import com.mentoredu.billing.exception.CoinPackageNotFoundException;
-import com.mentoredu.billing.exception.PaymentFailedException;
-import com.mentoredu.billing.exception.PlanNotFoundException;
+import com.mentoredu.auth.exception.EmailAlreadyExistsException;
+import com.mentoredu.auth.exception.EmailNotFoundException;
+import com.mentoredu.auth.exception.InvalidCredentialsException;
+import com.mentoredu.auth.exception.InvalidTokenException;
+import com.mentoredu.catalog.exception.AreaNotFoundException;
+import com.mentoredu.catalog.exception.CareerNotFoundException;
+import com.mentoredu.catalog.exception.CourseNotFoundException;
+import com.mentoredu.catalog.exception.DuplicateCourseException;
+import com.mentoredu.catalog.exception.DuplicateUniversityException;
+import com.mentoredu.catalog.exception.UniversityNotFoundException;
+import com.mentoredu.community.exception.AlreadyFollowingException;
+import com.mentoredu.community.exception.DuplicateReportException;
+import com.mentoredu.community.exception.DuplicateVerificationException;
+import com.mentoredu.community.exception.NotificationNotFoundException;
+import com.mentoredu.community.exception.ReportAlreadyResolvedException;
+import com.mentoredu.community.exception.ReportNotFoundException;
+import com.mentoredu.community.exception.SelfFollowException;
+import com.mentoredu.community.exception.VerificationNotFoundException;
 import com.mentoredu.forum.exception.AnswerNotFoundException;
 import com.mentoredu.forum.exception.CommentNotFoundException;
 import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.exception.ThreadNotOwnedException;
 import com.mentoredu.forum.exception.UserNotFoundException;
-import com.mentoredu.moderation.exception.DuplicateAppealException;
-import com.mentoredu.moderation.exception.DuplicateReportException;
-import com.mentoredu.moderation.exception.AppealAlreadyResolvedException;
-import com.mentoredu.verification.exception.DuplicateVerificationRequestException;
-import com.mentoredu.verification.exception.UnauthorizedVerificationException;
-import com.mentoredu.verification.exception.VerificationAlreadyProcessedException;
-import com.mentoredu.verification.exception.VerificationRequestNotFoundException;
-import com.mentoredu.moderation.exception.ReportAlreadyResolvedException;
-import com.mentoredu.moderation.exception.ReportNotFoundException;
-import com.mentoredu.moderation.exception.ReportedContentNotFoundException;
-import com.mentoredu.moderation.exception.SelfReportException;
-import com.mentoredu.moderation.exception.UnauthorizedModerationException;
-import com.mentoredu.academy.exception.AcademyAlreadyExistsException;
-import com.mentoredu.academy.exception.AcademyNotFoundException;
-import com.mentoredu.academy.exception.CampusAlreadyExistsException;
-import com.mentoredu.academy.exception.CycleAlreadyExistsException;
-import com.mentoredu.academy.exception.ProgramAlreadyExistsException;
-import com.mentoredu.academy.exception.TeacherAlreadyAssociatedException;
-import com.mentoredu.academy.exception.TeacherProfileNotFoundException;
-import com.mentoredu.auth.exception.EmailAlreadyExistsException;
-import com.mentoredu.auth.exception.EmailNotFoundException;
-import com.mentoredu.auth.exception.InvalidCredentialsException;
-import com.mentoredu.auth.exception.InvalidTokenException;
 import com.mentoredu.library.exception.DuplicateResourceException;
-import com.mentoredu.library.exception.DuplicateSolutionException;
 import com.mentoredu.library.exception.FileSizeLimitExceededException;
 import com.mentoredu.library.exception.InvalidFileTypeException;
 import com.mentoredu.library.exception.ResourceAccessDeniedException;
-import com.mentoredu.library.exception.ResourceFileNotFoundException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
-import com.mentoredu.library.exception.ResourceNotAvailableException;
-import com.mentoredu.library.exception.SolutionAccessDeniedException;
-import com.mentoredu.library.exception.SolutionNotFoundException;
-import com.mentoredu.library.exception.SolutionsNotAllowedException;
-import com.mentoredu.profile.exception.OrganizationNameAlreadyExistsException;
-import com.mentoredu.profile.exception.OrganizationProfileAlreadyExistsException;
+import com.mentoredu.pedagogy.exception.DuplicateSolutionException;
+import com.mentoredu.pedagogy.exception.FeedbackAlreadyExistsException;
+import com.mentoredu.pedagogy.exception.FeedbackNotFoundException;
+import com.mentoredu.pedagogy.exception.SolutionAccessDeniedException;
+import com.mentoredu.pedagogy.exception.SolutionNotFoundException;
+import com.mentoredu.profile.exception.AcademyNameAlreadyExistsException;
+import com.mentoredu.profile.exception.AcademyProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.TeacherProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.WrongProfileTypeException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -65,6 +48,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -73,6 +58,16 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private Map<String, Object> body(HttpStatus status, String error, String message) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", status.value());
+        body.put("error", error);
+        body.put("message", message);
+        return body;
+    }
+
+    // ── Validation ────────────────────────────────────────────────────────────
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
@@ -80,669 +75,252 @@ public class GlobalExceptionHandler {
             String field = ((FieldError) error).getField();
             fieldErrors.put(field, error.getDefaultMessage());
         });
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Validation failed");
-        body.put("details", fieldErrors);
-
-        return ResponseEntity.badRequest().body(body);
+        Map<String, Object> b = new LinkedHashMap<>();
+        b.put("timestamp", LocalDateTime.now().toString());
+        b.put("status", HttpStatus.BAD_REQUEST.value());
+        b.put("error", "Validation failed");
+        b.put("details", fieldErrors);
+        return ResponseEntity.badRequest().body(b);
     }
 
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleEmailConflict(EmailAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.UNAUTHORIZED.value());
-        body.put("error", "Unauthorized");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
-    }
-
-    @ExceptionHandler(EmailNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleEmailNotFound(EmailNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidToken(InvalidTokenException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.badRequest().body(body);
-    }
-
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put("error", "Internal server error");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
-    }
-
-    @ExceptionHandler(ProfileAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleProfileAlreadyExists(ProfileAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(ProfileNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleProfileNotFound(ProfileNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(StudentProfileAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleStudentProfileAlreadyExists(StudentProfileAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(TeacherProfileAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleTeacherProfileAlreadyExists(TeacherProfileAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(WrongProfileTypeException.class)
-    public ResponseEntity<Map<String, Object>> handleWrongProfileType(WrongProfileTypeException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(OrganizationProfileAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleOrganizationProfileAlreadyExists(OrganizationProfileAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(OrganizationNameAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleOrganizationNameAlreadyExists(OrganizationNameAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(AcademyAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleAcademyAlreadyExists(AcademyAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(AcademyNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleAcademyNotFound(AcademyNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(ProgramAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleProgramAlreadyExists(ProgramAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(CycleAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleCycleAlreadyExists(CycleAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(CampusAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleCampusAlreadyExists(CampusAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(TeacherProfileNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleTeacherProfileNotFound(TeacherProfileNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(TeacherAlreadyAssociatedException.class)
-    public ResponseEntity<Map<String, Object>> handleTeacherAlreadyAssociated(TeacherAlreadyAssociatedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleNotReadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request",
+            "Cuerpo de solicitud inválido o tipo de dato incorrecto"));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", "Invalid value for parameter '" + ex.getName() + "': " + ex.getValue());
-
-        return ResponseEntity.badRequest().body(body);
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.badRequest().body(body);
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(ResourceAccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceAccessDenied(ResourceAccessDeniedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("error", "Forbidden");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
-    }
-
-    @ExceptionHandler(ResourceNotAvailableException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotAvailable(ResourceNotAvailableException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
-        body.put("error", "Service Unavailable");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
-    }
-
-    @ExceptionHandler(ResourceFileNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceFileNotFound(ResourceFileNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<Map<String, Object>> handleDuplicateResource(DuplicateResourceException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(InvalidFileTypeException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidFileType(InvalidFileTypeException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.badRequest().body(body);
-    }
-
-    @ExceptionHandler(FileSizeLimitExceededException.class)
-    public ResponseEntity<Map<String, Object>> handleFileSizeLimit(FileSizeLimitExceededException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.badRequest().body(body);
-    }
-
-    @ExceptionHandler(AnswerNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleAnswerNotFound(AnswerNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(CommentNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleCommentNotFound(CommentNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUserNotFound(UserNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(ThreadClosedException.class)
-    public ResponseEntity<Map<String, Object>> handleThreadClosed(ThreadClosedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(ThreadNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleThreadNotFound(ThreadNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(ThreadNotOwnedException.class)
-    public ResponseEntity<Map<String, Object>> handleThreadNotOwned(ThreadNotOwnedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("error", "Forbidden");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
-    }
-
-    @ExceptionHandler(ReportedContentNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleReportedContentNotFound(ReportedContentNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(SelfReportException.class)
-    public ResponseEntity<Map<String, Object>> handleSelfReport(SelfReportException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.badRequest().body(body);
-    }
-
-    @ExceptionHandler(DuplicateAppealException.class)
-    public ResponseEntity<Map<String, Object>> handleDuplicateAppeal(DuplicateAppealException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(DuplicateReportException.class)
-    public ResponseEntity<Map<String, Object>> handleDuplicateReport(DuplicateReportException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(ReportNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleReportNotFound(ReportNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-    }
-
-    @ExceptionHandler(ReportAlreadyResolvedException.class)
-    public ResponseEntity<Map<String, Object>> handleReportAlreadyResolved(ReportAlreadyResolvedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(UnauthorizedModerationException.class)
-    public ResponseEntity<Map<String, Object>> handleUnauthorizedModeration(UnauthorizedModerationException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("error", "Forbidden");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request",
+            "Valor inválido para parámetro '" + ex.getName() + "': " + ex.getValue()));
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Map<String, Object>> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", "File size exceeds the maximum allowed limit.");
-
-        return ResponseEntity.badRequest().body(body);
+    public ResponseEntity<Map<String, Object>> handleMaxUpload(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request",
+            "El archivo supera el tamaño máximo permitido"));
     }
 
-    @ExceptionHandler(DuplicateVerificationRequestException.class)
-    public ResponseEntity<Map<String, Object>> handleDuplicateVerification(DuplicateVerificationRequestException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    @ExceptionHandler({IllegalArgumentException.class})
+    public ResponseEntity<Map<String, Object>> handleIllegalArg(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
     }
 
-    @ExceptionHandler(UnauthorizedVerificationException.class)
-    public ResponseEntity<Map<String, Object>> handleUnauthorizedVerification(UnauthorizedVerificationException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("error", "Forbidden");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(body(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage()));
     }
 
-    @ExceptionHandler(VerificationAlreadyProcessedException.class)
-    public ResponseEntity<Map<String, Object>> handleVerificationAlreadyProcessed(VerificationAlreadyProcessedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    // ── Auth ─────────────────────────────────────────────────────────────────
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handle(EmailAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
     }
 
-    @ExceptionHandler(AppealAlreadyResolvedException.class)
-    public ResponseEntity<Map<String, Object>> handleAppealAlreadyResolved(AppealAlreadyResolvedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handle(InvalidCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage()));
     }
 
-    @ExceptionHandler(VerificationRequestNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleVerificationRequestNotFound(VerificationRequestNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    @ExceptionHandler(EmailNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(EmailNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
     }
 
-    @ExceptionHandler(PlanNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handlePlanNotFound(PlanNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<Map<String, Object>> handle(InvalidTokenException ex) {
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
     }
 
-    @ExceptionHandler(ActiveSubscriptionAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleActiveSubscriptionExists(ActiveSubscriptionAlreadyExistsException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    // ── Catalog ───────────────────────────────────────────────────────────────
+    @ExceptionHandler(UniversityNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(UniversityNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
     }
 
-    @ExceptionHandler(PaymentFailedException.class)
-    public ResponseEntity<Map<String, Object>> handlePaymentFailed(PaymentFailedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.badRequest().body(body);
+    @ExceptionHandler(AreaNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(AreaNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
     }
 
-    @ExceptionHandler(CoinPackageNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleCoinPackageNotFound(CoinPackageNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    @ExceptionHandler(CourseNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(CourseNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
     }
 
-    @ExceptionHandler(NotificationNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotificationNotFound(NotificationNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    @ExceptionHandler(CareerNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(CareerNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
     }
 
-    @ExceptionHandler(FeedbackTargetNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleFeedbackTargetNotFound(FeedbackTargetNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    @ExceptionHandler(DuplicateUniversityException.class)
+    public ResponseEntity<Map<String, Object>> handle(DuplicateUniversityException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
     }
 
-    @ExceptionHandler(FeedbackUnauthorizedException.class)
-    public ResponseEntity<Map<String, Object>> handleFeedbackUnauthorized(FeedbackUnauthorizedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("error", "Forbidden");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    @ExceptionHandler(DuplicateCourseException.class)
+    public ResponseEntity<Map<String, Object>> handle(DuplicateCourseException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
     }
 
-    @ExceptionHandler(FeedbackSolutionNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleFeedbackSolutionNotFound(FeedbackSolutionNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    // ── Profile ───────────────────────────────────────────────────────────────
+    @ExceptionHandler(ProfileAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handle(ProfileAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
     }
 
-    @ExceptionHandler(FeedbackResourceAuthorshipException.class)
-    public ResponseEntity<Map<String, Object>> handleFeedbackResourceAuthorship(FeedbackResourceAuthorshipException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("error", "Forbidden");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    @ExceptionHandler(ProfileNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(ProfileNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
     }
 
-    @ExceptionHandler(SolutionsNotAllowedException.class)
-    public ResponseEntity<Map<String, Object>> handleSolutionsNotAllowed(SolutionsNotAllowedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("error", "Forbidden");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    @ExceptionHandler(StudentProfileAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handle(StudentProfileAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(TeacherProfileAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handle(TeacherProfileAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(AcademyProfileAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handle(AcademyProfileAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(AcademyNameAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handle(AcademyNameAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(WrongProfileTypeException.class)
+    public ResponseEntity<Map<String, Object>> handle(WrongProfileTypeException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    // ── Library ───────────────────────────────────────────────────────────────
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ResourceAccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handle(ResourceAccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<Map<String, Object>> handle(DuplicateResourceException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidFileTypeException.class)
+    public ResponseEntity<Map<String, Object>> handle(InvalidFileTypeException ex) {
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
+    }
+
+    @ExceptionHandler(FileSizeLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handle(FileSizeLimitExceededException ex) {
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
+    }
+
+    // ── Forum ─────────────────────────────────────────────────────────────────
+    @ExceptionHandler(ThreadNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(ThreadNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ThreadClosedException.class)
+    public ResponseEntity<Map<String, Object>> handle(ThreadClosedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ThreadNotOwnedException.class)
+    public ResponseEntity<Map<String, Object>> handle(ThreadNotOwnedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage()));
+    }
+
+    @ExceptionHandler(AnswerNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(AnswerNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(CommentNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    // ── Pedagogy ──────────────────────────────────────────────────────────────
+    @ExceptionHandler(SolutionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(SolutionNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
     }
 
     @ExceptionHandler(DuplicateSolutionException.class)
-    public ResponseEntity<Map<String, Object>> handleDuplicateSolution(DuplicateSolutionException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(SolutionNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleSolutionNotFound(SolutionNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    public ResponseEntity<Map<String, Object>> handle(DuplicateSolutionException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
     }
 
     @ExceptionHandler(SolutionAccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleSolutionAccessDenied(SolutionAccessDeniedException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("error", "Forbidden");
-        body.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    public ResponseEntity<Map<String, Object>> handle(SolutionAccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage()));
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", "Invalid value. Allowed values for profileType: STUDENT, TEACHER, ORGANIZATION");
+    @ExceptionHandler(FeedbackAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handle(FeedbackAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
 
-        return ResponseEntity.badRequest().body(body);
+    @ExceptionHandler(FeedbackNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(FeedbackNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    // ── Community ─────────────────────────────────────────────────────────────
+    @ExceptionHandler(SelfFollowException.class)
+    public ResponseEntity<Map<String, Object>> handle(SelfFollowException ex) {
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
+    }
+
+    @ExceptionHandler(AlreadyFollowingException.class)
+    public ResponseEntity<Map<String, Object>> handle(AlreadyFollowingException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ReportNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(ReportNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateReportException.class)
+    public ResponseEntity<Map<String, Object>> handle(DuplicateReportException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ReportAlreadyResolvedException.class)
+    public ResponseEntity<Map<String, Object>> handle(ReportAlreadyResolvedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(VerificationNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(VerificationNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateVerificationException.class)
+    public ResponseEntity<Map<String, Object>> handle(DuplicateVerificationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    @ExceptionHandler(NotificationNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(NotificationNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
     }
 }

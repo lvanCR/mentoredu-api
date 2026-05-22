@@ -2,126 +2,121 @@ package com.mentoredu.library.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
-import com.mentoredu.billing.model.enums.SubscriptionStatus;
-import com.mentoredu.billing.repository.SubscriptionRepository;
-import com.mentoredu.gamification.model.enums.PointSourceType;
-import com.mentoredu.gamification.repository.CoinWalletRepository;
-import com.mentoredu.gamification.service.IGamificationService;
-import com.mentoredu.library.dto.DownloadResult;
+import com.mentoredu.catalog.repository.CareerRepository;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
-import com.mentoredu.library.exception.DuplicateResourceException;
 import com.mentoredu.library.exception.ResourceAccessDeniedException;
-import com.mentoredu.library.exception.ResourceFileNotFoundException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
-import com.mentoredu.library.exception.ResourceNotAvailableException;
-import com.mentoredu.forum.exception.UserNotFoundException;
-import com.mentoredu.library.model.AcademicResource;
-import com.mentoredu.library.model.DownloadLog;
-import com.mentoredu.library.repository.AcademicResourceRepository;
-import com.mentoredu.library.repository.DownloadLogRepository;
-import com.mentoredu.library.repository.ResourceFileRepository;
+import com.mentoredu.library.model.Resource;
+import com.mentoredu.library.model.ResourceType;
+import com.mentoredu.library.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ResourceService implements IResourceService {
 
-    private static final Set<String> VALID_TYPES =
-            Set.of("EXAM", "SOLUTION", "NOTES", "PRACTICE", "VIDEO", "OTHER");
-    private static final Set<String> VALID_SEARCH_VISIBILITIES =
-            Set.of("PUBLIC", "PREMIUM");
-    private static final int RESOURCE_PUBLISHED_XP = 10;
-
-    private final AcademicResourceRepository resourceRepository;
-    private final ResourceFileRepository resourceFileRepository;
-    private final DownloadLogRepository downloadLogRepository;
-    private final UserRepository userRepository;
-    private final SubscriptionRepository subscriptionRepository;
-    private final CoinWalletRepository coinWalletRepository;
-    private final IGamificationService gamificationService;
+    private final ResourceRepository resourceRepository;
+    private final UserRepository     userRepository;
+    private final CareerRepository   careerRepository;
 
     // -------------------------------------------------------------------------
-    // US13 — Register resource metadata
+    // Publish resource (US07+US08)
     // -------------------------------------------------------------------------
 
     @Override
+    @Transactional
     public ResourceResponse publish(PublishResourceRequest request, String authorEmail) {
-        var author = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new UserNotFoundException("User not found: " + authorEmail));
+        User author = userRepository.findByEmail(authorEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authorEmail));
 
-        resourceFileRepository.findById(request.getFileId())
-                .orElseThrow(() -> new ResourceFileNotFoundException(
-                        "Resource file not found: " + request.getFileId()));
+        ResourceType type = request.getResourceType();
 
-        if (resourceRepository.existsByFileId(request.getFileId())) {
-            throw new DuplicateResourceException(
-                    "A resource already exists for file: " + request.getFileId());
+        // RN-07: course_id obligatorio salvo para EXAMEN_COMPLETO, GUIA y APUNTES
+        if (!type.courseIdOptional() && request.getCourseId() == null) {
+            throw new IllegalArgumentException(
+                    "courseId es obligatorio para el tipo " + type);
         }
 
-        // F1.5 / RN-47: solo TEACHER, ACADEMY o ADMIN pueden activar allows_solutions
-        boolean allowsSolutions = Boolean.TRUE.equals(request.getAllowsSolutions());
-        if (allowsSolutions) {
+        // RN-08: acepta_resoluciones solo válido para PRACTICA
+        boolean aceptaResoluciones = Boolean.TRUE.equals(request.getAceptaResoluciones());
+        if (aceptaResoluciones && type != ResourceType.PRACTICA) {
+            throw new IllegalArgumentException(
+                    "Solo los recursos de tipo PRACTICA aceptan resoluciones (RN-08)");
+        }
+
+        // RN-05: solo TEACHER, ACADEMY y ADMIN pueden activar aceptaResoluciones
+        if (aceptaResoluciones) {
             String role = author.getRole().getName();
             if (!"TEACHER".equals(role) && !"ACADEMY".equals(role) && !"ADMIN".equals(role)) {
                 throw new ResourceAccessDeniedException(
-                        "Solo docentes, academias y administradores pueden activar allows_solutions (RN-47)");
+                        "Solo docentes, academias y administradores pueden activar aceptaResoluciones (RN-05)");
             }
+        }
+
+        // RN-23: si career_id presente, la carrera debe pertenecer al area_id enviado
+        if (request.getCareerId() != null &&
+                !careerRepository.existsByIdAndAreaId(request.getCareerId(), request.getAreaId())) {
+            throw new IllegalArgumentException(
+                    "La carrera no pertenece al área seleccionada (RN-23)");
         }
 
         String visibility = (request.getVisibility() != null && !request.getVisibility().isBlank())
                 ? request.getVisibility() : "PUBLIC";
 
-        AcademicResource resource = AcademicResource.builder()
+        Resource resource = Resource.builder()
+                .author(author)
                 .title(request.getTitle())
-                .type(request.getType())
+                .universityId(request.getUniversityId())
+                .areaId(request.getAreaId())
+                .careerId(request.getCareerId())
+                .courseId(request.getCourseId())
+                .resourceType(type)
                 .visibility(visibility)
                 .description(request.getDescription())
-                .subjectId(request.getSubjectId())
-                .institutionId(request.getInstitutionId())
-                .fileId(request.getFileId())
-                .year(request.getYear())
-                .examCycle(request.getExamCycle())
-                .allowsSolutions(allowsSolutions)
-                .author(author)
+                .aceptaResoluciones(aceptaResoluciones)
+                .fileUrl(request.getFileUrl())
+                .fileName(request.getFileName())
+                .mimeType(request.getMimeType())
+                .sizeBytes(request.getSizeBytes())
                 .build();
 
-        AcademicResource saved = resourceRepository.save(resource);
-        // US30: award XP for publishing a resource (RN-31)
-        gamificationService.awardPoints(author.getId(), PointSourceType.RESOURCE_PUBLISHED, saved.getId(), RESOURCE_PUBLISHED_XP);
-        return new ResourceResponse(saved);
+        return new ResourceResponse(resourceRepository.save(resource));
     }
 
     // -------------------------------------------------------------------------
-    // US14 — Search resources by filters
+    // Search resources (US09)
     // -------------------------------------------------------------------------
 
     @Override
-    public List<ResourceResponse> search(String query, String type, String visibility,
-                                         UUID institutionId, UUID subjectId, Integer year) {
-        String cleanType = validateAndNormalizeType(type);
-        String cleanVisibility = validateAndNormalizeVisibility(visibility);
-        validateYear(year);
-
-        return resourceRepository.search(clean(query), cleanType, cleanVisibility, institutionId, subjectId, year)
+    public List<ResourceResponse> search(String query, String type, UUID universityId,
+                                         UUID areaId, UUID careerId, UUID courseId) {
+        ResourceType resourceType = null;
+        if (type != null && !type.isBlank()) {
+            try {
+                resourceType = ResourceType.valueOf(type.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(
+                        "Invalid resourceType: '" + type + "'. Allowed: "
+                        + java.util.Arrays.toString(ResourceType.values()));
+            }
+        }
+        String q = (query == null || query.isBlank()) ? null : query.trim();
+        String typeStr = (resourceType != null) ? resourceType.name() : null;
+        return resourceRepository.search(q, typeStr, universityId, areaId, careerId, courseId)
                 .stream()
                 .map(ResourceResponse::new)
                 .toList();
     }
 
     // -------------------------------------------------------------------------
-    // US15 — Get resource metadata by ID
+    // Get by ID
     // -------------------------------------------------------------------------
 
     @Override
@@ -132,102 +127,16 @@ public class ResourceService implements IResourceService {
     }
 
     // -------------------------------------------------------------------------
-    // US15 — Download academic resource (stream file)
+    // Get by author (US11)
     // -------------------------------------------------------------------------
 
     @Override
-    @Transactional
-    public DownloadResult downloadResource(UUID resourceId, String userEmail) {
-        AcademicResource resource = resourceRepository.findById(resourceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
-
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Authenticated user not found: " + userEmail));
-
-        checkAccessPermission(resource, user);
-
-        var file = resourceFileRepository.findById(resource.getFileId())
-                .orElseThrow(() -> new ResourceNotAvailableException(
-                        "File record not found for resource: " + resourceId));
-
-        Path filePath = Paths.get(file.getFileUrl());
-        if (!Files.exists(filePath)) {
-            throw new ResourceNotAvailableException(
-                    "File is temporarily unavailable: " + file.getFileName());
-        }
-
-        downloadLogRepository.save(DownloadLog.builder()
-                .user(user)
-                .resource(resource)
-                .downloadedAt(LocalDateTime.now())
-                .build());
-
-        return new DownloadResult(new FileSystemResource(filePath), file.getFileName());
-    }
-
-    // -------------------------------------------------------------------------
-    // Access control (RN-15)
-    // -------------------------------------------------------------------------
-
-    private void checkAccessPermission(AcademicResource resource, User user) {
-        switch (resource.getVisibility()) {
-            case "PRIVATE" -> {
-                if (!resource.getAuthor().getId().equals(user.getId())) {
-                    throw new ResourceAccessDeniedException(
-                            "This resource is private and only accessible to its author.");
-                }
-            }
-            case "PREMIUM" -> {
-                boolean hasActiveSubscription = subscriptionRepository
-                        .findByUserIdAndStatus(user.getId(), SubscriptionStatus.ACTIVE)
-                        .map(sub -> sub.getEndsAt() != null && sub.getEndsAt().isAfter(LocalDateTime.now()))
-                        .orElse(false);
-
-                boolean hasCoins = coinWalletRepository.findById(user.getId())
-                        .map(wallet -> wallet.getBalance() != null && wallet.getBalance() > 0)
-                        .orElse(false);
-
-                if (!hasActiveSubscription && !hasCoins) {
-                    throw new ResourceAccessDeniedException(
-                            "This resource requires a premium subscription or coin balance to download.");
-                }
-            }
-            default -> { /* PUBLIC — no restriction */ }
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Validation helpers
-    // -------------------------------------------------------------------------
-
-    private String validateAndNormalizeType(String type) {
-        if (type == null || type.isBlank()) return null;
-        String upper = type.trim().toUpperCase();
-        if (!VALID_TYPES.contains(upper)) {
-            throw new IllegalArgumentException(
-                    "Invalid resource type: '" + type + "'. Allowed values: EXAM, SOLUTION, NOTES, PRACTICE, VIDEO, OTHER");
-        }
-        return upper;
-    }
-
-    private String validateAndNormalizeVisibility(String visibility) {
-        if (visibility == null || visibility.isBlank()) return null;
-        String upper = visibility.trim().toUpperCase();
-        if (!VALID_SEARCH_VISIBILITIES.contains(upper)) {
-            throw new IllegalArgumentException(
-                    "Invalid visibility filter: '" + visibility + "'. Allowed values for search: PUBLIC, PREMIUM");
-        }
-        return upper;
-    }
-
-    private void validateYear(Integer year) {
-        if (year != null && (year < 1900 || year > 2099)) {
-            throw new IllegalArgumentException(
-                    "Year must be between 1900 and 2099. Received: " + year);
-        }
-    }
-
-    private String clean(String value) {
-        return (value == null || value.isBlank()) ? null : value.trim();
+    public List<ResourceResponse> getByAuthor(String authorEmail) {
+        User author = userRepository.findByEmail(authorEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authorEmail));
+        return resourceRepository.findByAuthorId(author.getId())
+                .stream()
+                .map(ResourceResponse::new)
+                .toList();
     }
 }

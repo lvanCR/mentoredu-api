@@ -3,48 +3,37 @@ package com.mentoredu.forum.model;
 import com.mentoredu.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "reactions")
+@Table(name = "reactions",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "target_type", "target_id"}))
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
 public class Reaction {
 
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(columnDefinition = "uuid")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "thread_id")
-    private Thread thread;
+    @Column(name = "target_type", nullable = false, length = 20)
+    private String targetType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "answer_id")
-    private Answer answer;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id")
-    private Comment comment;
+    @Column(name = "target_id", nullable = false, columnDefinition = "uuid")
+    private UUID targetId;
 
     @Column(name = "reaction_type", nullable = false, length = 20)
     private String reactionType;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
-    }
 }

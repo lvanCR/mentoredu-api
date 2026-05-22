@@ -15,6 +15,7 @@ import com.mentoredu.auth.entity.PasswordResetToken;
 import com.mentoredu.auth.entity.Session;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.entity.UserStatus;
+import com.mentoredu.auth.event.UserRegisteredEvent;
 import com.mentoredu.auth.exception.EmailAlreadyExistsException;
 import com.mentoredu.auth.exception.EmailNotFoundException;
 import com.mentoredu.auth.exception.InvalidCredentialsException;
@@ -26,6 +27,7 @@ import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +48,7 @@ public class AuthService {
     private final PasswordEncoder              passwordEncoder;
     private final JwtUtil                      jwtUtil;
     private final IEmailService                emailService;
+    private final ApplicationEventPublisher    eventPublisher;
 
     @Value("${app.password-reset.expiration-minutes:60}")
     private long passwordResetExpirationMinutes;
@@ -73,6 +76,18 @@ public class AuthService {
 
         var saved = userRepository.save(user);
 
+        eventPublisher.publishEvent(
+                new UserRegisteredEvent(saved.getId(), saved.getFirstName(), saved.getLastName(), saved.getRole().getName()));
+
+        String accessToken  = jwtUtil.generateAccessToken(saved);
+        String refreshToken = UUID.randomUUID().toString();
+
+        sessionRepository.save(Session.builder()
+                .user(saved)
+                .refreshToken(refreshToken)
+                .expiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getRefreshExpirationMs() / 1000))
+                .build());
+
         return RegisterResponse.builder()
                 .id(saved.getId())
                 .firstName(saved.getFirstName())
@@ -80,6 +95,10 @@ public class AuthService {
                 .email(saved.getEmail())
                 .role(saved.getRole().getName())
                 .status(saved.getStatus().name())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtUtil.getAccessExpirationMs() / 1000)
                 .build();
     }
 

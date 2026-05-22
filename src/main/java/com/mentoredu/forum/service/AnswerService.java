@@ -9,8 +9,6 @@ import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.model.Answer;
 import com.mentoredu.forum.repository.AnswerRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
-import com.mentoredu.gamification.model.enums.PointSourceType;
-import com.mentoredu.gamification.service.IGamificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -23,17 +21,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AnswerService implements IAnswerService {
 
-    private final AnswerRepository answerRepository;
-    private final ThreadRepository threadRepository;
-    private final UserRepository userRepository;
-    private final IGamificationService gamificationService;
+    private final AnswerRepository     answerRepository;
+    private final ThreadRepository     threadRepository;
+    private final UserRepository       userRepository;
     private final ApplicationEventPublisher eventPublisher;
-
-    private static final int ANSWER_GIVEN_XP = 5;
-
-    // -------------------------------------------------------------------------
-    // US17 — Reply to forum thread
-    // -------------------------------------------------------------------------
 
     @Override
     @Transactional
@@ -41,7 +32,6 @@ public class AnswerService implements IAnswerService {
         var thread = threadRepository.findById(threadId)
                 .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + threadId));
 
-        // RN-17: a closed thread does not accept new replies
         if ("CLOSED".equals(thread.getStatus())) {
             throw new ThreadClosedException("Thread is closed and does not accept new replies: " + threadId);
         }
@@ -57,7 +47,7 @@ public class AnswerService implements IAnswerService {
                 .build();
 
         Answer saved = answerRepository.save(answer);
-        gamificationService.awardPoints(user.getId(), PointSourceType.ANSWER_GIVEN, saved.getId(), ANSWER_GIVEN_XP);
+
         if (!thread.getAuthor().getId().equals(user.getId())) {
             eventPublisher.publishEvent(new AnswerCreatedEvent(
                     saved.getId(), thread.getAuthor().getId(), user.getId(), thread.getTitle()));
@@ -76,10 +66,6 @@ public class AnswerService implements IAnswerService {
                 .map(this::toResponse)
                 .toList();
     }
-
-    // -------------------------------------------------------------------------
-    // Mapping
-    // -------------------------------------------------------------------------
 
     private AnswerResponse toResponse(Answer a) {
         return AnswerResponse.builder()

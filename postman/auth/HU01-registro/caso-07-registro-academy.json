@@ -1,6 +1,6 @@
 {
   "escenario": "Caso 7 — Registro exitoso con rol ACADEMY",
-  "gherkin": "Dado que represento una organización educativa, cuando me registro con role=ACADEMY, entonces el sistema crea la cuenta con rol ACADEMY.",
+  "gherkin": "Dado que represento una organización educativa, cuando me registro con role=ACADEMY, entonces recibo 201 con access token, refresh token y perfil base con profile_type=ACADEMY.",
   "request": {
     "method": "POST",
     "url": "{{base_url}}/{{api_v1}}/auth/register",
@@ -23,11 +23,16 @@
       "lastName": "Educativa Lima",
       "email": "academia.lima@example.com",
       "role": "ACADEMY",
-      "status": "ACTIVE"
+      "status": "ACTIVE",
+      "accessToken": "<jwt-token>",
+      "refreshToken": "<uuid-token>",
+      "tokenType": "Bearer",
+      "expiresIn": 900
     }
   },
   "notas": [
-    "El rol asignado en la respuesta es ACADEMY (US01-v2, F0.3).",
-    "Este usuario podrá usar HU10 (crear perfil organización) y HU33 (crear academia)."
+    "US01 Escenario 1 (rol ACADEMY): recibe 201 con tokens.",
+    "Se crea perfil base en profiles con profile_type=ACADEMY.",
+    "Este usuario podrá usar POST /api/v1/profiles/academy para completar su perfil."
   ]
 }

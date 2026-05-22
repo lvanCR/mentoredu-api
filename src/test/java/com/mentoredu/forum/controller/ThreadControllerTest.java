@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = ThreadController.class)
+@WebMvcTest(controllers = {ThreadController.class, AnswerController.class})
 class ThreadControllerTest {
 
     @Autowired
@@ -58,9 +58,9 @@ class ThreadControllerTest {
     @Test
     @WithMockUser(username = "user@example.com")
     void createThread_withValidFields_returns201() throws Exception {
-        UUID subjectId = UUID.randomUUID();
-        var request = validThreadRequest(subjectId);
-        var response = buildThreadResponse(subjectId, "¿Cómo resolver integrales dobles?", false);
+        UUID courseId = UUID.randomUUID();
+        var request = validThreadRequest(courseId);
+        var response = buildThreadResponse(courseId, "¿Cómo resolver integrales dobles?", false);
 
         when(threadService.create(any(), eq("user@example.com"))).thenReturn(response);
 
@@ -71,17 +71,17 @@ class ThreadControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.title").value("¿Cómo resolver integrales dobles?"))
                 .andExpect(jsonPath("$.status").value("OPEN"))
-                .andExpect(jsonPath("$.subjectId").value(subjectId.toString()))
+                .andExpect(jsonPath("$.courseId").value(courseId.toString()))
                 .andExpect(jsonPath("$.createdAt").exists());
     }
 
     @Test
     @WithMockUser(username = "student@example.com")
     void createThread_withAnonymousFlag_returns201WithAnonimoDisplay() throws Exception {
-        UUID subjectId = UUID.randomUUID();
-        var request = validThreadRequest(subjectId);
+        UUID courseId = UUID.randomUUID();
+        var request = validThreadRequest(courseId);
         request.setAnonymous(true);
-        var response = buildAnonymousThreadResponse(subjectId, "¿Diferencia entre serie y sucesión?");
+        var response = buildAnonymousThreadResponse(courseId, "¿Diferencia entre serie y sucesión?");
 
         when(threadService.create(any(), eq("student@example.com"))).thenReturn(response);
 
@@ -145,7 +145,7 @@ class ThreadControllerTest {
 
     @Test
     @WithMockUser(username = "user@example.com")
-    void createThread_withoutSubjectId_returns400() throws Exception {
+    void createThread_withoutClassification_returns400() throws Exception {
         String body = """
                 {
                   "title": "¿Cómo resolver integrales dobles?",
@@ -153,11 +153,15 @@ class ThreadControllerTest {
                 }
                 """;
 
+        when(threadService.create(any(), eq("user@example.com")))
+                .thenThrow(new IllegalArgumentException(
+                        "El hilo requiere al menos una categoría (universityId, courseId o careerId)"));
+
         mockMvc.perform(post("/api/v1/threads")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.subjectId").exists());
+                .andExpect(jsonPath("$.message").exists());
     }
 
     // =========================================================================
@@ -167,9 +171,9 @@ class ThreadControllerTest {
     @Test
     @WithMockUser(username = "user@example.com")
     void listThreads_authenticated_returns200() throws Exception {
-        UUID subjectId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
         when(threadService.listRecent(0, 10))
-                .thenReturn(List.of(buildThreadResponse(subjectId, "Hilo de prueba", false)));
+                .thenReturn(List.of(buildThreadResponse(courseId, "Hilo de prueba", false)));
 
         mockMvc.perform(get("/api/v1/threads"))
                 .andExpect(status().isOk())
@@ -204,17 +208,17 @@ class ThreadControllerTest {
     @WithMockUser(username = "user@example.com")
     void getThread_whenExists_returns200() throws Exception {
         UUID id = UUID.randomUUID();
-        UUID subjectId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
 
         when(threadService.get(eq(id)))
-                .thenReturn(buildThreadResponse(id, subjectId, "¿Cómo resolver integrales dobles?", false));
+                .thenReturn(buildThreadResponse(id, courseId, "¿Cómo resolver integrales dobles?", false));
 
         mockMvc.perform(get("/api/v1/threads/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.title").value("¿Cómo resolver integrales dobles?"))
                 .andExpect(jsonPath("$.status").value("OPEN"))
-                .andExpect(jsonPath("$.subjectId").value(subjectId.toString()));
+                .andExpect(jsonPath("$.courseId").value(courseId.toString()));
     }
 
     @Test
@@ -390,14 +394,14 @@ class ThreadControllerTest {
     @WithMockUser(username = "author@example.com")
     void closeThread_asAuthor_returns200WithStatusClosed() throws Exception {
         UUID id = UUID.randomUUID();
-        UUID subjectId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
         var closed = ThreadResponse.builder()
                 .id(id)
                 .title("¿Cómo resolver integrales dobles?")
                 .body("Necesito ayuda con integrales dobles de funciones trigonométricas.")
                 .anonymous(false)
                 .authorDisplay("Juan Pérez")
-                .subjectId(subjectId)
+                .courseId(courseId)
                 .status("CLOSED")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -463,50 +467,50 @@ class ThreadControllerTest {
     // Helpers
     // =========================================================================
 
-    private CreateThreadRequest validThreadRequest(UUID subjectId) {
+    private CreateThreadRequest validThreadRequest(UUID courseId) {
         var r = new CreateThreadRequest();
         r.setTitle("¿Cómo resolver integrales dobles?");
         r.setBody("Necesito ayuda con integrales dobles de funciones trigonométricas.");
-        r.setSubjectId(subjectId);
+        r.setCourseId(courseId);
         return r;
     }
 
-    private ThreadResponse buildThreadResponse(UUID subjectId, String title, boolean anonymous) {
+    private ThreadResponse buildThreadResponse(UUID courseId, String title, boolean anonymous) {
         return ThreadResponse.builder()
                 .id(UUID.randomUUID())
                 .title(title)
                 .body("Necesito ayuda con integrales dobles de funciones trigonométricas.")
                 .anonymous(anonymous)
                 .authorDisplay(anonymous ? "Anónimo" : "Juan Pérez")
-                .subjectId(subjectId)
+                .courseId(courseId)
                 .status("OPEN")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
     }
 
-    private ThreadResponse buildThreadResponse(UUID id, UUID subjectId, String title, boolean anonymous) {
+    private ThreadResponse buildThreadResponse(UUID id, UUID courseId, String title, boolean anonymous) {
         return ThreadResponse.builder()
                 .id(id)
                 .title(title)
                 .body("Necesito ayuda con integrales dobles de funciones trigonométricas.")
                 .anonymous(anonymous)
                 .authorDisplay(anonymous ? "Anónimo" : "Juan Pérez")
-                .subjectId(subjectId)
+                .courseId(courseId)
                 .status("OPEN")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
     }
 
-    private ThreadResponse buildAnonymousThreadResponse(UUID subjectId, String title) {
+    private ThreadResponse buildAnonymousThreadResponse(UUID courseId, String title) {
         return ThreadResponse.builder()
                 .id(UUID.randomUUID())
                 .title(title)
                 .body("Tengo dudas sobre este concepto matemático.")
                 .anonymous(true)
                 .authorDisplay("Anónimo")
-                .subjectId(subjectId)
+                .courseId(courseId)
                 .status("OPEN")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

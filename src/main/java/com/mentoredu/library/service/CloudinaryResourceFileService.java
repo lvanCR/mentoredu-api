@@ -5,8 +5,6 @@ import com.cloudinary.utils.ObjectUtils;
 import com.mentoredu.library.dto.ResourceFileResponse;
 import com.mentoredu.library.exception.FileSizeLimitExceededException;
 import com.mentoredu.library.exception.InvalidFileTypeException;
-import com.mentoredu.library.model.ResourceFile;
-import com.mentoredu.library.repository.ResourceFileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -28,7 +26,6 @@ public class CloudinaryResourceFileService implements IResourceFileService {
     private static final byte[] PDF_MAGIC         = "%PDF".getBytes(StandardCharsets.US_ASCII);
 
     private final Cloudinary cloudinary;
-    private final ResourceFileRepository resourceFileRepository;
 
     @Value("${app.file.max-size-mb:20}")
     private int maxSizeMb;
@@ -41,20 +38,8 @@ public class CloudinaryResourceFileService implements IResourceFileService {
         validateMagicBytes(file);
 
         String fileUrl = uploadToCloudinary(file);
-
-        ResourceFile entity = ResourceFile.builder()
-                .fileUrl(fileUrl)
-                .fileName(file.getOriginalFilename())
-                .mimeType(ALLOWED_MIME_TYPE)
-                .sizeBytes(file.getSize())
-                .build();
-
-        return new ResourceFileResponse(resourceFileRepository.save(entity));
+        return new ResourceFileResponse(fileUrl, file.getOriginalFilename(), ALLOWED_MIME_TYPE, file.getSize());
     }
-
-    // -------------------------------------------------------------------------
-    // Cloudinary upload
-    // -------------------------------------------------------------------------
 
     @SuppressWarnings("unchecked")
     private String uploadToCloudinary(MultipartFile file) {
@@ -71,10 +56,6 @@ public class CloudinaryResourceFileService implements IResourceFileService {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Validations (same rules as ResourceFileService)
-    // -------------------------------------------------------------------------
-
     private void validateNotEmpty(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new InvalidFileTypeException("No file was provided or the file is empty.");
@@ -82,10 +63,9 @@ public class CloudinaryResourceFileService implements IResourceFileService {
     }
 
     private void validateMimeType(MultipartFile file) {
-        String mimeType = file.getContentType();
-        if (!ALLOWED_MIME_TYPE.equals(mimeType)) {
+        if (!ALLOWED_MIME_TYPE.equals(file.getContentType())) {
             throw new InvalidFileTypeException(
-                    "Only PDF files are accepted. Received content type: " + mimeType);
+                    "Only PDF files are accepted. Received content type: " + file.getContentType());
         }
     }
 
@@ -93,8 +73,7 @@ public class CloudinaryResourceFileService implements IResourceFileService {
         long maxBytes = (long) maxSizeMb * 1024 * 1024;
         if (file.getSize() > maxBytes) {
             throw new FileSizeLimitExceededException(
-                    "File size exceeds the maximum allowed limit of " + maxSizeMb + " MB. "
-                    + "Received: " + (file.getSize() / (1024 * 1024)) + " MB.");
+                    "File size exceeds the maximum allowed limit of " + maxSizeMb + " MB.");
         }
     }
 
@@ -102,8 +81,7 @@ public class CloudinaryResourceFileService implements IResourceFileService {
         try {
             byte[] firstBytes = Arrays.copyOf(file.getBytes(), PDF_MAGIC.length);
             if (!Arrays.equals(firstBytes, PDF_MAGIC)) {
-                throw new InvalidFileTypeException(
-                        "The file appears to be corrupted or is not a valid PDF.");
+                throw new InvalidFileTypeException("The file appears to be corrupted or is not a valid PDF.");
             }
         } catch (IOException ex) {
             throw new InvalidFileTypeException("Failed to read the uploaded file: " + ex.getMessage());

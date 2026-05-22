@@ -1,5 +1,5 @@
 @startuml
-title Diagrama ER Físico\nMentorEdu — Actualizado por Bounded Context
+title Diagrama ER Físico — MentorEdu v2.0\npor Bounded Context
 
 left to right direction
 hide circle
@@ -55,6 +55,53 @@ package "auth" {
 }
 
 ' =========================
+' CATALOG
+' =========================
+package "catalog" {
+  entity "universities" as universities {
+    *id : UUID <<PK>>
+    --
+    *name : VARCHAR(120) <<UQ>>
+    city : VARCHAR(80)
+  }
+
+  entity "areas" as areas {
+    *id : UUID <<PK>>
+    --
+    *university_id : UUID <<FK>>
+    *name : VARCHAR(120)
+    description : TEXT
+    <<UNIQUE (university_id, name)>>
+  }
+
+  entity "courses" as courses {
+    *id : UUID <<PK>>
+    --
+    *name : VARCHAR(120) <<UQ>>
+    description : TEXT
+  }
+
+  entity "area_courses" as area_courses {
+    *area_id : UUID <<PK, FK>>
+    *course_id : UUID <<PK, FK>>
+  }
+
+  entity "careers" as careers {
+    *id : UUID <<PK>>
+    --
+    *university_id : UUID <<FK>>
+    *area_id : UUID <<FK>>
+    *name : VARCHAR(120)
+    description : TEXT
+  }
+
+  entity "career_courses" as career_courses {
+    *career_id : UUID <<PK, FK>>
+    *course_id : UUID <<PK, FK>>
+  }
+}
+
+' =========================
 ' PROFILE
 ' =========================
 package "profile" {
@@ -76,95 +123,25 @@ package "profile" {
     --
     school_name : VARCHAR(120)
     grade_level : VARCHAR(20)
-    target_university : VARCHAR(120)
-    target_career : VARCHAR(120)
     study_shift : VARCHAR(30)
-    target_exam_area_id : UUID <<FK>>
+    target_university_id : UUID <<FK>>
+    target_area_id : UUID <<FK>>
+    target_career_id : UUID <<FK>>
   }
 
   entity "teacher_profiles" as teacher_profiles {
     *profile_id : UUID <<PK, FK>>
     --
-    specialty : VARCHAR(120)
-    institution_name : VARCHAR(120)
     bio_professional : TEXT
   }
 
-  entity "organization_profiles" as organization_profiles {
+  entity "academy_profiles" as academy_profiles {
     *profile_id : UUID <<PK, FK>>
     --
-    organization_name : VARCHAR(120)
+    *academy_name : VARCHAR(120) <<UQ>>
     ruc : VARCHAR(20) <<UQ>>
     website : VARCHAR(255)
     contact_email : VARCHAR(120)
-  }
-
-  entity "notification_preferences" as notification_preferences {
-    *user_id : UUID <<PK, FK>>
-    --
-    email_enabled : BOOLEAN
-    in_app_enabled : BOOLEAN
-    forum_enabled : BOOLEAN
-    moderation_enabled : BOOLEAN
-  }
-}
-
-' =========================
-' ACADEMY
-' =========================
-package "academy" {
-  entity "academies" as academies {
-    *id : UUID <<PK>>
-    --
-    *owner_profile_id : UUID <<FK>>
-    *name : VARCHAR(120)
-    description : TEXT
-    website : VARCHAR(255)
-    email : VARCHAR(120)
-    active : BOOLEAN
-    created_at : TIMESTAMP
-    updated_at : TIMESTAMP
-  }
-
-  entity "campuses" as campuses {
-    *id : UUID <<PK>>
-    --
-    *academy_id : UUID <<FK>>
-    *name : VARCHAR(120)
-    *address : VARCHAR(180)
-    *city : VARCHAR(80)
-    created_at : TIMESTAMP
-    updated_at : TIMESTAMP
-  }
-
-  entity "programs" as programs {
-    *id : UUID <<PK>>
-    --
-    *academy_id : UUID <<FK>>
-    *name : VARCHAR(120)
-    *modality : VARCHAR(30)
-    *intensity : VARCHAR(30)
-    *target_university : VARCHAR(120)
-    created_at : TIMESTAMP
-    updated_at : TIMESTAMP
-  }
-
-  entity "cycles" as cycles {
-    *id : UUID <<PK>>
-    --
-    *academy_id : UUID <<FK>>
-    *name : VARCHAR(120)
-    *cycle_type : VARCHAR(30)
-    *start_date : DATE
-    *end_date : DATE
-    created_at : TIMESTAMP
-    updated_at : TIMESTAMP
-  }
-
-  entity "teacher_academies" as teacher_academies {
-    *teacher_profile_id : UUID <<PK, FK>>
-    *academy_id : UUID <<PK, FK>>
-    created_at : TIMESTAMP
   }
 }
 
@@ -172,93 +149,28 @@ package "academy" {
 ' LIBRARY
 ' =========================
 package "library" {
-  entity "institutions" as institutions {
-    *id : UUID <<PK>>
-    --
-    *name : VARCHAR(120) <<UQ>>
-    city : VARCHAR(80)
-  }
-
-  entity "exam_areas" as exam_areas {
-    *id : UUID <<PK>>
-    --
-    *institution_id : UUID <<FK>>
-    *code : VARCHAR(10)
-    *name : VARCHAR(120)
-    *admission_modality : VARCHAR(30)
-    description : TEXT
-    *active : BOOLEAN
-    created_at : TIMESTAMP
-    <<UNIQUE (institution_id, code, admission_modality)>>
-  }
-
-  entity "area_subjects" as area_subjects {
-    *id : UUID <<PK>>
-    --
-    *exam_area_id : UUID <<FK>>
-    *subject_id : UUID <<FK>>
-    *weight_percentage : DECIMAL(5,2)
-    *is_eliminatory : BOOLEAN
-    min_score : DECIMAL(4,2)
-    <<UNIQUE (exam_area_id, subject_id)>>
-  }
-
-  entity "subjects" as subjects {
-    *id : UUID <<PK>>
-    --
-    *name : VARCHAR(80) <<UQ>>
-  }
-
-  entity "tags" as tags {
-    *id : UUID <<PK>>
-    --
-    *name : VARCHAR(60) <<UQ>>
-  }
-
-  entity "resource_files" as resource_files {
-    *id : UUID <<PK>>
-    --
-    *file_url : TEXT
-    *file_name : VARCHAR(255)
-    mime_type : VARCHAR(80)
-    size_bytes : BIGINT
-    created_at : TIMESTAMP
-  }
-
-  entity "academic_resources" as academic_resources {
+  entity "resources" as resources {
     *id : UUID <<PK>>
     --
     *author_user_id : UUID <<FK>>
-    subject_id : UUID <<FK>>
-    institution_id : UUID <<FK>>
-    exam_area_id : UUID <<FK>>
-    file_id : UUID <<FK>>
+    *university_id : UUID <<FK>>
+    *area_id : UUID <<FK>>
+    career_id : UUID <<FK>>
+    course_id : UUID <<FK>>
+    file_url : TEXT
+    file_name : VARCHAR(255)
+    mime_type : VARCHAR(80)
+    size_bytes : BIGINT
     *title : VARCHAR(160)
     description : TEXT
     *resource_type : VARCHAR(30)
     *visibility : VARCHAR(20)
-    exam_year : INT
-    exam_cycle : VARCHAR(30)
-    *allows_solutions : BOOLEAN
+    *acepta_resoluciones : BOOLEAN
     created_at : TIMESTAMP
     updated_at : TIMESTAMP
-  }
-
-  entity "resource_solutions" as resource_solutions {
-    *id : UUID <<PK>>
-    --
-    *resource_id : UUID <<FK>>
-    *student_id : UUID <<FK>>
-    *file_id : UUID <<FK>>
-    *status : VARCHAR(20)
-    submitted_at : TIMESTAMP
-    <<UNIQUE (resource_id, student_id)>>
-  }
-
-  entity "resource_tags" as resource_tags {
-    *resource_id : UUID <<PK, FK>>
-    *tag_id : UUID <<PK, FK>>
-    created_at : TIMESTAMP
+    <<CHECK course_id IS NOT NULL OR resource_type IN ('EXAMEN_COMPLETO','GUIA','APUNTES')>>
+    <<CHECK acepta_resoluciones = false OR resource_type = 'PRACTICA'>>
+    <<INDEX idx_resources_student_feed (university_id, area_id, career_id, resource_type)>>
   }
 
   entity "download_logs" as download_logs {
@@ -278,13 +190,20 @@ package "forum" {
     *id : UUID <<PK>>
     --
     *author_user_id : UUID <<FK>>
-    *subject_id : UUID <<FK>>
     *title : VARCHAR(160)
     *body : TEXT
     *is_anonymous : BOOLEAN
     *status : VARCHAR(20)
+    university_id : UUID <<FK>>
+    area_id : UUID <<FK>>
+    course_id : UUID <<FK>>
+    career_id : UUID <<FK>>
     created_at : TIMESTAMP
     updated_at : TIMESTAMP
+    <<CHECK area_id IS NULL OR university_id IS NOT NULL>>
+    <<CHECK career_id IS NULL OR course_id IS NULL>>
+    <<CHECK university_id IS NOT NULL OR course_id IS NOT NULL OR career_id IS NOT NULL>>
+    <<INDEX idx_threads_feed (university_id, area_id, course_id, career_id, status)>>
   }
 
   entity "answers" as answers {
@@ -309,76 +228,92 @@ package "forum" {
     updated_at : TIMESTAMP
   }
 
-  entity "follow_relations" as follow_relations {
-    *id : UUID <<PK>>
-    --
-    *follower_user_id : UUID <<FK>>
-    *followed_user_id : UUID <<FK>>
-    created_at : TIMESTAMP
-  }
-
   entity "reactions" as reactions {
     *id : UUID <<PK>>
     --
     *user_id : UUID <<FK>>
-    thread_id : UUID <<FK>>
-    answer_id : UUID <<FK>>
-    comment_id : UUID <<FK>>
+    *target_type : VARCHAR(20)
+    *target_id : UUID
     *reaction_type : VARCHAR(20)
     created_at : TIMESTAMP
+    <<UNIQUE (user_id, target_type, target_id)>>
   }
 }
 
 ' =========================
-' GAMIFICATION
+' PEDAGOGY
 ' =========================
-package "gamification" {
-  entity "coin_wallets" as coin_wallets {
-    *user_id : UUID <<PK, FK>>
+package "pedagogy" {
+  entity "solutions" as solutions {
+    *id : UUID <<PK>>
     --
-    *balance : INT
-    updated_at : TIMESTAMP
+    *resource_id : UUID <<FK>>
+    *student_id : UUID <<FK>>
+    file_url : TEXT
+    content : TEXT
+    *status : VARCHAR(20)
+    submitted_at : TIMESTAMP
+    <<UNIQUE (resource_id, student_id)>>
   }
 
-  entity "point_transactions" as point_transactions {
+  entity "feedback_entries" as feedback_entries {
+    *id : UUID <<PK>>
+    --
+    *solution_id : UUID <<FK, UQ>>
+    *author_user_id : UUID <<FK>>
+    score : DECIMAL(4,2)
+    *body : TEXT
+    created_at : TIMESTAMP
+    <<CHECK score BETWEEN 0.0 AND 10.0>>
+  }
+}
+
+' =========================
+' COMMUNITY
+' =========================
+package "community" {
+  entity "follows" as follows {
+    *id : UUID <<PK>>
+    --
+    *follower_id : UUID <<FK>>
+    *followed_id : UUID <<FK>>
+    created_at : TIMESTAMP
+    <<UNIQUE (follower_id, followed_id)>>
+    <<CHECK follower_id != followed_id>>
+  }
+
+  entity "verification_requests" as verification_requests {
     *id : UUID <<PK>>
     --
     *user_id : UUID <<FK>>
-    *source_type : VARCHAR(30)
-    source_id : UUID
-    *points_delta : INT
-    *reason : VARCHAR(120)
-    created_at : TIMESTAMP
+    *entity_type : VARCHAR(20)
+    *status : VARCHAR(20)
+    notes : TEXT
+    submitted_at : TIMESTAMP
+    reviewed_by : UUID <<FK>>
+    reviewed_at : TIMESTAMP
   }
 
-  entity "badges" as badges {
+  entity "verification_docs" as verification_docs {
     *id : UUID <<PK>>
     --
-    *code : VARCHAR(40) <<UQ>>
-    *name : VARCHAR(80)
-    description : TEXT
+    *request_id : UUID <<FK>>
+    *document_type : VARCHAR(50)
+    *file_url : TEXT
+    uploaded_at : TIMESTAMP
   }
 
-  entity "user_badges" as user_badges {
-    *user_id : UUID <<PK, FK>>
-    *badge_id : UUID <<PK, FK>>
-    earned_at : TIMESTAMP
-  }
-
-  entity "level_progress" as level_progress {
-    *user_id : UUID <<PK, FK>>
+  entity "teacher_academy_links" as teacher_academy_links {
+    *id : UUID <<PK>>
     --
-    *current_level : INT
-    *experience : INT
-    *progress_percentage : DECIMAL(5,2)
-    updated_at : TIMESTAMP
+    *teacher_profile_id : UUID <<FK>>
+    *academy_profile_id : UUID <<FK>>
+    *status : VARCHAR(20)
+    requested_at : TIMESTAMP
+    resolved_at : TIMESTAMP
+    <<UNIQUE (teacher_profile_id, academy_profile_id)>>
   }
-}
 
-' =========================
-' MODERATION
-' =========================
-package "moderation" {
   entity "reports" as reports {
     *id : UUID <<PK>>
     --
@@ -387,167 +322,18 @@ package "moderation" {
     *target_id : UUID
     *reason : VARCHAR(200)
     *status : VARCHAR(20)
+    resolution_note : TEXT
     resolved_by : UUID <<FK>>
     created_at : TIMESTAMP
     resolved_at : TIMESTAMP
   }
 
-  entity "moderation_actions" as moderation_actions {
-    *id : UUID <<PK>>
-    --
-    *report_id : UUID <<FK>>
-    *moderator_user_id : UUID <<FK>>
-    *action_type : VARCHAR(30)
-    notes : TEXT
-    created_at : TIMESTAMP
-  }
-
-  entity "audit_logs" as audit_logs {
-    *id : UUID <<PK>>
-    --
-    *actor_user_id : UUID <<FK>>
-    *action_type : VARCHAR(50)
-    *entity_type : VARCHAR(50)
-    *entity_id : UUID
-    detail : TEXT
-    created_at : TIMESTAMP
-  }
-
-  entity "appeals" as appeals {
-    *id : UUID <<PK>>
-    --
-    *report_id : UUID <<FK>>
-    *user_id : UUID <<FK>>
-    *reason : TEXT
-    *status : VARCHAR(20)
-    created_at : TIMESTAMP
-    reviewed_at : TIMESTAMP
-  }
-}
-
-' =========================
-' VERIFICATION
-' =========================
-package "verification" {
-  entity "verification_requests" as verification_requests {
-    *id : UUID <<PK>>
-    --
-    *user_id : UUID <<FK>>
-    *entity_type : VARCHAR(20)
-    *status : VARCHAR(20)
-    submitted_at : TIMESTAMP
-    reviewed_by : UUID <<FK>>
-    reviewed_at : TIMESTAMP
-  }
-
-  entity "verification_documents" as verification_documents {
-    *id : UUID <<PK>>
-    --
-    *request_id : UUID <<FK>>
-    *document_type : VARCHAR(50)
-    *file_url : TEXT
-    uploaded_at : TIMESTAMP
-  }
-}
-
-' =========================
-' BILLING
-' =========================
-package "billing" {
-  entity "plans" as plans {
-    *id : UUID <<PK>>
-    --
-    *name : VARCHAR(40) <<UQ>>
-    *price : DECIMAL(10,2)
-    *duration_days : INT
-    *description : VARCHAR(200)
-  }
-
-  entity "subscriptions" as subscriptions {
-    *id : UUID <<PK>>
-    --
-    *user_id : UUID <<FK>>
-    *plan_id : UUID <<FK>>
-    *status : VARCHAR(20)
-    starts_at : TIMESTAMP
-    ends_at : TIMESTAMP
-    created_at : TIMESTAMP
-  }
-
-  entity "payments" as payments {
-    *id : UUID <<PK>>
-    --
-    *user_id : UUID <<FK>>
-    subscription_id : UUID <<FK>>
-    coin_purchase_id : UUID <<FK>>
-    *amount : DECIMAL(10,2)
-    *currency : VARCHAR(10)
-    *payment_method : VARCHAR(30)
-    *status : VARCHAR(20)
-    created_at : TIMESTAMP
-  }
-
-  entity "coin_packages" as coin_packages {
-    *id : UUID <<PK>>
-    --
-    *name : VARCHAR(60)
-    *coins : INT
-    *price : DECIMAL(10,2)
-    active : BOOLEAN
-  }
-
-  entity "coin_purchases" as coin_purchases {
-    *id : UUID <<PK>>
-    --
-    *user_id : UUID <<FK>>
-    *coin_package_id : UUID <<FK>>
-    *quantity : INT
-    *total_amount : DECIMAL(10,2)
-    *status : VARCHAR(20)
-    created_at : TIMESTAMP
-  }
-
-  entity "premium_access" as premium_access {
-    *id : UUID <<PK>>
-    --
-    *user_id : UUID <<FK>>
-    *granted_at : TIMESTAMP
-    *expires_at : TIMESTAMP
-    revoked_at : TIMESTAMP
-  }
-}
-
-' =========================
-' FEEDBACK
-' =========================
-package "feedback" {
-  entity "feedback_entries" as feedback_entries {
-    *id : UUID <<PK>>
-    --
-    *author_user_id : UUID <<FK>>
-    *target_user_id : UUID <<FK>>
-    program_id : UUID <<FK>>
-    cycle_id : UUID <<FK>>
-    solution_id : UUID <<FK>>
-    resource_id : UUID <<FK>>
-    *body : TEXT
-    score : DECIMAL(4,2)
-    created_at : TIMESTAMP
-    updated_at : TIMESTAMP
-  }
-}
-
-' =========================
-' NOTIFICATIONS
-' =========================
-package "notifications" {
   entity "notifications" as notifications {
     *id : UUID <<PK>>
     --
     *user_id : UUID <<FK>>
     *type : VARCHAR(30)
-    *title : VARCHAR(120)
-    *message : TEXT
+    payload : JSONB
     read_at : TIMESTAMP
     created_at : TIMESTAMP
   }
@@ -557,90 +343,66 @@ package "notifications" {
 ' RELATIONSHIPS
 ' =========================
 
+' AUTH
 roles ||--o{ users : role_id
-
-users ||--o| profiles : user_id
-profiles ||--o| student_profiles : profile_id
-profiles ||--o| teacher_profiles : profile_id
-profiles ||--o| organization_profiles : profile_id
-users ||--o| notification_preferences : user_id
-
 users ||--o{ password_reset_tokens : user_id
 users ||--o{ sessions : user_id
 
-organization_profiles ||--o{ academies : owner_profile_id
-academies ||--o{ campuses : academy_id
-academies ||--o{ programs : academy_id
-academies ||--o{ cycles : academy_id
-teacher_profiles ||--o{ teacher_academies : teacher_profile_id
-academies ||--o{ teacher_academies : academy_id
+' CATALOG
+universities ||--o{ areas : university_id
+universities ||--o{ careers : university_id
+areas ||--o{ careers : area_id
+areas ||--o{ area_courses : area_id
+courses ||--o{ area_courses : course_id
+careers ||--o{ career_courses : career_id
+courses ||--o{ career_courses : course_id
 
-institutions ||--o{ exam_areas : institution_id
-exam_areas ||--o{ area_subjects : exam_area_id
-subjects ||--o{ area_subjects : subject_id
-student_profiles }o--o| exam_areas : target_exam_area_id
-
-users ||--o{ academic_resources : author_user_id
-subjects ||--o{ academic_resources : subject_id
-institutions ||--o{ academic_resources : institution_id
-exam_areas ||--o{ academic_resources : exam_area_id
-academic_resources ||--|| resource_files : file_id
-academic_resources ||--o{ resource_tags : resource_id
-tags ||--o{ resource_tags : tag_id
+' PROFILE
+users ||--o| profiles : user_id
+profiles ||--o| student_profiles : profile_id
+profiles ||--o| teacher_profiles : profile_id
+profiles ||--o| academy_profiles : profile_id
+universities ||--o{ student_profiles : target_university_id
+areas ||--o{ student_profiles : target_area_id
+careers ||--o{ student_profiles : target_career_id
+' LIBRARY
+users ||--o{ resources : author_user_id
+universities ||--o{ resources : university_id
+areas ||--o{ resources : area_id
+careers |o--o{ resources : career_id
+courses |o--o{ resources : course_id
 users ||--o{ download_logs : user_id
-academic_resources ||--o{ download_logs : resource_id
-academic_resources ||--o{ resource_solutions : resource_id
-users ||--o{ resource_solutions : student_id
-resource_files ||--o{ resource_solutions : file_id
+resources ||--o{ download_logs : resource_id
 
+' FORUM
 users ||--o{ threads : author_user_id
-subjects ||--o{ threads : subject_id
+universities |o--o{ threads : university_id
+areas |o--o{ threads : area_id
+courses |o--o{ threads : course_id
+careers |o--o{ threads : career_id
 threads ||--o{ answers : thread_id
 users ||--o{ answers : author_user_id
 threads ||--o{ comments : thread_id
 answers ||--o{ comments : answer_id
 users ||--o{ comments : author_user_id
-users ||--o{ follow_relations : follower_user_id
-users ||--o{ follow_relations : followed_user_id
 users ||--o{ reactions : user_id
-threads ||--o{ reactions : thread_id
-answers ||--o{ reactions : answer_id
-comments ||--o{ reactions : comment_id
 
-users ||--|| coin_wallets : user_id
-users ||--o{ point_transactions : user_id
-users ||--o{ user_badges : user_id
-badges ||--o{ user_badges : badge_id
-users ||--|| level_progress : user_id
+' PEDAGOGY
+resources ||--o{ solutions : resource_id
+users ||--o{ solutions : student_id
+solutions ||--|| feedback_entries : solution_id
+users ||--o{ feedback_entries : author_user_id
 
-users ||--o{ reports : reporter_user_id
-users ||--o{ reports : resolved_by
-reports ||--o{ moderation_actions : report_id
-users ||--o{ moderation_actions : moderator_user_id
-users ||--o{ audit_logs : actor_user_id
-reports ||--o{ appeals : report_id
-users ||--o{ appeals : user_id
-
+' COMMUNITY
+users ||--o{ follows : follower_id
+users ||--o{ follows : followed_id
 users ||--o{ verification_requests : user_id
 users ||--o{ verification_requests : reviewed_by
-verification_requests ||--o{ verification_documents : request_id
-
-users ||--o{ subscriptions : user_id
-plans ||--o{ subscriptions : plan_id
-users ||--o{ payments : user_id
-subscriptions ||--o{ payments : subscription_id
-coin_purchases ||--o{ payments : coin_purchase_id
-users ||--o{ coin_purchases : user_id
-coin_packages ||--o{ coin_purchases : coin_package_id
-users ||--o{ premium_access : user_id
-
+verification_requests ||--o{ verification_docs : request_id
+teacher_profiles ||--o{ teacher_academy_links : teacher_profile_id
+academy_profiles ||--o{ teacher_academy_links : academy_profile_id
+users ||--o{ reports : reporter_user_id
+users ||--o{ reports : resolved_by
 users ||--o{ notifications : user_id
-
-users ||--o{ feedback_entries : author_user_id
-users ||--o{ feedback_entries : target_user_id
-programs ||--o{ feedback_entries : program_id
-cycles ||--o{ feedback_entries : cycle_id
-resource_solutions ||--o{ feedback_entries : solution_id
-academic_resources ||--o{ feedback_entries : resource_id
 
 @enduml

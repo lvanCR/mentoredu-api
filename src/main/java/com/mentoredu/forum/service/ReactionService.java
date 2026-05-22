@@ -7,10 +7,7 @@ import com.mentoredu.forum.dto.ReactionResponse;
 import com.mentoredu.forum.exception.AnswerNotFoundException;
 import com.mentoredu.forum.exception.CommentNotFoundException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
-import com.mentoredu.forum.model.Answer;
-import com.mentoredu.forum.model.Comment;
 import com.mentoredu.forum.model.Reaction;
-import com.mentoredu.forum.model.Thread;
 import com.mentoredu.forum.repository.AnswerRepository;
 import com.mentoredu.forum.repository.CommentRepository;
 import com.mentoredu.forum.repository.ReactionRepository;
@@ -26,97 +23,65 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReactionService implements IReactionService {
 
-    private final ReactionRepository reactionRepository;
-    private final ThreadRepository threadRepository;
-    private final AnswerRepository answerRepository;
-    private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
+    private static final String THREAD  = "THREAD";
+    private static final String ANSWER  = "ANSWER";
+    private static final String COMMENT = "COMMENT";
 
-    // -------------------------------------------------------------------------
-    // US27 — React to forum content (toggle behavior per RN-19 spirit)
-    //
-    // Toggle rule:
-    //   - Same reactionType already exists → delete (returns Optional.empty)
-    //   - Different reactionType exists     → replace (returns Optional.of updated)
-    //   - No existing reaction              → create  (returns Optional.of new)
-    // -------------------------------------------------------------------------
+    private final ReactionRepository reactionRepository;
+    private final ThreadRepository   threadRepository;
+    private final AnswerRepository   answerRepository;
+    private final CommentRepository  commentRepository;
+    private final UserRepository     userRepository;
 
     @Override
     @Transactional
     public Optional<ReactionResponse> reactToThread(UUID threadId, CreateReactionRequest request, String userEmail) {
-        User user = loadUser(userEmail);
-        Thread thread = threadRepository.findById(threadId)
+        threadRepository.findById(threadId)
                 .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + threadId));
-
-        Optional<Reaction> existing = reactionRepository.findByUserAndThread(user, thread);
-        if (existing.isPresent()) {
-            Reaction reaction = existing.get();
-            if (reaction.getReactionType().equals(request.getReactionType())) {
-                reactionRepository.delete(reaction);
-                return Optional.empty();
-            }
-            reaction.setReactionType(request.getReactionType());
-            return Optional.of(toResponse(reactionRepository.save(reaction), "THREAD", threadId, user.getId()));
-        }
-
-        Reaction created = reactionRepository.save(Reaction.builder()
-                .user(user)
-                .thread(thread)
-                .reactionType(request.getReactionType())
-                .build());
-        return Optional.of(toResponse(created, "THREAD", threadId, user.getId()));
+        return toggle(loadUser(userEmail), THREAD, threadId, request.getReactionType());
     }
 
     @Override
     @Transactional
     public Optional<ReactionResponse> reactToAnswer(UUID answerId, CreateReactionRequest request, String userEmail) {
-        User user = loadUser(userEmail);
-        Answer answer = answerRepository.findById(answerId)
+        answerRepository.findById(answerId)
                 .orElseThrow(() -> new AnswerNotFoundException("Answer not found: " + answerId));
-
-        Optional<Reaction> existing = reactionRepository.findByUserAndAnswer(user, answer);
-        if (existing.isPresent()) {
-            Reaction reaction = existing.get();
-            if (reaction.getReactionType().equals(request.getReactionType())) {
-                reactionRepository.delete(reaction);
-                return Optional.empty();
-            }
-            reaction.setReactionType(request.getReactionType());
-            return Optional.of(toResponse(reactionRepository.save(reaction), "ANSWER", answerId, user.getId()));
-        }
-
-        Reaction created = reactionRepository.save(Reaction.builder()
-                .user(user)
-                .answer(answer)
-                .reactionType(request.getReactionType())
-                .build());
-        return Optional.of(toResponse(created, "ANSWER", answerId, user.getId()));
+        return toggle(loadUser(userEmail), ANSWER, answerId, request.getReactionType());
     }
 
     @Override
     @Transactional
     public Optional<ReactionResponse> reactToComment(UUID commentId, CreateReactionRequest request, String userEmail) {
-        User user = loadUser(userEmail);
-        Comment comment = commentRepository.findById(commentId)
+        commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException("Comment not found: " + commentId));
+        return toggle(loadUser(userEmail), COMMENT, commentId, request.getReactionType());
+    }
 
-        Optional<Reaction> existing = reactionRepository.findByUserAndComment(user, comment);
+    // -------------------------------------------------------------------------
+    // Toggle: same type → remove; different type → replace; none → create
+    // -------------------------------------------------------------------------
+
+    private Optional<ReactionResponse> toggle(User user, String targetType, UUID targetId, String reactionType) {
+        Optional<Reaction> existing = reactionRepository
+                .findByUserIdAndTargetTypeAndTargetId(user.getId(), targetType, targetId);
+
         if (existing.isPresent()) {
-            Reaction reaction = existing.get();
-            if (reaction.getReactionType().equals(request.getReactionType())) {
-                reactionRepository.delete(reaction);
+            Reaction r = existing.get();
+            if (r.getReactionType().equals(reactionType)) {
+                reactionRepository.delete(r);
                 return Optional.empty();
             }
-            reaction.setReactionType(request.getReactionType());
-            return Optional.of(toResponse(reactionRepository.save(reaction), "COMMENT", commentId, user.getId()));
+            r.setReactionType(reactionType);
+            return Optional.of(toResponse(reactionRepository.save(r)));
         }
 
         Reaction created = reactionRepository.save(Reaction.builder()
                 .user(user)
-                .comment(comment)
-                .reactionType(request.getReactionType())
+                .targetType(targetType)
+                .targetId(targetId)
+                .reactionType(reactionType)
                 .build());
-        return Optional.of(toResponse(created, "COMMENT", commentId, user.getId()));
+        return Optional.of(toResponse(created));
     }
 
     private User loadUser(String email) {
@@ -124,13 +89,13 @@ public class ReactionService implements IReactionService {
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
     }
 
-    private ReactionResponse toResponse(Reaction r, String targetType, UUID targetId, UUID userId) {
+    private ReactionResponse toResponse(Reaction r) {
         return ReactionResponse.builder()
                 .id(r.getId())
-                .targetType(targetType)
-                .targetId(targetId)
+                .targetType(r.getTargetType())
+                .targetId(r.getTargetId())
                 .reactionType(r.getReactionType())
-                .userId(userId)
+                .userId(r.getUser().getId())
                 .createdAt(r.getCreatedAt())
                 .build();
     }

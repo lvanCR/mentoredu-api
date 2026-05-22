@@ -27,7 +27,7 @@ public class DownloadLog {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resource_id", nullable = false)
-    private AcademicResource resource;
+    private Resource resource;
 
     @Column(name = "downloaded_at", nullable = false)
     private LocalDateTime downloadedAt;

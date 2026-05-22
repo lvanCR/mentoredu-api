@@ -62,6 +62,10 @@ class AuthControllerTest {
                 .email("juan@example.com")
                 .role("STUDENT")
                 .status("ACTIVE")
+                .accessToken("eyJhbGciOiJIUzI1NiJ9.test.signature")
+                .refreshToken("550e8400-e29b-41d4-a716-446655440000")
+                .tokenType("Bearer")
+                .expiresIn(900L)
                 .build();
 
         when(authService.register(any())).thenReturn(response);
@@ -73,6 +77,10 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.email").value("juan@example.com"))
                 .andExpect(jsonPath("$.role").value("STUDENT"))
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.refreshToken").exists())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.expiresIn").value(900))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
     }
 
@@ -156,6 +164,10 @@ class AuthControllerTest {
                 .email("ana@example.com")
                 .role("TEACHER")
                 .status("ACTIVE")
+                .accessToken("eyJhbGciOiJIUzI1NiJ9.test.signature")
+                .refreshToken("550e8400-e29b-41d4-a716-446655440001")
+                .tokenType("Bearer")
+                .expiresIn(900L)
                 .build();
 
         when(authService.register(any())).thenReturn(response);
@@ -167,7 +179,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.role").value("TEACHER"));
+                .andExpect(jsonPath("$.role").value("TEACHER"))
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.refreshToken").exists());
     }
 
     // F0.3 — Registrar como ACADEMY → 201 con rol ACADEMY
@@ -180,6 +194,10 @@ class AuthControllerTest {
                 .email("corp@example.com")
                 .role("ACADEMY")
                 .status("ACTIVE")
+                .accessToken("eyJhbGciOiJIUzI1NiJ9.test.signature")
+                .refreshToken("550e8400-e29b-41d4-a716-446655440002")
+                .tokenType("Bearer")
+                .expiresIn(900L)
                 .build();
 
         when(authService.register(any())).thenReturn(response);
@@ -191,7 +209,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.role").value("ACADEMY"));
+                .andExpect(jsonPath("$.role").value("ACADEMY"))
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.refreshToken").exists());
     }
 
     // F0.3 — Rol prohibido (MODERATOR) → 400 Bad Request

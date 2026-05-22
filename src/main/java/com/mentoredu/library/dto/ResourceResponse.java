@@ -1,6 +1,7 @@
 package com.mentoredu.library.dto;
 
-import com.mentoredu.library.model.AcademicResource;
+import com.mentoredu.library.model.Resource;
+import com.mentoredu.library.model.ResourceType;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -9,31 +10,41 @@ import java.util.UUID;
 @Getter
 public class ResourceResponse {
 
-    private final UUID id;
-    private final String title;
-    private final String type;
-    private final String visibility;
-    private final String description;
-    private final UUID subjectId;
-    private final UUID institutionId;
-    private final UUID fileId;
-    private final Integer year;
-    private final String examCycle;
+    private final UUID         id;
+    private final String       title;
+    private final ResourceType resourceType;
+    private final String       visibility;
+    private final String       description;
+    private final UUID         universityId;
+    private final UUID         areaId;
+    private final UUID         careerId;
+    private final UUID         courseId;
+    private final String       fileUrl;
+    private final String       fileName;
+    private final String       mimeType;
+    private final Long         sizeBytes;
+    private final boolean      aceptaResoluciones;
     private final LocalDateTime createdAt;
-    private final String authorName;
+    private final UUID         authorId;
+    private final String       authorName;
 
-    public ResourceResponse(AcademicResource resource) {
-        this.id = resource.getId();
-        this.title = resource.getTitle();
-        this.type = resource.getType();
-        this.visibility = resource.getVisibility();
-        this.description = resource.getDescription();
-        this.subjectId = resource.getSubjectId();
-        this.institutionId = resource.getInstitutionId();
-        this.fileId = resource.getFileId();
-        this.year = resource.getYear();
-        this.examCycle = resource.getExamCycle();
-        this.createdAt = resource.getCreatedAt();
-        this.authorName = resource.getAuthor().getFirstName() + " " + resource.getAuthor().getLastName();
+    public ResourceResponse(Resource resource) {
+        this.id                 = resource.getId();
+        this.title              = resource.getTitle();
+        this.resourceType       = resource.getResourceType();
+        this.visibility         = resource.getVisibility();
+        this.description        = resource.getDescription();
+        this.universityId       = resource.getUniversityId();
+        this.areaId             = resource.getAreaId();
+        this.careerId           = resource.getCareerId();
+        this.courseId           = resource.getCourseId();
+        this.fileUrl            = resource.getFileUrl();
+        this.fileName           = resource.getFileName();
+        this.mimeType           = resource.getMimeType();
+        this.sizeBytes          = resource.getSizeBytes();
+        this.aceptaResoluciones = resource.isAceptaResoluciones();
+        this.createdAt          = resource.getCreatedAt();
+        this.authorId           = resource.getAuthor().getId();
+        this.authorName         = resource.getAuthor().getFirstName() + " " + resource.getAuthor().getLastName();
     }
 }

@@ -2,34 +2,10 @@ package com.mentoredu.profile.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
-import com.mentoredu.profile.dto.CreateOrganizationProfileRequest;
-import com.mentoredu.profile.dto.CreateStudentProfileRequest;
-import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
-import com.mentoredu.profile.dto.OrganizationProfileResponse;
-import com.mentoredu.profile.dto.ProfileMeResponse;
-import com.mentoredu.profile.dto.ProfileResponse;
-import com.mentoredu.profile.dto.SelectAccountTypeRequest;
-import com.mentoredu.profile.dto.StudentProfileResponse;
-import com.mentoredu.profile.dto.TeacherProfileResponse;
-import com.mentoredu.profile.dto.UpdateProfileRequest;
-import com.mentoredu.profile.dto.UpdateStudentProfileRequest;
-import com.mentoredu.profile.dto.UpdateTeacherProfileRequest;
-import com.mentoredu.profile.exception.OrganizationNameAlreadyExistsException;
-import com.mentoredu.profile.exception.OrganizationProfileAlreadyExistsException;
-import com.mentoredu.profile.exception.ProfileAlreadyExistsException;
-import com.mentoredu.profile.exception.ProfileNotFoundException;
-import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
-import com.mentoredu.profile.exception.TeacherProfileAlreadyExistsException;
-import com.mentoredu.profile.exception.WrongProfileTypeException;
-import com.mentoredu.profile.model.OrganizationProfile;
-import com.mentoredu.profile.model.Profile;
-import com.mentoredu.profile.model.ProfileType;
-import com.mentoredu.profile.model.StudentProfile;
-import com.mentoredu.profile.model.TeacherProfile;
-import com.mentoredu.profile.repository.OrganizationProfileRepository;
-import com.mentoredu.profile.repository.ProfileRepository;
-import com.mentoredu.profile.repository.StudentProfileRepository;
-import com.mentoredu.profile.repository.TeacherProfileRepository;
+import com.mentoredu.profile.dto.*;
+import com.mentoredu.profile.exception.*;
+import com.mentoredu.profile.model.*;
+import com.mentoredu.profile.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -41,11 +17,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProfileService implements IProfileService {
 
-    private final ProfileRepository             profileRepository;
-    private final StudentProfileRepository      studentProfileRepository;
-    private final TeacherProfileRepository      teacherProfileRepository;
-    private final OrganizationProfileRepository organizationProfileRepository;
-    private final UserRepository                userRepository;
+    private final ProfileRepository            profileRepository;
+    private final StudentProfileRepository     studentProfileRepository;
+    private final TeacherProfileRepository     teacherProfileRepository;
+    private final AcademyProfileRepository     academyProfileRepository;
+    private final UserRepository               userRepository;
 
     // -------------------------------------------------------------------------
     // US04 — Select account type
@@ -84,8 +60,7 @@ public class ProfileService implements IProfileService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
         Profile profile = profileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ProfileNotFoundException(
-                        "Profile not found for user: " + email));
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
 
         profile.setDisplayName(request.getDisplayName());
         if (request.getAvatarUrl() != null) profile.setAvatarUrl(request.getAvatarUrl());
@@ -96,7 +71,7 @@ public class ProfileService implements IProfileService {
     }
 
     // -------------------------------------------------------------------------
-    // F0.4 — GET /profiles/me
+    // GET /profiles/me
     // -------------------------------------------------------------------------
 
     @Override
@@ -109,10 +84,10 @@ public class ProfileService implements IProfileService {
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
 
         boolean complete = switch (profile.getProfileType()) {
-            case "STUDENT"      -> studentProfileRepository.existsById(profile.getId());
-            case "TEACHER"      -> teacherProfileRepository.existsById(profile.getId());
-            case "ORGANIZATION" -> organizationProfileRepository.existsById(profile.getId());
-            default             -> false;
+            case "STUDENT" -> studentProfileRepository.existsById(profile.getId());
+            case "TEACHER" -> teacherProfileRepository.existsById(profile.getId());
+            case "ACADEMY" -> academyProfileRepository.existsById(profile.getId());
+            default        -> false;
         };
 
         return new ProfileMeResponse(profile, complete);
@@ -129,8 +104,7 @@ public class ProfileService implements IProfileService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
         Profile profile = profileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ProfileNotFoundException(
-                        "Profile not found for user: " + email));
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
 
         if (!ProfileType.STUDENT.name().equals(profile.getProfileType())) {
             throw new WrongProfileTypeException(
@@ -145,27 +119,32 @@ public class ProfileService implements IProfileService {
         StudentProfile studentProfile = StudentProfile.builder()
                 .profileId(profile.getId())
                 .gradeLevel(request.getGradeLevel())
-                .targetUniversity(request.getTargetUniversity())
                 .schoolName(request.getSchoolName())
-                .targetCareer(request.getTargetCareer())
                 .studyShift(request.getStudyShift())
+                .targetUniversityId(request.getTargetUniversityId())
+                .targetAreaId(request.getTargetAreaId())
+                .targetCareerId(request.getTargetCareerId())
                 .build();
 
         return new StudentProfileResponse(studentProfileRepository.save(studentProfile));
     }
 
     // -------------------------------------------------------------------------
-    // Skeleton methods (pre-existing, not yet implementing a US)
+    // GET /profiles/student/{userId}
     // -------------------------------------------------------------------------
 
     @Override
     public StudentProfileResponse getStudentProfile(UUID userId) {
         Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Perfil no encontrado para el usuario"));
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + userId));
         StudentProfile studentProfile = studentProfileRepository.findById(profile.getId())
-                .orElseThrow(() -> new RuntimeException("Perfil de estudiante no encontrado"));
+                .orElseThrow(() -> new ProfileNotFoundException("Student profile not found for user: " + userId));
         return new StudentProfileResponse(studentProfile);
     }
+
+    // -------------------------------------------------------------------------
+    // PATCH /profiles/student/me — Update student profile
+    // -------------------------------------------------------------------------
 
     @Override
     @Transactional
@@ -174,94 +153,23 @@ public class ProfileService implements IProfileService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
         Profile profile = profileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ProfileNotFoundException(
-                        "Profile not found for user: " + email));
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
 
         StudentProfile studentProfile = studentProfileRepository.findById(profile.getId())
-                .orElseThrow(() -> new ProfileNotFoundException(
-                        "Student profile not found for user: " + email));
+                .orElseThrow(() -> new ProfileNotFoundException("Student profile not found for user: " + email));
 
-        if (request.getSchoolName() != null)        studentProfile.setSchoolName(request.getSchoolName());
-        if (request.getGradeLevel() != null)        studentProfile.setGradeLevel(request.getGradeLevel());
-        if (request.getTargetUniversity() != null)  studentProfile.setTargetUniversity(request.getTargetUniversity());
-        if (request.getTargetCareer() != null)      studentProfile.setTargetCareer(request.getTargetCareer());
-        if (request.getStudyShift() != null)        studentProfile.setStudyShift(request.getStudyShift());
+        if (request.getSchoolName()         != null) studentProfile.setSchoolName(request.getSchoolName());
+        if (request.getGradeLevel()         != null) studentProfile.setGradeLevel(request.getGradeLevel());
+        if (request.getStudyShift()         != null) studentProfile.setStudyShift(request.getStudyShift());
+        if (request.getTargetUniversityId() != null) studentProfile.setTargetUniversityId(request.getTargetUniversityId());
+        if (request.getTargetAreaId()       != null) studentProfile.setTargetAreaId(request.getTargetAreaId());
+        if (request.getTargetCareerId()     != null) studentProfile.setTargetCareerId(request.getTargetCareerId());
 
         return new StudentProfileResponse(studentProfileRepository.save(studentProfile));
     }
 
     // -------------------------------------------------------------------------
-    // US09 — Update teacher specialty
-    // -------------------------------------------------------------------------
-
-    @Override
-    @Transactional
-    public TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
-
-        Profile profile = profileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ProfileNotFoundException(
-                        "Profile not found for user: " + email));
-
-        TeacherProfile teacherProfile = teacherProfileRepository.findById(profile.getId())
-                .orElseThrow(() -> new ProfileNotFoundException(
-                        "Teacher profile not found for user: " + email));
-
-        teacherProfile.setSpecialty(request.getSpecialty());
-        if (request.getInstitutionName() != null) teacherProfile.setInstitutionName(request.getInstitutionName());
-        if (request.getBioProfessional()  != null) teacherProfile.setBioProfessional(request.getBioProfessional());
-
-        return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
-    }
-
-    // -------------------------------------------------------------------------
-    // US10 — Create organization profile
-    // -------------------------------------------------------------------------
-
-    @Override
-    @Transactional
-    public OrganizationProfileResponse createOrganizationProfile(String email, CreateOrganizationProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
-
-        Profile profile = profileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ProfileNotFoundException(
-                        "Profile not found for user: " + email));
-
-        if (!ProfileType.ORGANIZATION.name().equals(profile.getProfileType())) {
-            throw new WrongProfileTypeException(
-                    "Account type is not ORGANIZATION. Current type: " + profile.getProfileType());
-        }
-
-        if (organizationProfileRepository.existsById(profile.getId())) {
-            throw new OrganizationProfileAlreadyExistsException(
-                    "Organization profile already exists for this account.");
-        }
-
-        if (organizationProfileRepository.existsByOrganizationName(request.getOrganizationName())) {
-            throw new OrganizationNameAlreadyExistsException(
-                    "An organization with this name already exists: " + request.getOrganizationName());
-        }
-
-        if (request.getRuc() != null && organizationProfileRepository.existsByRuc(request.getRuc())) {
-            throw new OrganizationNameAlreadyExistsException(
-                    "An organization with this RUC already exists: " + request.getRuc());
-        }
-
-        OrganizationProfile organizationProfile = OrganizationProfile.builder()
-                .profileId(profile.getId())
-                .organizationName(request.getOrganizationName())
-                .ruc(request.getRuc())
-                .website(request.getWebsite())
-                .contactEmail(request.getContactEmail())
-                .build();
-
-        return new OrganizationProfileResponse(organizationProfileRepository.save(organizationProfile));
-    }
-
-    // -------------------------------------------------------------------------
-    // US08 — Create teacher profile
+    // Create teacher profile
     // -------------------------------------------------------------------------
 
     @Override
@@ -271,8 +179,7 @@ public class ProfileService implements IProfileService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
         Profile profile = profileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ProfileNotFoundException(
-                        "Profile not found for user: " + email));
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
 
         if (!ProfileType.TEACHER.name().equals(profile.getProfileType())) {
             throw new WrongProfileTypeException(
@@ -286,11 +193,74 @@ public class ProfileService implements IProfileService {
 
         TeacherProfile teacherProfile = TeacherProfile.builder()
                 .profileId(profile.getId())
-                .specialty(request.getSpecialty())
-                .institutionName(request.getInstitutionName())
                 .bioProfessional(request.getBioProfessional())
                 .build();
 
         return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
+    }
+
+    // -------------------------------------------------------------------------
+    // Update teacher profile
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
+
+        TeacherProfile teacherProfile = teacherProfileRepository.findById(profile.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Teacher profile not found for user: " + email));
+
+        if (request.getBioProfessional() != null) teacherProfile.setBioProfessional(request.getBioProfessional());
+
+        return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
+    }
+
+    // -------------------------------------------------------------------------
+    // Create academy profile
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public AcademyProfileResponse createAcademyProfile(String email, CreateAcademyProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
+
+        if (!ProfileType.ACADEMY.name().equals(profile.getProfileType())) {
+            throw new WrongProfileTypeException(
+                    "Account type is not ACADEMY. Current type: " + profile.getProfileType());
+        }
+
+        if (academyProfileRepository.existsById(profile.getId())) {
+            throw new AcademyProfileAlreadyExistsException(
+                    "Academy profile already exists for this account.");
+        }
+
+        if (academyProfileRepository.existsByAcademyName(request.academyName())) {
+            throw new AcademyNameAlreadyExistsException(
+                    "An academy with this name already exists: " + request.academyName());
+        }
+
+        if (request.ruc() != null && academyProfileRepository.existsByRuc(request.ruc())) {
+            throw new AcademyNameAlreadyExistsException(
+                    "An academy with this RUC already exists: " + request.ruc());
+        }
+
+        AcademyProfile academyProfile = AcademyProfile.builder()
+                .profileId(profile.getId())
+                .academyName(request.academyName())
+                .ruc(request.ruc())
+                .website(request.website())
+                .contactEmail(request.contactEmail())
+                .build();
+
+        return AcademyProfileResponse.from(academyProfileRepository.save(academyProfile));
     }
 }

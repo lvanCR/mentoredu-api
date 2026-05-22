@@ -1,6 +1,9 @@
 package com.mentoredu.library.dto;
 
-import jakarta.validation.constraints.*;
+import com.mentoredu.library.model.ResourceType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.util.UUID;
@@ -8,29 +11,23 @@ import java.util.UUID;
 @Data
 public class PublishResourceRequest {
 
-    @NotBlank
+    @NotBlank(message = "title is required")
     private String title;
 
-    @NotNull
-    private UUID fileId;
+    @NotNull(message = "universityId is required")
+    private UUID universityId;
 
-    @NotNull
-    private UUID institutionId;
+    @NotNull(message = "areaId is required")
+    private UUID areaId;
 
-    @NotNull
-    private UUID subjectId;
+    /** Opcional — si presente, career.area_id debe coincidir con areaId (RN-23). */
+    private UUID careerId;
 
-    @NotNull
-    @Min(value = 1900, message = "examYear must be 1900 or later")
-    @Max(value = 2099, message = "examYear must be 2099 or earlier")
-    private Integer year;
+    /** Opcional para EXAMEN_COMPLETO, GUIA y APUNTES; obligatorio para el resto (RN-07). */
+    private UUID courseId;
 
-    @NotBlank
-    @Pattern(
-        regexp = "EXAM|SOLUTION|NOTES|PRACTICE|VIDEO|OTHER",
-        message = "resourceType must be one of: EXAM, SOLUTION, NOTES, PRACTICE, VIDEO, OTHER"
-    )
-    private String type;
+    @NotNull(message = "resourceType is required")
+    private ResourceType resourceType;
 
     @Pattern(
         regexp = "PUBLIC|PREMIUM|PRIVATE",
@@ -40,7 +37,11 @@ public class PublishResourceRequest {
 
     private String description;
 
-    private String examCycle;
+    private Boolean aceptaResoluciones;
 
-    private Boolean allowsSolutions;
+    // Metadatos de archivo — obtenidos desde POST /resources/files
+    private String fileUrl;
+    private String fileName;
+    private String mimeType;
+    private Long   sizeBytes;
 }

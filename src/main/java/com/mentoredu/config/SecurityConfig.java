@@ -3,6 +3,7 @@ package com.mentoredu.config;
 import com.mentoredu.auth.filter.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -28,9 +30,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/api/v1/auth/**",
-                    "/api/v1/resources/search",
-                    "/api/v1/billing/plans",
-                    "/api/v1/billing/coin-packages",
+                    "/api/v1/catalog/universities",
+                    "/api/v1/catalog/universities/*/areas",
+                    "/api/v1/catalog/courses",
+                    "/api/v1/catalog/areas/*/courses",
+                    "/api/v1/catalog/universities/*/careers",
                     "/actuator/health",
                     "/swagger-ui/**",
                     "/swagger-ui.html",

@@ -16,11 +16,10 @@ public class TeacherProfile {
     @Column(name = "profile_id", columnDefinition = "uuid")
     private UUID profileId;
 
-    @Column(length = 120)
-    private String specialty;
-
-    @Column(name = "institution_name", length = 120)
-    private String institutionName;
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "profile_id")
+    private Profile profile;
 
     @Column(name = "bio_professional", columnDefinition = "text")
     private String bioProfessional;
