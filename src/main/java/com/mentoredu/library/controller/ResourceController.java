@@ -1,5 +1,6 @@
 package com.mentoredu.library.controller;
 
+import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.service.IResourceService;
@@ -96,5 +97,17 @@ public class ResourceController {
         Authentication a = auth();
         if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(resourceService.getByAuthor(a.getName()));
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /resources/{id}/download — Download resource (US10)
+    // -------------------------------------------------------------------------
+
+    @GetMapping("/{id}/download")
+    @Operation(summary = "Descargar un recurso académico (US10)")
+    public ResponseEntity<DownloadResponse> download(@PathVariable UUID id) {
+        Authentication a = auth();
+        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(resourceService.download(id, a.getName()));
     }
 }

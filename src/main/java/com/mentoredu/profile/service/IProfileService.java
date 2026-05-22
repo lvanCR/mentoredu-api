@@ -8,6 +8,7 @@ public interface IProfileService {
     ProfileResponse selectAccountType(String email, SelectAccountTypeRequest request);
     ProfileResponse updateProfile(String email, UpdateProfileRequest request);
     ProfileMeResponse getMyProfile(String email);
+    ProfileResponse getPublicProfile(UUID userId);
 
     StudentProfileResponse createStudentProfile(String email, CreateStudentProfileRequest request);
     StudentProfileResponse getStudentProfile(UUID userId);
@@ -17,4 +18,5 @@ public interface IProfileService {
     TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request);
 
     AcademyProfileResponse createAcademyProfile(String email, CreateAcademyProfileRequest request);
+    AcademyProfileResponse updateAcademyProfile(String email, UpdateAcademyProfileRequest request);
 }

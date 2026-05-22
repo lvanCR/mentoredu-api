@@ -34,6 +34,9 @@ public class VerificationRequest {
     @Column(name = "submitted_at", updatable = false)
     private LocalDateTime submittedAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by")
     private User reviewedBy;

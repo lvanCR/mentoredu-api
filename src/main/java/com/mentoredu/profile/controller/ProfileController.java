@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+
 @RestController
 @RequestMapping("/api/v1/profiles")
 @RequiredArgsConstructor
@@ -123,16 +124,37 @@ public class ProfileController {
     }
 
     // -------------------------------------------------------------------------
-    // Create academy profile
+    // Create / update academy profile (US06)
     // -------------------------------------------------------------------------
 
     @PostMapping("/academy")
-    @Operation(summary = "Crear perfil de academia")
+    @Operation(summary = "US06 - Crear perfil de academia")
     public ResponseEntity<AcademyProfileResponse> createAcademyProfile(
             @Valid @RequestBody CreateAcademyProfileRequest request) {
         Authentication a = auth();
         if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(profileService.createAcademyProfile(a.getName(), request));
+    }
+
+    @PatchMapping("/academy/me")
+    @Operation(summary = "US06 - Actualizar perfil de academia")
+    public ResponseEntity<AcademyProfileResponse> updateAcademyProfile(
+            @Valid @RequestBody UpdateAcademyProfileRequest request) {
+        Authentication a = auth();
+        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(profileService.updateAcademyProfile(a.getName(), request));
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /profiles/{userId} — public profile (US06 E4)
+    // -------------------------------------------------------------------------
+
+    @GetMapping("/{userId}")
+    @Operation(summary = "US06 - Ver perfil público de cualquier usuario")
+    public ResponseEntity<ProfileResponse> getPublicProfile(@PathVariable UUID userId) {
+        Authentication a = auth();
+        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(profileService.getPublicProfile(userId));
     }
 }

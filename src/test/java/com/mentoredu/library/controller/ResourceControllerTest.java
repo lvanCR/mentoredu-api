@@ -3,6 +3,7 @@ package com.mentoredu.library.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.exception.DuplicateResourceException;
@@ -344,6 +345,49 @@ class ResourceControllerTest {
     @Test
     void getMyResources_withoutAuth_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/resources/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // GET /resources/{id}/download (US10)
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void downloadResource_whenExists_returns200WithFileUrl() throws Exception {
+        UUID id = UUID.randomUUID();
+        var response = DownloadResponse.builder()
+                .resourceId(id)
+                .title("Examen UNI 2024")
+                .fileUrl("uploads/resources/examen.pdf")
+                .fileName("examen.pdf")
+                .mimeType("application/pdf")
+                .sizeBytes(1024L)
+                .build();
+        when(resourceService.download(eq(id), eq("user@example.com"))).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/resources/{id}/download", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resourceId").value(id.toString()))
+                .andExpect(jsonPath("$.fileUrl").value("uploads/resources/examen.pdf"))
+                .andExpect(jsonPath("$.fileName").value("examen.pdf"));
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void downloadResource_whenNotFound_returns404() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(resourceService.download(eq(id), eq("user@example.com")))
+                .thenThrow(new ResourceNotFoundException("Resource not found: " + id));
+
+        mockMvc.perform(get("/api/v1/resources/{id}/download", id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    void downloadResource_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/resources/{id}/download", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
     }
 

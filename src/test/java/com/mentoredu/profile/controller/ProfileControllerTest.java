@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.profile.dto.*;
 import com.mentoredu.profile.exception.*;
+import com.mentoredu.profile.dto.UpdateAcademyProfileRequest;
 import com.mentoredu.profile.model.*;
 import com.mentoredu.profile.service.IProfileService;
 import org.junit.jupiter.api.Test;
@@ -602,6 +603,99 @@ class ProfileControllerTest {
         mockMvc.perform(post("/api/v1/profiles/academy")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // Update academy profile (US06 E2)
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "academy@example.com")
+    void updateAcademyProfile_withWebsite_returns200() throws Exception {
+        var request = new UpdateAcademyProfileRequest();
+        request.setWebsite("https://nueva-web.pe");
+        var response = buildAcademyProfileResponse("Academia Lima", null, "https://nueva-web.pe", null);
+        when(profileService.updateAcademyProfile(eq("academy@example.com"), any())).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/profiles/academy/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.website").value("https://nueva-web.pe"))
+                .andExpect(jsonPath("$.profileId").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "academy@example.com")
+    void updateAcademyProfile_whenNameAlreadyExists_returns409() throws Exception {
+        var request = new UpdateAcademyProfileRequest();
+        request.setAcademyName("Academia Duplicada");
+        when(profileService.updateAcademyProfile(eq("academy@example.com"), any()))
+                .thenThrow(new AcademyNameAlreadyExistsException(
+                        "An academy with this name already exists: Academia Duplicada"));
+
+        mockMvc.perform(patch("/api/v1/profiles/academy/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"));
+    }
+
+    @Test
+    @WithMockUser(username = "academy@example.com")
+    void updateAcademyProfile_whenProfileNotFound_returns404() throws Exception {
+        when(profileService.updateAcademyProfile(eq("academy@example.com"), any()))
+                .thenThrow(new ProfileNotFoundException("Academy profile not found for user: academy@example.com"));
+
+        mockMvc.perform(patch("/api/v1/profiles/academy/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    void updateAcademyProfile_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(patch("/api/v1/profiles/academy/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // GET /profiles/{userId} — public profile (US06 E4)
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "any@example.com")
+    void getPublicProfile_withValidUserId_returns200() throws Exception {
+        UUID userId = UUID.randomUUID();
+        var response = buildProfileResponse(ProfileType.STUDENT);
+        when(profileService.getPublicProfile(userId)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/profiles/{userId}", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileType").value("STUDENT"))
+                .andExpect(jsonPath("$.userId").exists())
+                .andExpect(jsonPath("$.displayName").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "any@example.com")
+    void getPublicProfile_whenUserNotFound_returns404() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(profileService.getPublicProfile(userId))
+                .thenThrow(new ProfileNotFoundException("Profile not found for user: " + userId));
+
+        mockMvc.perform(get("/api/v1/profiles/{userId}", userId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    void getPublicProfile_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/profiles/{userId}", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
     }
 

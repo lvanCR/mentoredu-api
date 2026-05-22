@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -221,6 +222,18 @@ public class ProfileService implements IProfileService {
     }
 
     // -------------------------------------------------------------------------
+    // GET /profiles/{userId} — public profile
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProfileResponse getPublicProfile(UUID userId) {
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + userId));
+        return new ProfileResponse(profile);
+    }
+
+    // -------------------------------------------------------------------------
     // Create academy profile
     // -------------------------------------------------------------------------
 
@@ -260,6 +273,36 @@ public class ProfileService implements IProfileService {
                 .website(request.website())
                 .contactEmail(request.contactEmail())
                 .build();
+
+        return AcademyProfileResponse.from(academyProfileRepository.save(academyProfile));
+    }
+
+    // -------------------------------------------------------------------------
+    // Update academy profile (US06)
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public AcademyProfileResponse updateAcademyProfile(String email, UpdateAcademyProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
+
+        AcademyProfile academyProfile = academyProfileRepository.findById(profile.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Academy profile not found for user: " + email));
+
+        if (request.getAcademyName() != null && !request.getAcademyName().isBlank()) {
+            if (!Objects.equals(academyProfile.getAcademyName(), request.getAcademyName())
+                    && academyProfileRepository.existsByAcademyName(request.getAcademyName())) {
+                throw new AcademyNameAlreadyExistsException(
+                        "An academy with this name already exists: " + request.getAcademyName());
+            }
+            academyProfile.setAcademyName(request.getAcademyName());
+        }
+        if (request.getWebsite()      != null) academyProfile.setWebsite(request.getWebsite());
+        if (request.getContactEmail() != null) academyProfile.setContactEmail(request.getContactEmail());
 
         return AcademyProfileResponse.from(academyProfileRepository.save(academyProfile));
     }

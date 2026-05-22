@@ -3,12 +3,15 @@ package com.mentoredu.library.service;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.catalog.repository.CareerRepository;
+import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
+import com.mentoredu.library.model.DownloadLog;
 import com.mentoredu.library.model.Resource;
 import com.mentoredu.library.model.ResourceType;
+import com.mentoredu.library.repository.DownloadLogRepository;
 import com.mentoredu.library.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,9 +25,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ResourceService implements IResourceService {
 
-    private final ResourceRepository resourceRepository;
-    private final UserRepository     userRepository;
-    private final CareerRepository   careerRepository;
+    private final ResourceRepository    resourceRepository;
+    private final UserRepository        userRepository;
+    private final CareerRepository      careerRepository;
+    private final DownloadLogRepository downloadLogRepository;
 
     // -------------------------------------------------------------------------
     // Publish resource (US07+US08)
@@ -138,5 +142,33 @@ public class ResourceService implements IResourceService {
                 .stream()
                 .map(ResourceResponse::new)
                 .toList();
+    }
+
+    // -------------------------------------------------------------------------
+    // Download resource (US10)
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public DownloadResponse download(UUID resourceId, String userEmail) {
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userEmail));
+
+        downloadLogRepository.save(DownloadLog.builder()
+                .user(user)
+                .resource(resource)
+                .build());
+
+        return DownloadResponse.builder()
+                .resourceId(resource.getId())
+                .title(resource.getTitle())
+                .fileUrl(resource.getFileUrl())
+                .fileName(resource.getFileName())
+                .mimeType(resource.getMimeType())
+                .sizeBytes(resource.getSizeBytes())
+                .build();
     }
 }

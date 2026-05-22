@@ -11,6 +11,8 @@ import com.mentoredu.catalog.exception.DuplicateCourseException;
 import com.mentoredu.catalog.exception.DuplicateUniversityException;
 import com.mentoredu.catalog.exception.UniversityNotFoundException;
 import com.mentoredu.community.exception.AlreadyFollowingException;
+import com.mentoredu.community.exception.AssociationNotFoundException;
+import com.mentoredu.community.exception.DuplicateAssociationException;
 import com.mentoredu.community.exception.DuplicateReportException;
 import com.mentoredu.community.exception.DuplicateVerificationException;
 import com.mentoredu.community.exception.NotificationNotFoundException;
@@ -322,5 +324,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotificationNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handle(NotificationNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(AssociationNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(AssociationNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateAssociationException.class)
+    public ResponseEntity<Map<String, Object>> handle(DuplicateAssociationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
     }
 }
