@@ -4,6 +4,7 @@ import com.mentoredu.auth.dto.ForgotPasswordRequest;
 import com.mentoredu.auth.dto.ForgotPasswordResponse;
 import com.mentoredu.auth.dto.LoginRequest;
 import com.mentoredu.auth.dto.LoginResponse;
+import com.mentoredu.auth.dto.LogoutRequest;
 import com.mentoredu.auth.dto.RefreshTokenRequest;
 import com.mentoredu.auth.dto.RefreshTokenResponse;
 import com.mentoredu.auth.dto.RegisterRequest;
@@ -35,6 +36,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request) {
+        authService.logout(request);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/forgot-password")

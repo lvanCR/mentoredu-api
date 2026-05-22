@@ -5,6 +5,7 @@ import com.mentoredu.auth.dto.ForgotPasswordRequest;
 import com.mentoredu.auth.dto.ForgotPasswordResponse;
 import com.mentoredu.auth.dto.LoginRequest;
 import com.mentoredu.auth.dto.LoginResponse;
+import com.mentoredu.auth.dto.LogoutRequest;
 import com.mentoredu.auth.dto.RefreshTokenRequest;
 import com.mentoredu.auth.dto.RefreshTokenResponse;
 import com.mentoredu.auth.dto.RegisterRequest;
@@ -364,6 +365,62 @@ class AuthControllerTest {
         r.setEmail("juan@example.com");
         r.setPassword("Password123");
         return r;
+    }
+
+    // -------------------------------------------------------------------------
+    // US02 — Logout
+    // -------------------------------------------------------------------------
+
+    @Test
+    void logout_withValidToken_returns204() throws Exception {
+        var request = new LogoutRequest();
+        request.setRefreshToken("550e8400-e29b-41d4-a716-446655440000");
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void logout_withInvalidToken_returns401() throws Exception {
+        org.mockito.Mockito.doThrow(new InvalidCredentialsException("Refresh token not found or invalid"))
+                .when(authService).logout(any());
+
+        var request = new LogoutRequest();
+        request.setRefreshToken("invalid-token");
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Unauthorized"));
+    }
+
+    @Test
+    void logout_withAlreadyRevokedToken_returns401() throws Exception {
+        org.mockito.Mockito.doThrow(new InvalidCredentialsException("Session is already revoked"))
+                .when(authService).logout(any());
+
+        var request = new LogoutRequest();
+        request.setRefreshToken("revoked-token");
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Session is already revoked"));
+    }
+
+    @Test
+    void logout_withMissingToken_returns400() throws Exception {
+        var request = new LogoutRequest();
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.refreshToken").exists());
     }
 
     // -------------------------------------------------------------------------

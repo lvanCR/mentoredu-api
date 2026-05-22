@@ -1,6 +1,7 @@
 package com.mentoredu.auth.service;
 
 import com.mentoredu.auth.dto.ForgotPasswordRequest;
+import com.mentoredu.auth.dto.LogoutRequest;
 import com.mentoredu.auth.dto.ForgotPasswordResponse;
 import com.mentoredu.auth.dto.LoginRequest;
 import com.mentoredu.auth.dto.LoginResponse;
@@ -139,6 +140,23 @@ public class AuthService {
                         .role(user.getRole().getName())
                         .build())
                 .build();
+    }
+
+    // -------------------------------------------------------------------------
+    // US02 — Logout
+    // -------------------------------------------------------------------------
+
+    @Transactional
+    public void logout(LogoutRequest request) {
+        Session session = sessionRepository.findByRefreshToken(request.getRefreshToken())
+                .orElseThrow(() -> new InvalidCredentialsException("Refresh token not found or invalid"));
+
+        if (session.getRevokedAt() != null) {
+            throw new InvalidCredentialsException("Session is already revoked");
+        }
+
+        session.setRevokedAt(LocalDateTime.now());
+        sessionRepository.save(session);
     }
 
     // -------------------------------------------------------------------------

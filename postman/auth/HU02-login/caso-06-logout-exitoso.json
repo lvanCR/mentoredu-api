@@ -1,0 +1,23 @@
+{
+  "escenario": "Caso 6 — Logout exitoso",
+  "gherkin": "Dado que tengo una sesión activa, cuando envío POST /api/v1/auth/logout con el refresh token, entonces recibo 204 No Content y la sesión queda revocada.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/auth/logout",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "refreshToken": "{{refreshToken}}"
+    }
+  },
+  "expected_response": {
+    "status": 204,
+    "body": null
+  },
+  "notas": [
+    "US02 Escenario 3: usa el refreshToken obtenido en el login (caso 01) o en el registro (HU01 caso 01).",
+    "Después del logout, usar el mismo refreshToken en HU02 caso-07 para verificar que ya está revocado.",
+    "El accessToken sigue siendo válido hasta que expire (15 min) — esto es por diseño (stateless)."
+  ]
+}
