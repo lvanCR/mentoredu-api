@@ -45,6 +45,7 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder              passwordEncoder;
     private final JwtUtil                      jwtUtil;
+    private final IEmailService                emailService;
 
     @Value("${app.password-reset.expiration-minutes:60}")
     private long passwordResetExpirationMinutes;
@@ -144,9 +145,10 @@ public class AuthService {
                 .used(false)
                 .build());
 
+        emailService.sendPasswordResetEmail(user.getEmail(), rawToken);
+
         return ForgotPasswordResponse.builder()
-                .message("Recovery token generated. In production this would be sent via email.")
-                .token(rawToken)
+                .message("Si existe una cuenta con ese correo, recibirás un enlace de recuperación en breve.")
                 .build();
     }
 

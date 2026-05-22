@@ -183,8 +183,10 @@ package "profile" {
     +targetUniversity: String
     +targetCareer: String
     +studyShift: String
+    +targetExamAreaId: UUID
 
     +updateAcademicGoals(): void
+    +selectExamArea(areaId: UUID): void
   }
 
   class TeacherProfile {
@@ -276,6 +278,28 @@ package "library" {
     +updateData(): void
   }
 
+  class ExamArea {
+    +id: UUID
+    +code: String
+    +name: String
+    +admissionModality: String
+    +description: String
+    +active: Boolean
+    +createdAt: LocalDateTime
+
+    +getWeightedSubjects(): List<AreaSubject>
+    +getTotalWeight(): BigDecimal
+  }
+
+  class AreaSubject {
+    +id: UUID
+    +weightPercentage: BigDecimal
+    +isEliminatory: Boolean
+    +minScore: BigDecimal
+
+    +isEliminatedBy(score: BigDecimal): Boolean
+  }
+
   class Subject {
     +id: UUID
     +name: String
@@ -310,6 +334,14 @@ package "library" {
     +editMetadata(): void
     +archive(): void
     +download(): void
+  }
+
+  enum AdmissionModality {
+    ORDINARIO
+    CEPRE
+    TRASLADO_EXTERNO
+    EXONERADO
+    CONVENIO
   }
 
   class ResourceSolution {
@@ -644,8 +676,16 @@ Academy "1" *-- "0..*" Program : offers >
 Academy "1" *-- "0..*" Cycle : schedules >
 TeacherProfile "0..*" -- "0..*" Academy : teaches in >
 
-' Library
+' Library — Reference data for Peruvian admissions
+Institution "1" *-- "0..*" ExamArea : defines >
+ExamArea "1" *-- "1..*" AreaSubject : weights >
+Subject "1" -- "0..*" AreaSubject : weighted in >
+ExamArea -- AdmissionModality : typed by >
+StudentProfile "0..*" --> "0..1" ExamArea : targets >
+
+' Library — Resources
 User "1" -- "0..*" AcademicResource : publishes >
+AcademicResource "0..1" -- "0..1" ExamArea : classified for >
 AcademicResource "1" -- "1" Subject : belongs to >
 AcademicResource "0..1" -- "1" Institution : associated to >
 AcademicResource "1" *-- "1" ResourceFile : contains >

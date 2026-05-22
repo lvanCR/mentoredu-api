@@ -1,5 +1,7 @@
 package com.mentoredu.library.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.mentoredu.library.dto.ResourceFileResponse;
 import com.mentoredu.library.exception.FileSizeLimitExceededException;
 import com.mentoredu.library.exception.InvalidFileTypeException;
@@ -13,24 +15,20 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
-@Profile("!prod")
+@Profile("prod")
 @RequiredArgsConstructor
-public class ResourceFileService implements IResourceFileService {
+public class CloudinaryResourceFileService implements IResourceFileService {
 
     private static final String ALLOWED_MIME_TYPE = "application/pdf";
     private static final byte[] PDF_MAGIC         = "%PDF".getBytes(StandardCharsets.US_ASCII);
 
+    private final Cloudinary cloudinary;
     private final ResourceFileRepository resourceFileRepository;
-
-    @Value("${app.file.upload-dir:uploads/resources}")
-    private String uploadDir;
 
     @Value("${app.file.max-size-mb:20}")
     private int maxSizeMb;
@@ -42,8 +40,7 @@ public class ResourceFileService implements IResourceFileService {
         validateSize(file);
         validateMagicBytes(file);
 
-        String storedName = UUID.randomUUID() + ".pdf";
-        String fileUrl    = storeFile(file, storedName);
+        String fileUrl = uploadToCloudinary(file);
 
         ResourceFile entity = ResourceFile.builder()
                 .fileUrl(fileUrl)
@@ -56,7 +53,26 @@ public class ResourceFileService implements IResourceFileService {
     }
 
     // -------------------------------------------------------------------------
-    // Validations
+    // Cloudinary upload
+    // -------------------------------------------------------------------------
+
+    @SuppressWarnings("unchecked")
+    private String uploadToCloudinary(MultipartFile file) {
+        try {
+            Map<String, Object> options = ObjectUtils.asMap(
+                "resource_type", "raw",
+                "folder",        "mentoredu/resources",
+                "public_id",     UUID.randomUUID().toString()
+            );
+            Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(), options);
+            return (String) result.get("secure_url");
+        } catch (IOException ex) {
+            throw new IllegalStateException("Error al subir el archivo a Cloudinary: " + ex.getMessage());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Validations (same rules as ResourceFileService)
     // -------------------------------------------------------------------------
 
     private void validateNotEmpty(MultipartFile file) {
@@ -91,22 +107,6 @@ public class ResourceFileService implements IResourceFileService {
             }
         } catch (IOException ex) {
             throw new InvalidFileTypeException("Failed to read the uploaded file: " + ex.getMessage());
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Storage
-    // -------------------------------------------------------------------------
-
-    private String storeFile(MultipartFile file, String storedName) {
-        try {
-            Path dir = Paths.get(uploadDir);
-            Files.createDirectories(dir);
-            Path dest = dir.resolve(storedName);
-            Files.write(dest, file.getBytes());
-            return uploadDir + "/" + storedName;
-        } catch (IOException ex) {
-            throw new IllegalStateException("Failed to store the uploaded file: " + ex.getMessage());
         }
     }
 }

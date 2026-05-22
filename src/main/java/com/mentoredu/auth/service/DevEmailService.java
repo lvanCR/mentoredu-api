@@ -1,0 +1,21 @@
+package com.mentoredu.auth.service;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+@Profile("!prod")
+public class DevEmailService implements IEmailService {
+
+    @Value("${app.frontend.base-url:http://localhost:4200}")
+    private String frontendBaseUrl;
+
+    @Override
+    public void sendPasswordResetEmail(String to, String token) {
+        log.info("[DEV] Password reset link for {}: {}/reset-password?token={}",
+                to, frontendBaseUrl, token);
+    }
+}

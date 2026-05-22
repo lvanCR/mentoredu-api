@@ -7,13 +7,13 @@
     "headers": {
       "Content-Type": "application/json"
     },
-    "body": {
-      "firstName": "Ana",
-      "lastName": "García",
-      "email": "ana.garcia@example.com",
-      "password": "Segura2024",
-      "role": "STUDENT"
-    }
+      "body": {
+        "firstName": "Ana",
+        "lastName": "García",
+        "email": "ana.garcia@example.com",
+        "password": "Segura2024",
+        "role": "STUDENT"
+      }
   },
   "expected_response": {
     "status": 201,

@@ -116,6 +116,19 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Mail (SendGrid SMTP en producción — F1.9) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- Cloudinary (almacenamiento de PDFs en producción — F1.8) -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http45</artifactId>
+            <version>1.39.0</version>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

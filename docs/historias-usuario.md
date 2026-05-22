@@ -1,659 +1,1179 @@
-# 📘 Resumen Ejecutivo: Edu Enterprise & MentorEdu
+# Historias de Usuario — MentorEdu (v2.0)
 
-## 🚀 Startup
+## Tabla de Épicas
 
-| Campo | Descripción |
-|---|---|
-| Nombre | Edu Enterprise |
-| Producto | MentorEdu |
-| Fundación | 2026 |
-| Origen | Universidad Peruana de Ciencias Aplicadas (UPC) |
-| Propósito | Democratizar el acceso a materiales de preparación universitaria mediante una plataforma colaborativa, gamificada y móvil. |
-| ODS asociado | ODS 4: Educación de calidad (metas 4.4, 4.5 y 4.a) |
-
-## 🎯 Segmentos objetivo
-
-| Segmento | Perfil | Principales necesidades |
-|---|---|---|
-| Estudiantes preuniversitarios | Jóvenes de 15 a 20 años, de 4.º/5.º de secundaria o egresados, aspirantes a universidades competitivas. | Repositorio de materiales, foros colaborativos, clasificación por institución y curso, gamificación. |
-| Docentes | Profesores particulares o de academias que comparten materiales y resuelven dudas. | Verificación, visibilidad, publicación de recursos y participación en foros. |
-| Organizaciones | Academias, centros de preparación y entidades educativas. | Perfil institucional, sedes, oferta académica, verificación y administración de recursos. |
-
-## 🧭 Objetivos estratégicos
-
-| Perspectiva | Objetivo |
-|---|---|
-| Para estudiantes | Acceso equitativo a materiales, espacio seguro para resolver dudas y motivación mediante puntos y niveles. |
-| Para docentes | Publicación confiable, reputación profesional y participación ordenada en la comunidad. |
-| Para organizaciones | Perfil institucional claro, gestión de oferta académica y presencia verificada dentro de la plataforma. |
-| Impacto social | Disminuir barreras de acceso a recursos de preparación universitaria y fortalecer el aprendizaje colaborativo. |
-
-## Especificación de Requisitos y Diseño — MentorEdu
-## 1. Épicas (Epics)
-| ID | Titulo | Descripcion |
-|---|---|---|
-| EP-01 | Auth | Gestiona el registro, inicio de sesion y recuperacion de acceso de los usuarios. |
-| EP-02 | Profile | Gestiona el perfil base y los perfiles especificos de cada tipo de usuario. |
-| EP-03 | Academy | Gestiona las academias de preparacion, sus sedes, programas y ciclos de estudio. |
-| EP-04 | Library | Gestiona la publicacion, clasificacion, busqueda y descarga de recursos academicos. |
-| EP-05 | Forum | Gestiona los hilos de discusion y las respuestas de la comunidad. |
-| EP-06 | Moderation | Gestiona reportes, revisiones y resolucion de incidencias de contenido. |
-| EP-07 | Verification | Gestiona la solicitud y aprobacion de verificacion de docentes y organizaciones. |
-| EP-08 | Billing | Gestiona suscripciones, pagos y compra de beneficios premium. |
-| EP-09 | Notifications | Gestiona las notificaciones generadas por eventos del sistema. |
-| EP-10 | Gamification | Gestiona la acumulacion de puntos de experiencia, niveles, insignias y monedas del usuario. |
-| EP-11 | Feedback | Gestiona la retroalimentacion academica formal emitida por docentes hacia estudiantes y su consulta. |
-
-## 2. User Stories
-
-### US01 — Register account with email and password
-- **Epic**: EP-01
-- **Descripcion**: Como visitante, quiero registrarme con correo y contraseña para crear mi cuenta.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que ingreso un correo valido y una contrasena valida, cuando envio el formulario, entonces el sistema crea la cuenta. |
-| Error | Dado que el correo ya existe o la contrasena no cumple la politica, cuando envio el formulario, entonces el sistema rechaza el registro. |
-| Alternativo exitoso | Dado que completo todos los campos obligatorios correctamente, cuando confirmo el registro, entonces el sistema crea la cuenta y la deja lista para autenticacion. |
-| Alternativo error | Dado que no completo un campo obligatorio, cuando intento registrar la cuenta, entonces el sistema devuelve un error de validacion y no guarda datos. |
-
-### US02 — Sign in with email and password
-- **Epic**: EP-01
-- **Descripcion**: Como usuario registrado, quiero iniciar sesion con mi correo y contraseña para acceder a la plataforma.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que ingreso credenciales validas, cuando envio la solicitud, entonces el sistema autentica la sesion. |
-| Error | Dado que las credenciales son incorrectas, cuando intento acceder, entonces el sistema responde con error de autenticacion. |
-| Alternativo exitoso | Dado que mi cuenta esta activa y mis credenciales son correctas, cuando inicio sesion, entonces el sistema retorna el token o sesion activa. |
-| Alternativo error | Dado que mi cuenta esta bloqueada o inactiva, cuando intento iniciar sesion, entonces el sistema rechaza el acceso. |
-
-### US03 — Request password recovery
-- **Epic**: EP-01
-- **Descripcion**: Como usuario, quiero solicitar recuperacion de contraseña con mi correo para restablecer mi acceso.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que ingreso un correo registrado, cuando envio la solicitud, entonces el sistema genera el enlace de recuperacion. |
-| Error | Dado que el correo no existe, cuando envio la solicitud, entonces el sistema no crea la peticion. |
-| Alternativo exitoso | Dado que el correo pertenece a una cuenta valida, cuando confirmo la solicitud, entonces el sistema envia el enlace al correo registrado. |
-| Alternativo error | Dado que el correo tiene formato invalido, cuando intento enviar la solicitud, entonces el sistema rechaza el pedido por validacion. |
-
-### US04 — Select account type
-- **Epic**: EP-02
-- **Descripcion**: Como usuario autenticado, quiero seleccionar mi tipo de cuenta para definir mi ruta de uso.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que mi cuenta aun no tiene tipo asignado, cuando selecciono un tipo permitido, entonces el sistema guarda la eleccion. |
-| Error | Dado que la cuenta ya tiene perfil definido, cuando intento cambiarlo, entonces el sistema rechaza la operacion. |
-| Alternativo exitoso | Dado que selecciono un tipo de cuenta valido, cuando confirmo el cambio, entonces el sistema asocia mi cuenta al tipo elegido. |
-| Alternativo error | Dado que intento seleccionar un tipo no permitido por el sistema, cuando envio la solicitud, entonces el sistema devuelve un error de validacion. |
-
-### US05 — Update common profile data
-- **Epic**: EP-02
-- **Descripcion**: Como usuario, quiero editar mis datos comunes de perfil para mantener mi informacion actualizada.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que estoy autenticado y completo los datos permitidos, cuando guardo los cambios, entonces el sistema actualiza mi perfil. |
-| Error | Dado que dejo un campo obligatorio vacio, cuando intento guardar, entonces el sistema rechaza la actualizacion. |
-| Alternativo exitoso | Dado que modifico solo datos comunes como nombre o ciudad, cuando confirmo la edicion, entonces el sistema guarda los cambios sin afectar el tipo de cuenta. |
-| Alternativo error | Dado que intento cambiar un campo restringido, cuando envio la actualizacion, entonces el sistema devuelve error de permiso o validacion. |
-
-### US06 — Create student profile
-- **Epic**: EP-02
-- **Descripcion**: Como estudiante preuniversitario, quiero crear mi perfil academico para registrar mi situacion de preparacion.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que mi cuenta fue clasificada como estudiante, cuando ingreso grado, universidad objetivo y area de preparacion, entonces el sistema crea el perfil. |
-| Error | Dado que falta un campo obligatorio, cuando intento crear el perfil, entonces el sistema rechaza la operacion. |
-| Alternativo exitoso | Dado que completo la informacion academica requerida, cuando confirmo el formulario, entonces el sistema registra mi perfil de estudiante. |
-| Alternativo error | Dado que ingreso un valor no valido en el grado o universidad, cuando envio el formulario, entonces el sistema devuelve error de validacion. |
-
-### US07 — Update student target university
-- **Epic**: EP-02
-- **Descripcion**: Como estudiante preuniversitario, quiero actualizar mi universidad objetivo para mantener mi meta academica vigente.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que mi perfil de estudiante existe, cuando cambio la universidad objetivo, entonces el sistema guarda la actualizacion. |
-| Error | Dado que el campo queda vacio, cuando intento guardar, entonces el sistema rechaza el cambio. |
-| Alternativo exitoso | Dado que ingreso una universidad valida, cuando confirmo la edicion, entonces el sistema actualiza el dato sin modificar los demas campos. |
-| Alternativo error | Dado que mi perfil de estudiante no existe, cuando intento editarlo, entonces el sistema responde que el recurso no fue encontrado. |
-
-### US08 — Create teacher profile
-- **Epic**: EP-02
-- **Descripcion**: Como docente, quiero crear mi perfil profesional para mostrar mi especialidad y mi institucion.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que mi cuenta fue clasificada como docente, cuando ingreso nombre profesional, especialidad e institucion, entonces el sistema crea el perfil. |
-| Error | Dado que falta un dato obligatorio, cuando intento crear el perfil, entonces el sistema rechaza la creacion. |
-| Alternativo exitoso | Dado que completo los datos profesionales validos, cuando confirmo el formulario, entonces el sistema registra mi perfil docente. |
-| Alternativo error | Dado que la especialidad ingresada no esta permitida, cuando envio el formulario, entonces el sistema devuelve error de validacion. |
-
-### US09 — Update teacher specialty
-- **Epic**: EP-02
-- **Descripcion**: Como docente, quiero actualizar mi especialidad para reflejar mi area de enseñanza actual.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que mi perfil docente existe, cuando selecciono una especialidad valida, entonces el sistema guarda el cambio. |
-| Error | Dado que la especialidad no esta permitida, cuando intento actualizar, entonces el sistema rechaza la operacion. |
-| Alternativo exitoso | Dado que elijo una nueva especialidad valida, cuando confirmo la edicion, entonces el sistema actualiza el perfil. |
-| Alternativo error | Dado que mi perfil docente no existe, cuando intento modificarlo, entonces el sistema responde que el recurso no fue encontrado. |
-
-### US10 — Create organization profile
-- **Epic**: EP-02
-- **Descripcion**: Como organizacion, quiero crear mi perfil institucional para registrar mi academia.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que mi cuenta fue clasificada como organizacion, cuando ingreso nombre, sedes y descripcion institucional, entonces el sistema crea el perfil. |
-| Error | Dado que falta un dato obligatorio, cuando intento crear el perfil, entonces el sistema rechaza la creacion. |
-| Alternativo exitoso | Dado que completo los datos institucionales validos, cuando confirmo el formulario, entonces el sistema registra mi perfil de organizacion. |
-| Alternativo error | Dado que el nombre institucional ya existe, cuando intento registrarlo, entonces el sistema devuelve un error de duplicidad. |
-
-### US11 — Register academic offering
-- **Epic**: EP-03
-- **Descripcion**: Como organizacion, quiero registrar mi oferta academica para mostrar mis ciclos de preparacion.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que mi perfil institucional existe, cuando agrego ciclo, modalidad e intensidad, entonces el sistema guarda la oferta. |
-| Error | Dado que el contenido esta incompleto o no cumple formato, cuando envio el registro, entonces el sistema lo rechaza. |
-| Alternativo exitoso | Dado que ingreso un nuevo ciclo academico valido, cuando confirmo el registro, entonces el sistema publica la oferta. |
-| Alternativo error | Dado que intento registrar una oferta duplicada, cuando envio la solicitud, entonces el sistema la rechaza por duplicidad. |
-
-### US12 — Upload academic PDF resource
-- **Epic**: EP-04
-- **Descripcion**: Como usuario autenticado, quiero subir un PDF academico para compartir material de estudio.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que el archivo es PDF y cumple el tamaño permitido, cuando lo subo, entonces el sistema registra el recurso. |
-| Error | Dado que el archivo no es PDF o excede el tamano permitido, cuando intento subirlo, entonces el sistema lo rechaza. |
-| Alternativo exitoso | Dado que selecciono un PDF valido, cuando confirmo la carga, entonces el sistema almacena el archivo y genera su referencia. |
-| Alternativo error | Dado que el archivo esta corrupto, cuando intento subirlo, entonces el sistema devuelve un error de carga. |
-
-### US13 — Register resource metadata
-- **Epic**: EP-04
-- **Descripcion**: Como usuario autenticado, quiero registrar los metadatos de un recurso para que sea buscable.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces                                                                                                              |
-|---|---------------------------------------------------------------------------------------------------------------------------------------|
-| Exitoso | Dado que completo titulo, institucion, curso, anio y categoria, cuando guardo el recurso, entonces el sistema registra los metadatos. |
-| Error | Dado que falta un metadato obligatorio, cuando intento guardar, entonces el sistema no crea el registro.                              |
-| Alternativo exitoso | Dado que ingreso metadatos validos, cuando confirmo el formulario, entonces el sistema deja el recurso listo para busqueda.           |
-| Alternativo error | Dado que el curso o el año no cumplen formato, cuando envio el formulario, entonces el sistema devuelve error de validacion.          |
-
-### US14 — Search resources by filters
-- **Epic**: EP-04
-- **Descripcion**: Como usuario, quiero buscar recursos por filtros para encontrar material especifico.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que aplico filtros validos, cuando ejecuto la busqueda, entonces el sistema devuelve coincidencias. |
-| Error | Dado que ingreso un parametro de busqueda con formato invalido, cuando ejecuto la busqueda, entonces el sistema devuelve un error de validacion. |
-| Alternativo exitoso | Dado que aplico filtros validos pero no existen recursos que coincidan, cuando ejecuto la busqueda, entonces el sistema devuelve una lista vacia sin error. |
-| Alternativo error | Dado que ingreso filtros inconsistentes, cuando busco, entonces el sistema devuelve un error de validacion. |
-
-### US15 — Download academic resource
-- **Epic**: EP-04
-- **Descripcion**: Como usuario, quiero descargar un recurso academico para estudiarlo sin conexion.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces                                                                                                                |
-|---|-----------------------------------------------------------------------------------------------------------------------------------------|
-| Exitoso | Dado que el recurso existe y tengo puntos suficientes, cuando solicito la descarga, entonces el sistema entrega el archivo.             |
-| Error | Dado que el recurso no existe o no tengo puntos suficientes, cuando intento descargarlo, entonces el sistema rechaza la operacion.      |
-| Alternativo exitoso | Dado que el archivo esta disponible, cuando confirmo la descarga, entonces el sistema inicia la transferencia correctamente.            |
-| Alternativo error | Dado que el archivo no esta disponible temporalmente, cuando intento descargarlo, entonces el sistema devuelve error de disponibilidad. |
-
-### US16 — Create forum thread
-- **Epic**: EP-05
-- **Descripcion**: Como usuario autenticado, quiero crear un hilo de foro sobre una duda concreta para iniciar una discusion.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que el texto del hilo es valido, cuando envio la publicacion, entonces el sistema crea el foro. |
-| Error | Dado que el texto esta vacio, cuando intento publicarlo, entonces el sistema rechaza la accion. |
-| Alternativo exitoso | Dado que escribo una duda concreta, cuando confirmo la publicacion, entonces el sistema registra el hilo correctamente. |
-| Alternativo error | Dado que no estoy autenticado, cuando intento crear el hilo, entonces el sistema rechaza el acceso. |
-
-### US17 — Reply to forum thread
-- **Epic**: EP-05
-- **Descripcion**: Como usuario autenticado, quiero responder un hilo para aportar una solucion.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que el hilo existe y mi respuesta es valida, cuando la envio, entonces el sistema la publica. |
-| Error | Dado que la respuesta esta vacia, cuando intento responder, entonces el sistema rechaza la accion. |
-| Alternativo exitoso | Dado que redacto una respuesta clara, cuando confirmo el envio, entonces el sistema la agrega al hilo. |
-| Alternativo error | Dado que el hilo esta cerrado, cuando intento responder, entonces el sistema devuelve un error de estado. |
-
-### US18 — Close forum thread
-- **Epic**: EP-05
-- **Descripcion**: Como autor del hilo, quiero cerrar el foro para dar por terminada la discusion.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que soy el autor del hilo, cuando marco el foro como cerrado, entonces el sistema cambia su estado. |
-| Error | Dado que el hilo no es mio, cuando intento cerrarlo, entonces el sistema rechaza la operacion. |
-| Alternativo exitoso | Dado que la discusion ya no requiere mas aportes, cuando confirmo el cierre, entonces el sistema bloquea nuevas respuestas. |
-| Alternativo error | Dado que el hilo no existe, cuando intento cerrarlo, entonces el sistema responde que el recurso no fue encontrado. |
-
-### US19 — Report content
-- **Epic**: EP-06
-- **Descripcion**: Como usuario autenticado, quiero reportar contenido para que sea revisado por moderacion.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que ingreso un motivo valido, cuando envio el reporte, entonces el sistema lo registra. |
-| Error | Dado que no indico motivo, cuando intento reportar, entonces el sistema rechaza la solicitud. |
-| Alternativo exitoso | Dado que selecciono una categoria de reporte correcta, cuando confirmo el envio, entonces el sistema guarda el caso para revision. |
-| Alternativo error | Dado que intento reportar contenido inexistente, cuando envio la solicitud, entonces el sistema responde que el recurso no fue encontrado. |
-
-### US20 — Resolve report
-- **Epic**: EP-06
-- **Descripcion**: Como moderador autorizado, quiero resolver un reporte para cerrar el caso.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que tengo permisos de moderacion, cuando selecciono una resolucion, entonces el sistema cambia el estado del reporte. |
-| Error | Dado que no tengo permisos, cuando intento resolverlo, entonces el sistema rechaza la accion. |
-| Alternativo exitoso | Dado que reviso el caso y selecciono una decision valida, cuando confirmo la resolucion, entonces el sistema cierra el reporte. |
-| Alternativo error | Dado que el reporte ya fue resuelto, cuando intento modificarlo, entonces el sistema rechaza el cambio por estado invalido. |
-
-### US21 — Request teacher verification
-- **Epic**: EP-07
-- **Descripcion**: Como docente, quiero solicitar verificacion para obtener un cheque de usuario verificado.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que subo una credencial valida, cuando envio la solicitud, entonces el sistema la deja en revision. |
-| Error | Dado que el archivo no cumple formato o peso, cuando intento enviarlo, entonces el sistema rechaza la solicitud. |
-| Alternativo exitoso | Dado que adjunto mi documento profesional valido, cuando confirmo la peticion, entonces el sistema registra el estado pendiente. |
-| Alternativo error | Dado que mi solicitud ya existe, cuando intento enviar otra, entonces el sistema la rechaza por duplicidad. |
-
-### US22 — Request organization verification
-- **Epic**: EP-07
-- **Descripcion**: Como organizacion, quiero solicitar verificacion para obtener un logo institucional personalizado.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que subo la documentacion valida, cuando envio la solicitud, entonces el sistema la deja en revision. |
-| Error | Dado que la documentacion es invalida o incompleta, cuando intento enviarla, entonces el sistema rechaza la solicitud. |
-| Alternativo exitoso | Dado que completo los documentos requeridos, cuando confirmo la peticion, entonces el sistema registra la verificacion pendiente. |
-| Alternativo error | Dado que ya existe una solicitud activa, cuando intento crear otra, entonces el sistema la rechaza por duplicidad. |
-
-### US23 — Activate premium subscription
-- **Epic**: EP-08
-- **Descripcion**: Como usuario, quiero activar una suscripcion premium para acceder a beneficios adicionales.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que completo el pago, cuando se procesa correctamente, entonces el sistema activa la suscripcion. |
-| Error | Dado que el pago falla, cuando intento activar el plan, entonces el sistema no lo habilita. |
-| Alternativo exitoso | Dado que selecciono un plan premium valido, cuando confirmo el cobro, entonces el sistema deja mi cuenta con acceso premium. |
-| Alternativo error | Dado que mi cuenta ya tiene una suscripcion activa, cuando intento contratar otra, entonces el sistema rechaza la operacion. |
-
-### US24 — Buy coin package
-- **Epic**: EP-08
-- **Descripcion**: Como usuario, quiero comprar un paquete de monedas para usar beneficios de la plataforma.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que el pago se confirma, cuando compro el paquete, entonces el sistema acredita las monedas. |
-| Error | Dado que el pago falla, cuando intento comprar, entonces el sistema no acredita saldo. |
-| Alternativo exitoso | Dado que elijo un paquete disponible, cuando confirmo la compra, entonces el sistema aumenta mi saldo de monedas. |
-| Alternativo error | Dado que el paquete no existe, cuando intento comprarlo, entonces el sistema rechaza la operacion. |
-
-### US25 — View pending notifications
-- **Epic**: EP-09
-- **Descripcion**: Como usuario autenticado, quiero consultar mis notificaciones pendientes para revisar actividad reciente.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que tengo notificaciones pendientes, cuando abro la bandeja, entonces el sistema muestra las notificaciones no leidas ordenadas por fecha. |
-| Error | Dado que no estoy autenticado, cuando intento consultar mis notificaciones, entonces el sistema responde con error de acceso. |
-| Alternativo exitoso | Dado que no tengo notificaciones pendientes, cuando consulto la bandeja, entonces el sistema devuelve la lista vacia sin error. |
-| Alternativo error | Dado que el servicio de notificaciones no esta disponible, cuando intento consultar, entonces el sistema devuelve un error de disponibilidad. |
-
-### US26 — Reset password with token
-- **Epic**: EP-01
-- **Descripcion**: Como usuario, quiero usar el enlace de recuperacion para establecer una nueva contrasena y recuperar el acceso.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que tengo un token de recuperacion valido y vigente, cuando establezco una nueva contrasena valida, entonces el sistema actualiza la credencial y marca el token como usado. |
-| Error | Dado que el token ha expirado o ya fue utilizado, cuando intento acceder al formulario de restablecimiento, entonces el sistema rechaza la operacion. |
-| Alternativo exitoso | Dado que ingreso una contrasena que cumple la politica de seguridad, cuando confirmo el cambio, entonces el sistema guarda la nueva credencial y cierra cualquier sesion activa anterior. |
-| Alternativo error | Dado que la nueva contrasena no cumple la politica de seguridad, cuando intento confirmar el cambio, entonces el sistema devuelve un error de validacion. |
-
-### US27 — React to forum content
-- **Epic**: EP-05
-- **Descripcion**: Como usuario autenticado, quiero reaccionar a un hilo, respuesta o comentario para expresar mi opinion sobre el contenido.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que el contenido existe y estoy autenticado, cuando selecciono una reaccion valida, entonces el sistema registra mi reaccion. |
-| Error | Dado que el contenido no existe, cuando intento reaccionar, entonces el sistema responde que el recurso no fue encontrado. |
-| Alternativo exitoso | Dado que ya registre una reaccion al mismo contenido, cuando selecciono la misma reaccion nuevamente, entonces el sistema elimina mi reaccion anterior. |
-| Alternativo error | Dado que no estoy autenticado, cuando intento reaccionar a un contenido, entonces el sistema rechaza el acceso. |
-
-### US28 — Comment on forum answer
-- **Epic**: EP-05
-- **Descripcion**: Como usuario autenticado, quiero comentar una respuesta del foro para agregar contexto o aclaracion.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que la respuesta existe y mi comentario tiene contenido valido, cuando lo envio, entonces el sistema lo publica. |
-| Error | Dado que el comentario esta vacio, cuando intento enviarlo, entonces el sistema rechaza la accion. |
-| Alternativo exitoso | Dado que redacto un comentario con informacion adicional valida, cuando confirmo el envio, entonces el sistema lo agrega correctamente a la respuesta. |
-| Alternativo error | Dado que la respuesta ya no existe, cuando intento comentarla, entonces el sistema responde que el recurso no fue encontrado. |
-
-### US29 — Follow a user
-- **Epic**: EP-05
-- **Descripcion**: Como usuario autenticado, quiero seguir a otro usuario para ver su actividad en la comunidad.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que el usuario objetivo existe y aun no lo sigo, cuando envio la solicitud de seguimiento, entonces el sistema registra la relacion. |
-| Error | Dado que intento seguirme a mi mismo, cuando envio la solicitud, entonces el sistema rechaza la operacion. |
-| Alternativo exitoso | Dado que ya sigo al usuario, cuando cancelo el seguimiento, entonces el sistema elimina la relacion de seguimiento. |
-| Alternativo error | Dado que el usuario objetivo no existe, cuando intento seguirlo, entonces el sistema responde que el recurso no fue encontrado. |
-
-### US30 — Earn experience points
-- **Epic**: EP-10
-- **Descripcion**: Como usuario autenticado, quiero acumular puntos de experiencia al contribuir en la plataforma para aumentar mi nivel.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que realizo una accion recompensada como publicar un recurso o responder un hilo, cuando el sistema procesa la accion, entonces registra los puntos correspondientes en mi historial. |
-| Error | Dado que la accion fuente no existe o fue eliminada, cuando el sistema intenta registrar puntos, entonces descarta la operacion sin generar inconsistencia. |
-| Alternativo exitoso | Dado que acumulo puntos suficientes para subir de nivel, cuando el sistema recalcula mi progreso, entonces actualiza mi nivel actual. |
-| Alternativo error | Dado que la misma accion ya genero puntos anteriormente, cuando el sistema evalua nuevamente, entonces no registra duplicados. |
-
-### US31 — View personal level and progress
-- **Epic**: EP-10
-- **Descripcion**: Como usuario autenticado, quiero consultar mi nivel actual y progreso de experiencia para conocer mi avance en la plataforma.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que tengo un registro de progreso activo, cuando consulto mi perfil de gamificacion, entonces el sistema muestra mi nivel, experiencia acumulada y porcentaje de avance. |
-| Error | Dado que no estoy autenticado, cuando intento consultar el progreso, entonces el sistema rechaza el acceso. |
-| Alternativo exitoso | Dado que soy un usuario nuevo sin experiencia acumulada, cuando consulto mi progreso, entonces el sistema muestra el nivel inicial con cero puntos. |
-| Alternativo error | Dado que el registro de progreso aun no existe, cuando lo consulto, entonces el sistema lo inicializa y devuelve el estado base. |
-
-### US32 — Earn and view badges
-- **Epic**: EP-10
-- **Descripcion**: Como usuario autenticado, quiero ganar insignias por hitos de participacion y visualizarlas en mi perfil.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que alcanzo el hito requerido por una insignia, cuando el sistema evalua mi actividad, entonces acredita la insignia en mi perfil. |
-| Error | Dado que una insignia ya fue acreditada a mi cuenta, cuando el sistema intenta asignarla nuevamente, entonces descarta la operacion por duplicidad. |
-| Alternativo exitoso | Dado que consulto mis insignias ganadas, cuando reviso el listado, entonces el sistema muestra cada insignia con su nombre y fecha de obtencion. |
-| Alternativo error | Dado que el hito requerido aun no fue alcanzado, cuando el sistema evalua mi actividad, entonces no acredita la insignia y no genera error. |
-
-### US34 — Provide academic feedback to student
-- **Epic**: EP-11
-- **Descripcion**: Como docente, quiero registrar retroalimentacion academica formal sobre el desempeño de un estudiante para que quede documentada en el sistema.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que soy un docente registrado y el estudiante existe, cuando envio retroalimentacion con cuerpo de texto valido, entonces el sistema la registra y la asocia al estudiante receptor. |
-| Error | Dado que el cuerpo de retroalimentacion esta vacio, cuando intento enviarla, entonces el sistema rechaza la operacion por validacion. |
-| Alternativo exitoso | Dado que incluyo una puntuacion junto al comentario de retroalimentacion, cuando confirmo el envio, entonces el sistema guarda ambos datos correctamente. |
-| Alternativo error | Dado que el estudiante objetivo no existe, cuando intento enviar retroalimentacion, entonces el sistema responde que el recurso no fue encontrado. |
-
-### US35 — View received academic feedback
-- **Epic**: EP-11
-- **Descripcion**: Como estudiante, quiero consultar la retroalimentacion academica que he recibido para conocer la evaluacion de mis docentes.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que tengo retroalimentacion registrada, cuando consulto mi historial de retroalimentacion, entonces el sistema devuelve el listado ordenado por fecha descendente. |
-| Error | Dado que no estoy autenticado, cuando intento consultar mi retroalimentacion, entonces el sistema rechaza el acceso. |
-| Alternativo exitoso | Dado que no tengo retroalimentacion registrada aun, cuando consulto el historial, entonces el sistema devuelve una lista vacia sin error. |
-| Alternativo error | Dado que intento modificar una retroalimentacion recibida, cuando envio el cambio, entonces el sistema rechaza la operacion porque las entradas son inmutables. |
-
-### US33 — Create academy
-- **Epic**: EP-03
-- **Descripcion**: Como organizacion, quiero registrar mi academia en la plataforma para publicar oferta educativa.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que tengo un perfil de organizacion activo, cuando ingreso nombre, descripcion y datos de contacto de la academia, entonces el sistema crea el registro y lo deja activo. |
-| Error | Dado que falta el nombre de la academia, cuando intento registrarla, entonces el sistema rechaza la creacion. |
-| Alternativo exitoso | Dado que completo todos los datos requeridos, cuando confirmo el registro, entonces el sistema deja la academia lista para publicar sedes y oferta academica. |
-| Alternativo error | Dado que ya existe una academia registrada con ese nombre por la misma organizacion, cuando intento crearla, entonces el sistema la rechaza por duplicidad. |
-
-### US36 — Register campus for academy
-- **Epic**: EP-03
-- **Descripcion**: Como organizacion, quiero registrar sedes fisicas de mi academia para que los estudiantes conozcan los puntos de atencion disponibles.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que soy la organizacion propietaria de la academia, cuando registro una sede con nombre, direccion y ciudad validos, entonces el sistema la crea y la asocia a la academia. |
-| Error | Dado que omito un campo obligatorio como nombre, direccion o ciudad, cuando intento registrar la sede, entonces el sistema rechaza la operacion por validacion. |
-| Alternativo exitoso | Dado que ya tengo sedes registradas, cuando agrego una nueva con nombre distinto, entonces el sistema la crea sin afectar las existentes. |
-| Alternativo error | Dado que ya existe una sede con ese nombre en la misma academia, cuando intento registrarla, entonces el sistema la rechaza por duplicidad. |
-
-### US37 — Associate teacher to academy
-- **Epic**: EP-03
-- **Descripcion**: Como organizacion, quiero asociar docentes a mi academia para mostrar el plantel de ensenanza disponible a los estudiantes.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que soy la organizacion propietaria de la academia y el perfil docente indicado existe, cuando registro la asociacion, entonces el sistema la crea correctamente. |
-| Error | Dado que el perfil indicado no existe o no es de tipo docente, cuando intento asociarlo, entonces el sistema rechaza la operacion. |
-| Alternativo exitoso | Dado que la academia ya tiene docentes asociados, cuando asocio uno nuevo valido, entonces el sistema lo agrega sin afectar las asociaciones existentes. |
-| Alternativo error | Dado que el docente ya esta asociado a la misma academia, cuando intento registrar la asociacion nuevamente, entonces el sistema la rechaza por duplicidad. |
-
-### US38 — Submit appeal for moderation decision
-- **Epic**: EP-06
-- **Descripcion**: Como usuario autenticado, quiero presentar una apelacion sobre una decision de moderacion para que mi caso sea revisado nuevamente.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que el reporte existe y no tengo una apelacion activa para ese reporte, cuando presento la apelacion con un motivo valido, entonces el sistema la registra con estado OPEN. |
-| Error | Dado que omito el motivo de la apelacion, cuando intento presentarla, entonces el sistema rechaza la operacion por validacion. |
-| Alternativo exitoso | Dado que presento mi apelacion correctamente, cuando consulto su estado, entonces el sistema la muestra como pendiente de revision. |
-| Alternativo error | Dado que ya presente una apelacion para el mismo reporte, cuando intento presentar otra, entonces el sistema la rechaza por duplicidad. |
-
-### US39 — Submit solution to academic resource
-- **Epic**: EP-04
-- **Descripcion**: Como estudiante, quiero enviar mi resolucion de un recurso academico para que el docente pueda evaluarla.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que el recurso tiene habilitadas las soluciones y no he enviado una resolucion antes, cuando envio un archivo PDF valido previamente subido, entonces el sistema registra mi solucion con estado SUBMITTED y me otorga 3 puntos de experiencia. |
-| Error — recurso no acepta soluciones | Dado que el recurso tiene allows_solutions en false, cuando intento enviar una resolucion, entonces el sistema rechaza la operacion con 403 Forbidden (RN-47). |
-| Error — solucion duplicada | Dado que ya envie una resolucion para ese recurso, cuando intento enviar otra, entonces el sistema la rechaza con 409 Conflict (RN-45). |
-| Error — recurso no existe | Dado que el resourceId no corresponde a ningun recurso registrado, cuando intento enviar la resolucion, entonces el sistema responde con 404 Not Found. |
-| Error — no autenticado | Dado que no estoy autenticado, cuando intento enviar una resolucion, entonces el sistema rechaza el acceso con 401 Unauthorized. |
-
-### US40 — Provide feedback on student solution
-- **Epic**: EP-11
-- **Descripcion**: Como docente o academia, quiero evaluar la resolucion enviada por un estudiante para registrar retroalimentacion academica formal sobre su trabajo.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso | Dado que soy el autor del recurso y la solucion del estudiante existe, cuando registro retroalimentacion con cuerpo de texto valido, entonces el sistema crea la entrada de feedback, cambia el estado de la solucion a REVIEWED automaticamente y me otorga 5 puntos de experiencia (RN-49). |
-| Error — rol no autorizado | Dado que mi rol no es TEACHER, ACADEMY ni ADMIN, cuando intento registrar feedback sobre una solucion, entonces el sistema rechaza la operacion con 403 Forbidden (RN-36). |
-| Error — no soy autor del recurso | Dado que soy docente pero no soy el autor del recurso al que pertenece la solucion, cuando intento evaluarla, entonces el sistema rechaza la operacion con 403 Forbidden (RN-48). |
-| Error — solucion no existe | Dado que el solutionId no corresponde a ninguna solucion registrada, cuando intento evaluarla, entonces el sistema responde con 404 Not Found. |
-| Alternativo exitoso — insignia HIGHLY_RATED | Dado que el score registrado es mayor o igual a 8.0, cuando el sistema procesa el feedback, entonces concede la insignia HIGHLY_RATED al estudiante receptor si aun no la tiene. |
-| Alternativo error — body vacio | Dado que omito el cuerpo del mensaje de retroalimentacion, cuando intento registrarlo, entonces el sistema rechaza la operacion con 400 Bad Request por validacion. |
-
-### US41 — View my solution and received feedback
-- **Epic**: EP-04
-- **Descripcion**: Como estudiante, quiero consultar la resolucion que envie para un recurso y el feedback que recibi sobre ella, para conocer la evaluacion de mi docente.
-- **Criterios de aceptacion**:
-
-| Escenario | Dado / Cuando / Entonces |
-|---|---|
-| Exitoso — con feedback | Dado que envie una resolucion y el docente ya la evaluo, cuando consulto mi solucion del recurso, entonces el sistema devuelve los datos de la solucion junto con el feedback recibido (cuerpo, score, autor y fecha). |
-| Exitoso — sin feedback aun | Dado que envie una resolucion pero aun no hay feedback registrado, cuando consulto mi solucion, entonces el sistema devuelve los datos de la solucion con status SUBMITTED y el campo feedback en null. |
-| Error — sin resolucion enviada | Dado que no he enviado ninguna resolucion para ese recurso, cuando intento consultarla, entonces el sistema responde con 404 Not Found. |
-| Error — no autenticado | Dado que no estoy autenticado, cuando intento consultar mi resolucion, entonces el sistema rechaza el acceso con 401 Unauthorized. |
-
-## 3. Reglas de Negocio
-
-### Auth
-- RN-01: No puede existir mas de una cuenta con el mismo correo.
-- RN-02: Cada usuario debe tener exactamente un rol activo.
-- RN-03: La contrasena debe almacenarse cifrada.
-- RN-04: Los enlaces de recuperacion deben expirar.
-
-### Profile
-- RN-05: Un usuario solo puede tener un perfil base.
-- RN-06: Los campos comunes obligatorios no pueden quedar vacios.
-- RN-07: Un cambio de tipo de cuenta debe ser consistente con el perfil creado.
-
-### Academy
-- RN-08: Un estudiante solo puede tener un perfil academico principal.
-- RN-09: Un docente solo puede tener un perfil profesional.
-- RN-10: Una organizacion solo puede tener un perfil institucional activo.
-- RN-11: Cada perfil debe registrar solo los campos que le corresponden.
-
-### Library
-- RN-12: Todo recurso debe registrar titulo, institucion, curso, anio y categoria.
-- RN-13: Solo se aceptan archivos con formatos permitidos.
-- RN-14: No se permite publicar un recurso duplicado identico.
-- RN-15: La descarga depende del permiso del usuario y del estado del recurso.
-
-### Forum
-- RN-16: Un hilo debe estar asociado a un tema concreto.
-- RN-17: Un hilo solo puede tener un estado abierto o cerrado.
-- RN-18: Solo el autor del hilo puede cerrarlo.
-- RN-19: Toda respuesta debe pertenecer a un hilo existente.
-
-### Moderation
-- RN-20: Todo reporte debe incluir un motivo.
-- RN-21: Solo moderadores autorizados pueden resolver reportes.
-- RN-22: Toda accion de moderacion debe generar auditoria.
-
-### Verification
-- RN-23: Toda solicitud de verificacion requiere documento valido.
-- RN-24: Solo una solicitud de verificacion puede estar activa por entidad.
-- RN-25: La verificacion del docente y de la organizacion se resuelven por flujos distintos.
-
-### Billing
-- RN-26: Un usuario solo puede tener una suscripcion premium activa a la vez.
-- RN-27: El acceso premium depende de una suscripcion vigente o de una compra validada.
-- RN-28: Las compras fallidas no deben modificar el saldo ni el estado del plan.
-
-### Notifications
-- RN-29: Las notificaciones solo se generan por eventos definidos por el negocio.
-- RN-30: Toda notificacion debe tener estado leido o no leido.
-
-### Gamification
-- RN-31: Los puntos de experiencia se generan unicamente por acciones definidas por el sistema.
-- RN-32: El nivel del usuario se recalcula automaticamente al acumular experiencia suficiente.
-- RN-33: Una insignia no puede asignarse mas de una vez al mismo usuario.
-- RN-34: El historial de puntos de experiencia es de solo lectura y no puede modificarse manualmente.
-- RN-35: Los puntos de experiencia y las monedas virtuales son sistemas independientes.
-
-### Feedback
-- RN-36: Solo un usuario con rol TEACHER, ACADEMY o ADMIN puede emitir retroalimentacion academica formal hacia un estudiante.
-- RN-37: Una entrada de retroalimentacion no puede modificarse ni eliminarse una vez registrada.
-- RN-38: El estudiante receptor puede consultar su retroalimentacion recibida pero no editarla ni eliminarla.
-
-### Sedes (EP-03)
-- RN-39: El nombre de sede debe ser unico por academia.
-- RN-40: Solo la organizacion propietaria de la academia puede registrar sedes en ella.
-
-### Asociacion Docente-Academia (EP-03)
-- RN-41: Un docente puede asociarse a multiples academias; una academia puede tener multiples docentes.
-- RN-42: Una asociacion docente-academia no puede registrarse mas de una vez.
-
-### Apelaciones (EP-06)
-- RN-43: Solo puede existir una apelacion activa por usuario por reporte.
-- RN-44: El motivo de la apelacion es obligatorio.
-
-### Ciclo Pedagogico (US39-US41)
-- RN-45: Solo puede existir una solucion por par (resource_id, student_id). Restriccion UNIQUE en la base de datos.
-- RN-46: Una solucion solo es visible para su autor, el autor del recurso original, moderadores y administradores.
-- RN-47: El campo allows_solutions=true solo puede activarlo un usuario con rol TEACHER o ACADEMY. Los estudiantes no pueden activarlo.
-- RN-48: Solo el autor del recurso puede dar feedback a las soluciones de ese recurso.
-- RN-49: El estado de la solucion en resource_solutions pasa de SUBMITTED a REVIEWED automaticamente al registrar una feedback_entry con ese solution_id.
-- RN-50: El feedback de una solucion es inmutable una vez registrado (igual que RN-37).
-- RN-51: Las soluciones son privadas. No aparecen en busquedas publicas ni se referencian desde el foro.
-
-## 4. Bounded Contexts
-
-| Bounded Context | Descripcion |
-|---|---|
-| auth | Gestiona el registro, inicio de sesion y recuperacion de acceso de los usuarios. |
-| profile | Gestiona el perfil base y los perfiles especificos de cada tipo de usuario. |
-| academy | Gestiona las academias de preparacion, sus sedes, programas y ciclos de estudio. |
-| library | Gestiona la publicacion, clasificacion, busqueda y descarga de recursos academicos. |
-| forum | Gestiona los hilos de discusion y las respuestas de la comunidad. |
-| moderation | Gestiona reportes, revisiones y resolucion de incidencias de contenido. |
-| verification | Gestiona la solicitud y aprobacion de verificacion de docentes y organizaciones. |
-| billing | Gestiona suscripciones, pagos y compra de beneficios premium. |
-| notifications | Gestiona las notificaciones generadas por eventos del sistema. |
-| gamification | Gestiona la acumulacion de puntos de experiencia, niveles, insignias y monedas del usuario. |
-| feedback | Gestiona la retroalimentacion academica formal emitida por docentes y academias hacia estudiantes, incluyendo evaluaciones de resoluciones de recursos academicos. |
-
-## 5. Relacion Epics → Bounded Contexts
-
-Cada Epic agrupa funcionalidades de una sola capacidad de negocio. Ese mismo limite define el modulo en el codigo y la estructura de la API.
-
-| Epic | Título | Bounded Context | Paquete en código |
+| Épica | Dominio | Historias | BCs involucrados |
 |---|---|---|---|
-| EP-01 | Auth | auth | `auth/` |
-| EP-02 | Profile | profile | `profile/` |
-| EP-03 | Academy | academy | `academy/` |
-| EP-04 | Library | library | `library/` |
-| EP-05 | Forum | forum | `forum/` |
-| EP-06 | Moderation | moderation | `moderation/` |
-| EP-07 | Verification | verification | `verification/` |
-| EP-08 | Billing | billing | `billing/` |
-| EP-09 | Notifications | notifications | `notifications/` |
-| EP-10 | Gamification | gamification | `gamification/` |
-| EP-11 | Feedback | feedback | `feedback/` |
+| EP-01 | Acceso y Perfiles | US01–US06 | Auth, Profile |
+| EP-02 | Biblioteca de Recursos | US07–US11 | Library |
+| EP-03 | Foro de Preguntas y Respuestas | US12–US15 | Forum |
+| EP-04 | Ciclo Pedagógico | US16–US20 | Library, Pedagogy |
+| EP-05 | Comunidad y Confianza | US21–US28 | Community, Catalog |
+
+---
+
+## EP-01: Acceso y Perfiles
+
+### US01 — Registrar cuenta con email y rol
+
+**Como** visitante no autenticado,
+**quiero** crear una cuenta eligiendo mi rol (estudiante, docente o academia),
+**para** acceder a la plataforma con los permisos adecuados a mi perfil.
+
+**Escenario 1 — Registro exitoso como estudiante**
+```gherkin
+Dado que soy un visitante con datos válidos y rol STUDENT
+Cuando envío POST /api/v1/auth/register con email, contraseña y role="STUDENT"
+Entonces recibo 201 Created con access token JWT y refresh token
+Y el usuario se crea con estado ACTIVE y rol STUDENT
+Y se crea un registro base en profiles con profile_type=STUDENT
+```
+
+**Escenario 2 — Email duplicado**
+```gherkin
+Dado que ya existe un usuario con el mismo email
+Cuando envío POST /api/v1/auth/register
+Entonces recibo 409 Conflict con mensaje "El email ya está registrado"
+```
+
+**Escenario 3 — Rol inválido**
+```gherkin
+Dado que envío un rol que no es STUDENT, TEACHER ni ACADEMY
+Cuando envío POST /api/v1/auth/register
+Entonces recibo 400 Bad Request con mensaje "Rol inválido"
+```
+
+**Escenario 4 — Datos faltantes**
+```gherkin
+Dado que omito email o contraseña
+Cuando envío POST /api/v1/auth/register
+Entonces recibo 400 Bad Request
+```
+
+**Reglas:** RN-01, RN-02
+**Notificación:** ninguna
+
+---
+
+### US02 — Iniciar y cerrar sesión
+
+**Como** usuario registrado,
+**quiero** iniciar sesión con mi email y contraseña y cerrar mi sesión activa,
+**para** acceder a los recursos protegidos y terminar mi sesión de forma segura.
+
+**Escenario 1 — Login exitoso**
+```gherkin
+Dado que tengo una cuenta activa
+Cuando envío POST /api/v1/auth/login con credenciales correctas
+Entonces recibo 200 OK con access token (15 min) y refresh token (7 días)
+Y se registra una nueva sesión en la tabla sessions
+```
+
+**Escenario 2 — Credenciales incorrectas**
+```gherkin
+Dado que envío contraseña incorrecta
+Cuando envío POST /api/v1/auth/login
+Entonces recibo 401 Unauthorized
+```
+
+**Escenario 3 — Logout exitoso**
+```gherkin
+Dado que tengo una sesión activa y envío el refresh token
+Cuando envío POST /api/v1/auth/logout
+Entonces recibo 204 No Content
+Y la sesión queda revocada (revoked_at actualizado)
+```
+
+**Escenario 4 — Refresh token expirado o revocado**
+```gherkin
+Dado que el refresh token es inválido o expiró
+Cuando envío POST /api/v1/auth/refresh
+Entonces recibo 401 Unauthorized
+```
+
+**Escenario 5 — Renovación de sesión exitosa**
+```gherkin
+Dado que tengo un refresh token válido
+Cuando envío POST /api/v1/auth/refresh
+Entonces recibo 200 OK con nuevo access token
+```
+
+**Reglas:** RN-01, RN-02
+**Notificación:** ninguna
+
+---
+
+### US03 — Recuperar contraseña
+
+**Como** usuario que olvidó su contraseña,
+**quiero** solicitar un enlace de restablecimiento,
+**para** recuperar el acceso a mi cuenta.
+
+**Escenario 1 — Solicitud exitosa**
+```gherkin
+Dado que soy un usuario registrado
+Cuando envío POST /api/v1/auth/forgot-password con mi email
+Entonces recibo 200 OK con mensaje genérico (nunca revela si el email existe)
+Y se genera un token seguro (32 bytes hex, 1 hora de vigencia)
+Y se envía el enlace por email (log en dev, SendGrid SMTP en prod)
+```
+
+**Escenario 2 — Email no registrado**
+```gherkin
+Dado que el email no existe en la BD
+Cuando envío POST /api/v1/auth/forgot-password
+Entonces recibo 200 OK con el mismo mensaje genérico
+```
+
+**Escenario 3 — Restablecimiento exitoso**
+```gherkin
+Dado que tengo un token válido y no expirado
+Cuando envío POST /api/v1/auth/reset-password con token y nueva contraseña
+Entonces recibo 200 OK
+Y la contraseña se actualiza cifrada con BCrypt
+Y el token queda marcado como usado
+```
+
+**Escenario 4 — Token expirado o ya usado**
+```gherkin
+Dado que el token expiró o ya fue usado
+Cuando envío POST /api/v1/auth/reset-password
+Entonces recibo 400 Bad Request
+```
+
+**Reglas:** RN-02
+**Notificación:** ninguna
+
+---
+
+### US04 — Editar perfil de estudiante
+
+**Como** usuario con rol STUDENT,
+**quiero** completar y editar mis datos académicos personales,
+**para** que otros usuarios conozcan mi meta universitaria.
+
+**Escenario 1 — Crear perfil de estudiante**
+```gherkin
+Dado que tengo rol STUDENT y aún no tengo student_profile
+Cuando envío POST /api/v1/profiles/student con datos válidos
+Entonces recibo 201 Created con los datos del perfil
+Y se crea un registro en student_profiles vinculado a mi profile
+```
+
+**Escenario 2 — Actualizar perfil existente**
+```gherkin
+Dado que ya tengo student_profile
+Cuando envío PATCH /api/v1/profiles/student/me con campos a modificar
+Entonces recibo 200 OK con el perfil actualizado
+```
+
+**Escenario 3 — Universidad/área/carrera no existe en catálogo**
+```gherkin
+Dado que envío un ID de universidad que no existe en el catálogo
+Cuando envío POST o PATCH a /api/v1/profiles/student
+Entonces recibo 400 Bad Request con "Valor no encontrado en catálogo"
+```
+
+**Escenario 4 — Rol incorrecto**
+```gherkin
+Dado que tengo rol TEACHER o ACADEMY
+Cuando intento acceder a POST /api/v1/profiles/student
+Entonces recibo 403 Forbidden
+```
+
+**Reglas:** RN-03
+**Notificación:** ninguna
+
+---
+
+### US05 — Editar perfil de docente
+
+**Como** usuario con rol TEACHER,
+**quiero** editar mis datos profesionales y mis especialidades académicas,
+**para** que los estudiantes puedan conocer mi perfil y mis áreas de enseñanza.
+
+**Escenario 1 — Crear perfil de docente**
+```gherkin
+Dado que tengo rol TEACHER y aún no tengo teacher_profile
+Cuando envío POST /api/v1/profiles/teacher con datos válidos
+Entonces recibo 201 Created con el perfil creado
+```
+
+**Escenario 2 — Actualizar perfil existente**
+```gherkin
+Dado que ya tengo teacher_profile
+Cuando envío PATCH /api/v1/profiles/teacher/me
+Entonces recibo 200 OK con el perfil actualizado
+```
+
+**Escenario 3 — Agregar especialidad**
+```gherkin
+Dado que tengo teacher_profile
+Cuando envío POST /api/v1/profiles/teacher/me/specialties con {universityId, areaId, courseId}
+Entonces recibo 201 Created con la especialidad registrada en teacher_specialties
+```
+
+**Escenario 4 — Especialidad duplicada**
+```gherkin
+Dado que ya tengo esa combinación universidad+área+curso
+Cuando intento agregar la misma especialidad
+Entonces recibo 409 Conflict
+```
+
+**Reglas:** RN-03, RN-04
+**Notificación:** ninguna
+
+---
+
+### US06 — Editar perfil de academia
+
+**Como** usuario con rol ACADEMY,
+**quiero** editar los datos institucionales de mi academia y ver el perfil público de cualquier usuario,
+**para** tener presencia en la plataforma como organización educativa verificable.
+
+**Escenario 1 — Crear perfil de academia**
+```gherkin
+Dado que tengo rol ACADEMY y no tengo academy_profile
+Cuando envío POST /api/v1/profiles/academy con nombre, RUC y website
+Entonces recibo 201 Created con el perfil institucional
+```
+
+**Escenario 2 — Actualizar perfil existente**
+```gherkin
+Dado que ya tengo academy_profile
+Cuando envío PATCH /api/v1/profiles/academy/me con nuevos datos
+Entonces recibo 200 OK con el perfil actualizado
+```
+
+**Escenario 3 — Nombre de organización duplicado**
+```gherkin
+Dado que el nombre de organización ya existe en BD
+Cuando intento crear academy_profile con el mismo nombre
+Entonces recibo 409 Conflict
+```
+
+**Escenario 4 — Ver perfil público de un usuario**
+```gherkin
+Dado que soy cualquier usuario autenticado
+Cuando envío GET /api/v1/profiles/{userId}
+Entonces recibo 200 OK con los datos públicos del perfil (sin datos sensibles como email)
+```
+
+**Reglas:** RN-01
+**Notificación:** ninguna
+
+---
+
+## EP-02: Biblioteca de Recursos
+
+### US07 — Subir archivo PDF
+
+**Como** usuario con rol TEACHER o ACADEMY,
+**quiero** subir un archivo PDF a la plataforma,
+**para** usarlo como recurso académico o ejercicio.
+
+**Escenario 1 — Subida exitosa**
+```gherkin
+Dado que soy TEACHER o ACADEMY y envío un archivo PDF válido
+Cuando envío POST /api/v1/resources/files (multipart/form-data)
+Entonces recibo 201 Created con {fileId, fileName, fileUrl, sizeBytes}
+Y el archivo se almacena (local en dev, Cloudinary en prod)
+```
+
+**Escenario 2 — Tipo de archivo no permitido**
+```gherkin
+Dado que envío un archivo que no es PDF
+Cuando envío POST /api/v1/resources/files
+Entonces recibo 415 Unsupported Media Type
+```
+
+**Escenario 3 — Rol incorrecto o sin autenticación**
+```gherkin
+Dado que soy STUDENT o no estoy autenticado
+Cuando intento POST /api/v1/resources/files
+Entonces recibo 403 Forbidden o 401 Unauthorized
+```
+
+**Reglas:** RN-05
+**Notificación:** ninguna
+
+---
+
+### US08 — Registrar metadatos de un recurso
+
+**Como** usuario con rol TEACHER o ACADEMY,
+**quiero** registrar los metadatos de un recurso usando un archivo previamente subido,
+**para** que el recurso sea visible y buscable por los estudiantes.
+
+**Escenario 1 — Registro exitoso**
+```gherkin
+Dado que tengo un fileId válido y envío metadatos completos
+Cuando envío POST /api/v1/resources con {fileId, title, type, universityId, areaId, courseId}
+Entonces recibo 201 Created con el recurso completo
+Y el recurso queda con acepta_resoluciones=false por defecto
+```
+
+**Escenario 2 — fileId inválido o no pertenece al usuario**
+```gherkin
+Dado que el fileId no existe o pertenece a otro usuario
+Cuando envío POST /api/v1/resources
+Entonces recibo 400 Bad Request
+```
+
+**Escenario 3 — Universidad/área/curso no en catálogo**
+```gherkin
+Dado que algún ID no existe en el catálogo
+Cuando envío POST /api/v1/resources
+Entonces recibo 400 Bad Request especificando el campo que falló
+```
+
+**Escenario 4 — Campo obligatorio faltante**
+```gherkin
+Dado que omito title, type, universityId, areaId o courseId
+Cuando envío POST /api/v1/resources
+Entonces recibo 400 Bad Request con la lista de campos faltantes
+```
+
+**Reglas:** RN-05, RN-06, RN-07
+**Notificación:** ninguna
+
+---
+
+### US09 — Buscar y filtrar recursos
+
+**Como** cualquier usuario autenticado,
+**quiero** buscar recursos académicos usando filtros como universidad, área y curso,
+**para** encontrar el material más relevante para mi preparación.
+
+**Escenario 1 — Búsqueda con filtros**
+```gherkin
+Dado que soy usuario autenticado
+Cuando envío GET /api/v1/resources?universityId=X&areaId=Y&type=EXAMEN
+Entonces recibo 200 OK con lista paginada de recursos que coinciden con los filtros
+```
+
+**Escenario 2 — Sin filtros (listado general)**
+```gherkin
+Dado que no paso filtros opcionales
+Cuando envío GET /api/v1/resources
+Entonces recibo 200 OK con los recursos más recientes (paginado, 20 por página)
+```
+
+**Escenario 3 — Búsqueda por texto libre**
+```gherkin
+Dado que paso el parámetro ?q=matematica
+Cuando envío GET /api/v1/resources?q=matematica
+Entonces recibo 200 OK con recursos cuyo título contiene el término buscado
+```
+
+**Escenario 4 — Sin resultados**
+```gherkin
+Dado que los filtros son válidos pero no hay coincidencias
+Cuando envío GET /api/v1/resources?universityId=X&type=EXAMEN
+Entonces recibo 200 OK con lista vacía []
+```
+
+**Reglas:** RN-06, RN-07
+**Notificación:** ninguna
+
+---
+
+### US10 — Descargar un recurso
+
+**Como** cualquier usuario autenticado,
+**quiero** descargar el PDF de un recurso académico,
+**para** estudiar con el material offline.
+
+**Escenario 1 — Descarga exitosa**
+```gherkin
+Dado que el recurso existe y estoy autenticado
+Cuando envío GET /api/v1/resources/{id}/download
+Entonces recibo 200 OK con la URL de descarga del archivo
+Y se registra una entrada en download_logs con {userId, resourceId, downloadedAt}
+```
+
+**Escenario 2 — Recurso no encontrado**
+```gherkin
+Dado que el ID no corresponde a ningún recurso
+Cuando envío GET /api/v1/resources/{id}/download
+Entonces recibo 404 Not Found
+```
+
+**Escenario 3 — Sin autenticación**
+```gherkin
+Dado que no estoy autenticado
+Cuando intento GET /api/v1/resources/{id}/download
+Entonces recibo 401 Unauthorized
+```
+
+**Reglas:** RN-07
+**Notificación:** ninguna
+
+---
+
+### US11 — Ver mis recursos publicados
+
+**Como** usuario TEACHER o ACADEMY,
+**quiero** ver el listado de recursos que he publicado,
+**para** gestionar mi contenido en la plataforma.
+
+**Escenario 1 — Listado de mis recursos**
+```gherkin
+Dado que soy TEACHER o ACADEMY autenticado
+Cuando envío GET /api/v1/resources/me
+Entonces recibo 200 OK con mis recursos paginados, ordenados por created_at DESC
+```
+
+**Escenario 2 — Sin recursos publicados**
+```gherkin
+Dado que aún no he publicado ningún recurso
+Cuando envío GET /api/v1/resources/me
+Entonces recibo 200 OK con lista vacía []
+```
+
+**Reglas:** RN-05
+**Notificación:** ninguna
+
+---
+
+## EP-03: Foro de Preguntas y Respuestas
+
+### US12 — Crear un hilo en el foro
+
+**Como** usuario autenticado,
+**quiero** publicar una pregunta o duda en el foro asociada a un curso,
+**para** que otros usuarios me puedan ayudar.
+
+**Escenario 1 — Creación exitosa**
+```gherkin
+Dado que soy usuario autenticado y el courseId existe en el catálogo
+Cuando envío POST /api/v1/threads con {courseId, title, body, isAnonymous}
+Entonces recibo 201 Created con el hilo creado con status=OPEN
+```
+
+**Escenario 2 — Publicación anónima**
+```gherkin
+Dado que envío isAnonymous=true
+Cuando el hilo se crea y se consulta
+Entonces la respuesta muestra author como null o "Anónimo"
+Pero internamente se almacena el author_id para moderación
+```
+
+**Escenario 3 — Curso no existe en catálogo**
+```gherkin
+Dado que el courseId enviado no existe en la tabla courses
+Cuando envío POST /api/v1/threads
+Entonces recibo 400 Bad Request
+```
+
+**Escenario 4 — Campos obligatorios faltantes**
+```gherkin
+Dado que omito title o body
+Cuando envío POST /api/v1/threads
+Entonces recibo 400 Bad Request
+```
+
+**Reglas:** RN-12, RN-13
+**Notificación:** ninguna al crear
+
+---
+
+### US13 — Responder a un hilo
+
+**Como** usuario autenticado,
+**quiero** publicar una respuesta en un hilo del foro,
+**para** compartir mi conocimiento o ayudar a quien preguntó.
+
+**Escenario 1 — Respuesta exitosa**
+```gherkin
+Dado que el hilo existe y está en status=OPEN
+Cuando envío POST /api/v1/threads/{id}/answers con {body}
+Entonces recibo 201 Created con la respuesta registrada
+Y se dispara notificación tipo "answer_received" al autor del hilo (si ≠ respondedor)
+```
+
+**Escenario 2 — Hilo cerrado**
+```gherkin
+Dado que el hilo tiene status=CLOSED
+Cuando intento responder con POST /api/v1/threads/{id}/answers
+Entonces recibo 409 Conflict con "El hilo está cerrado"
+```
+
+**Escenario 3 — Hilo no encontrado**
+```gherkin
+Dado que el threadId no existe
+Cuando envío POST /api/v1/threads/{id}/answers
+Entonces recibo 404 Not Found
+```
+
+**Escenario 4 — Cerrar un hilo (autor o moderador)**
+```gherkin
+Dado que soy el autor del hilo o tengo rol MODERATOR/ADMIN
+Cuando envío PATCH /api/v1/threads/{id}/close
+Entonces recibo 200 OK con el hilo en status=CLOSED
+```
+
+**Escenario 5 — No autorizado para cerrar**
+```gherkin
+Dado que no soy el autor ni tengo rol de moderación
+Cuando intento PATCH /api/v1/threads/{id}/close
+Entonces recibo 403 Forbidden
+```
+
+**Reglas:** RN-13, RN-14
+**Notificación:** `answer_received` → autor del hilo (si ≠ respondedor)
+
+---
+
+### US14 — Reaccionar a contenido del foro
+
+**Como** usuario autenticado,
+**quiero** reaccionar (like/dislike) a un hilo o respuesta,
+**para** expresar si el contenido me resultó útil.
+
+**Escenario 1 — Primera reacción (toggle on)**
+```gherkin
+Dado que aún no he reaccionado a ese contenido
+Cuando envío POST /api/v1/threads/{id}/reactions o /api/v1/answers/{id}/reactions con {reactionType}
+Entonces recibo 201 Created con mi reacción registrada
+Y se dispara notificación tipo "reaction_received" al autor del contenido (si ≠ yo)
+```
+
+**Escenario 2 — Segunda reacción del mismo tipo (toggle off)**
+```gherkin
+Dado que ya reaccioné con el mismo tipo a ese contenido
+Cuando envío nuevamente el mismo POST
+Entonces recibo 204 No Content y la reacción se elimina
+```
+
+**Escenario 3 — Contenido inexistente**
+```gherkin
+Dado que el threadId o answerId no existe
+Cuando envío POST de reacción
+Entonces recibo 404 Not Found
+```
+
+**Reglas:** RN-15
+**Notificación:** `reaction_received` → autor del contenido (si ≠ reactante)
+
+---
+
+### US15 — Comentar en una respuesta
+
+**Como** usuario autenticado,
+**quiero** agregar un comentario a una respuesta del foro,
+**para** hacer aclaraciones o continuar el hilo de conversación.
+
+**Escenario 1 — Comentario exitoso**
+```gherkin
+Dado que la respuesta existe
+Cuando envío POST /api/v1/answers/{id}/comments con {body}
+Entonces recibo 201 Created con el comentario registrado
+Y se dispara notificación tipo "comment_received" al autor de la respuesta (si ≠ yo)
+```
+
+**Escenario 2 — Respuesta no encontrada**
+```gherkin
+Dado que el answerId no existe
+Cuando envío POST /api/v1/answers/{id}/comments
+Entonces recibo 404 Not Found
+```
+
+**Escenario 3 — Body vacío**
+```gherkin
+Dado que envío body vacío o nulo
+Cuando envío POST /api/v1/answers/{id}/comments
+Entonces recibo 400 Bad Request
+```
+
+**Reglas:** ninguna adicional
+**Notificación:** `comment_received` → autor de la respuesta (si ≠ comentarista)
+
+---
+
+## EP-04: Ciclo Pedagógico
+
+### US16 — Publicar un ejercicio sin solución
+
+**Como** usuario TEACHER o ACADEMY,
+**quiero** marcar un recurso como ejercicio que acepta resoluciones de los estudiantes,
+**para** poder evaluar el proceso de aprendizaje.
+
+**Escenario 1 — Activar acepta_resoluciones al crear el recurso**
+```gherkin
+Dado que soy TEACHER o ACADEMY
+Cuando envío POST /api/v1/resources con acepta_resoluciones=true
+Entonces recibo 201 Created con el recurso marcado como ejercicio
+```
+
+**Escenario 2 — Activar acepta_resoluciones en recurso existente**
+```gherkin
+Dado que ya tengo un recurso publicado y soy su autor
+Cuando envío PATCH /api/v1/resources/{id}/settings con {acepta_resoluciones: true}
+Entonces recibo 200 OK con el recurso actualizado
+```
+
+**Escenario 3 — STUDENT intenta activar acepta_resoluciones**
+```gherkin
+Dado que soy STUDENT
+Cuando intento enviar acepta_resoluciones=true
+Entonces recibo 403 Forbidden
+```
+
+**Escenario 4 — Ver resoluciones de mi ejercicio**
+```gherkin
+Dado que soy el autor del ejercicio
+Cuando envío GET /api/v1/resources/{id}/solutions
+Entonces recibo 200 OK con la lista de resoluciones enviadas por los estudiantes
+```
+
+**Reglas:** RN-05, RN-08
+**Notificación:** `solution_submitted` → autor del ejercicio (disparado en US18)
+
+---
+
+### US17 — Ver resoluciones de mis ejercicios
+
+**Como** usuario TEACHER o ACADEMY,
+**quiero** ver el detalle de una resolución específica enviada por un estudiante,
+**para** revisar su trabajo antes de dar feedback.
+
+**Escenario 1 — Ver listado de resoluciones**
+```gherkin
+Dado que soy el autor del ejercicio
+Cuando envío GET /api/v1/resources/{id}/solutions
+Entonces recibo 200 OK con {solutionId, studentName, status, submittedAt} por cada resolución
+```
+
+**Escenario 2 — Ver detalle de una resolución específica**
+```gherkin
+Dado que soy el autor del ejercicio
+Cuando envío GET /api/v1/resources/{id}/solutions/{solutionId}
+Entonces recibo 200 OK con el detalle incluyendo fileUrl del PDF subido por el estudiante
+```
+
+**Escenario 3 — No soy el autor del ejercicio**
+```gherkin
+Dado que intento ver resoluciones de un ejercicio que no es mío
+Cuando envío GET /api/v1/resources/{id}/solutions
+Entonces recibo 403 Forbidden
+```
+
+**Escenario 4 — Sin resoluciones aún**
+```gherkin
+Dado que nadie ha enviado resoluciones al ejercicio
+Cuando envío GET /api/v1/resources/{id}/solutions
+Entonces recibo 200 OK con lista vacía []
+```
+
+**Reglas:** RN-08, RN-10
+**Notificación:** ninguna (solo lectura)
+
+---
+
+### US18 — Enviar mi resolución a un ejercicio
+
+**Como** usuario STUDENT,
+**quiero** subir mi resolución en PDF a un ejercicio publicado,
+**para** que el docente la evalúe y me dé retroalimentación.
+
+**Escenario 1 — Envío exitoso**
+```gherkin
+Dado que soy STUDENT, el recurso acepta resoluciones y no he enviado una antes
+Cuando envío POST /api/v1/resources/{id}/solutions con {fileId}
+Entonces recibo 201 Created con {solutionId, status: "SUBMITTED", submittedAt}
+Y se dispara notificación tipo "solution_submitted" al autor del ejercicio
+```
+
+**Escenario 2 — Resolución duplicada**
+```gherkin
+Dado que ya envié una resolución a ese ejercicio
+Cuando intento enviar otra
+Entonces recibo 409 Conflict con "Ya enviaste una resolución para este ejercicio"
+```
+
+**Escenario 3 — Recurso no acepta resoluciones**
+```gherkin
+Dado que acepta_resoluciones=false en ese recurso
+Cuando envío POST /api/v1/resources/{id}/solutions
+Entonces recibo 403 Forbidden
+```
+
+**Escenario 4 — Recurso no encontrado**
+```gherkin
+Dado que el resourceId no existe
+Cuando envío POST /api/v1/resources/{id}/solutions
+Entonces recibo 404 Not Found
+```
+
+**Reglas:** RN-08, RN-09, RN-10
+**Notificación:** `solution_submitted` → autor del ejercicio
+
+---
+
+### US19 — Dar feedback correctivo a una resolución
+
+**Como** usuario TEACHER o ACADEMY,
+**quiero** dar retroalimentación escrita y con puntuación a la resolución de un estudiante,
+**para** guiar su aprendizaje de forma formal.
+
+**Escenario 1 — Feedback exitoso**
+```gherkin
+Dado que soy el autor del ejercicio y la resolución tiene status=SUBMITTED
+Cuando envío POST /api/v1/solutions/{solutionId}/feedback con {body, score}
+Entonces recibo 201 Created con el feedback registrado
+Y la resolución cambia automáticamente a status=REVIEWED
+Y se dispara notificación tipo "feedback_received" al estudiante autor de la resolución
+```
+
+**Escenario 2 — No soy el autor del ejercicio**
+```gherkin
+Dado que no soy el autor del recurso base del ejercicio
+Cuando intento dar feedback a una de sus resoluciones
+Entonces recibo 403 Forbidden
+```
+
+**Escenario 3 — Score fuera de rango**
+```gherkin
+Dado que envío score < 0 o score > 10
+Cuando envío POST /api/v1/solutions/{solutionId}/feedback
+Entonces recibo 400 Bad Request
+```
+
+**Escenario 4 — La resolución ya tiene feedback (inmutabilidad)**
+```gherkin
+Dado que ya existe un feedback_entry para esa solución
+Cuando intento crear otro feedback
+Entonces recibo 409 Conflict con "Esta resolución ya tiene feedback"
+```
+
+**Escenario 5 — Solución no encontrada**
+```gherkin
+Dado que el solutionId no existe
+Cuando envío POST /api/v1/solutions/{solutionId}/feedback
+Entonces recibo 404 Not Found
+```
+
+**Reglas:** RN-10, RN-11, RN-22
+**Notificación:** `feedback_received` → estudiante autor de la resolución
+
+---
+
+### US20 — Ver mi resolución y feedback recibido
+
+**Como** usuario STUDENT,
+**quiero** ver mi resolución enviada y el feedback que el docente dejó,
+**para** entender en qué debo mejorar.
+
+**Escenario 1 — Ver resolución con feedback**
+```gherkin
+Dado que soy el autor de la resolución y el docente ya dio feedback
+Cuando envío GET /api/v1/resources/{id}/solutions/mine
+Entonces recibo 200 OK con {solution: {..., fileUrl}, feedback: {body, score, createdAt}}
+```
+
+**Escenario 2 — Ver resolución sin feedback aún**
+```gherkin
+Dado que soy el autor de la resolución pero el docente no ha respondido todavía
+Cuando envío GET /api/v1/resources/{id}/solutions/mine
+Entonces recibo 200 OK con {solution: {...}, feedback: null}
+```
+
+**Escenario 3 — Sin resolución enviada**
+```gherkin
+Dado que no envié resolución para ese ejercicio
+Cuando envío GET /api/v1/resources/{id}/solutions/mine
+Entonces recibo 404 Not Found
+```
+
+**Escenario 4 — Intento ver la resolución de otro estudiante**
+```gherkin
+Dado que intento acceder a una solución que no me pertenece
+Cuando envío la petición directa a esa resolución
+Entonces recibo 403 Forbidden
+```
+
+**Reglas:** RN-09, RN-10
+**Notificación:** ninguna (solo lectura)
+
+---
+
+## EP-05: Comunidad y Confianza
+
+### US21 — Seguir a un usuario
+
+**Como** usuario autenticado,
+**quiero** seguir a otros usuarios (docentes, academias o estudiantes),
+**para** mantenerme al tanto de su actividad en la plataforma.
+
+**Escenario 1 — Seguir exitoso**
+```gherkin
+Dado que no sigo aún a ese usuario
+Cuando envío POST /api/v1/users/{id}/follow
+Entonces recibo 201 Created
+Y se crea una fila en follows(follower_id, followed_id)
+Y se dispara notificación tipo "new_follower" al usuario seguido
+```
+
+**Escenario 2 — Dejar de seguir (toggle)**
+```gherkin
+Dado que ya sigo a ese usuario
+Cuando envío nuevamente POST /api/v1/users/{id}/follow
+Entonces recibo 204 No Content y el registro se elimina de follows
+```
+
+**Escenario 3 — Intentar seguirse a sí mismo**
+```gherkin
+Dado que el {id} corresponde a mi propio usuario
+Cuando envío POST /api/v1/users/{id}/follow
+Entonces recibo 400 Bad Request con "No puedes seguirte a ti mismo"
+```
+
+**Escenario 4 — Usuario no encontrado**
+```gherkin
+Dado que el userId no existe
+Cuando envío POST /api/v1/users/{id}/follow
+Entonces recibo 404 Not Found
+```
+
+**Reglas:** RN-21
+**Notificación:** `new_follower` → usuario seguido
+
+---
+
+### US22 — Solicitar verificación de identidad
+
+**Como** usuario TEACHER o ACADEMY,
+**quiero** enviar una solicitud de verificación con documentos adjuntos,
+**para** obtener un sello de cuenta verificada que genere confianza en la comunidad.
+
+**Escenario 1 — Solicitud exitosa**
+```gherkin
+Dado que soy TEACHER o ACADEMY y no tengo verificación PENDING o VERIFIED activa
+Cuando envío POST /api/v1/verification/requests con al menos un documento adjunto
+Entonces recibo 201 Created con {requestId, status: "PENDING"}
+```
+
+**Escenario 2 — Ya tiene verificación pendiente o activa**
+```gherkin
+Dado que tengo una solicitud en status=PENDING o estoy VERIFIED
+Cuando intento enviar otra solicitud
+Entonces recibo 409 Conflict
+```
+
+**Escenario 3 — Sin documentos adjuntos**
+```gherkin
+Dado que no adjunto ningún documento
+Cuando envío POST /api/v1/verification/requests
+Entonces recibo 400 Bad Request con "Se requiere al menos un documento"
+```
+
+**Escenario 4 — Ver mis solicitudes**
+```gherkin
+Dado que soy TEACHER o ACADEMY autenticado
+Cuando envío GET /api/v1/verification/requests/me
+Entonces recibo 200 OK con mi historial de solicitudes
+```
+
+**Reglas:** RN-16
+**Notificación:** ninguna al crear. Sí al resolverse (ver US23).
+
+---
+
+### US23 — Aprobar o rechazar una verificación
+
+**Como** usuario MODERATOR o ADMIN,
+**quiero** revisar y resolver una solicitud de verificación,
+**para** dar o denegar el sello de cuenta verificada.
+
+**Escenario 1 — Aprobar verificación**
+```gherkin
+Dado que hay una solicitud en status=PENDING
+Cuando envío PATCH /api/v1/verification/requests/{id}/process con {status: "APPROVED"}
+Entonces recibo 200 OK
+Y la solicitud queda en status=APPROVED
+Y se dispara notificación tipo "verification_processed" al solicitante
+```
+
+**Escenario 2 — Rechazar verificación con razón**
+```gherkin
+Dado que hay una solicitud en status=PENDING
+Cuando envío PATCH /api/v1/verification/requests/{id}/process con {status: "REJECTED", reason: "..."}
+Entonces recibo 200 OK
+Y se dispara notificación tipo "verification_processed" al solicitante
+```
+
+**Escenario 3 — Reason faltante en rechazo**
+```gherkin
+Dado que envío status=REJECTED sin proporcionar reason
+Cuando envío PATCH /api/v1/verification/requests/{id}/process
+Entonces recibo 400 Bad Request con "Se requiere una razón para el rechazo"
+```
+
+**Escenario 4 — Solicitud ya procesada**
+```gherkin
+Dado que la solicitud ya está en status=APPROVED o REJECTED
+Cuando intento procesarla de nuevo
+Entonces recibo 409 Conflict con "La solicitud ya fue procesada"
+```
+
+**Reglas:** RN-17
+**Notificación:** `verification_processed` → solicitante
+
+---
+
+### US24 — Asociar docente a academia
+
+**Como** usuario TEACHER,
+**quiero** solicitar asociarme a una academia,
+**para** aparecer como parte de su equipo docente y ganar visibilidad.
+
+**Escenario 1 — Solicitud de asociación**
+```gherkin
+Dado que soy TEACHER y la academia existe
+Cuando envío POST /api/v1/academies/{academyProfileId}/teachers/link
+Entonces recibo 201 Created con {linkId, status: "PENDING"}
+```
+
+**Escenario 2 — Academia acepta la solicitud**
+```gherkin
+Dado que soy ACADEMY y hay un link en status=PENDING
+Cuando envío PATCH /api/v1/teacher-links/{linkId}/resolve con {status: "ACCEPTED"}
+Entonces recibo 200 OK con el link actualizado
+Y se dispara notificación tipo "association_resolved" al docente
+```
+
+**Escenario 3 — Academia rechaza la solicitud**
+```gherkin
+Dado que soy ACADEMY y hay un link en status=PENDING
+Cuando envío PATCH /api/v1/teacher-links/{linkId}/resolve con {status: "REJECTED"}
+Entonces recibo 200 OK
+Y se dispara notificación tipo "association_resolved" al docente
+```
+
+**Escenario 4 — Solicitud duplicada**
+```gherkin
+Dado que ya existe un link PENDING o ACCEPTED para ese par (docente, academia)
+Cuando el docente intenta crear otra solicitud
+Entonces recibo 409 Conflict
+```
+
+**Reglas:** RN-18
+**Notificación:** `association_resolved` → docente solicitante
+
+---
+
+### US25 — Reportar contenido inapropiado
+
+**Como** usuario autenticado,
+**quiero** reportar un hilo, respuesta, comentario o recurso que viola las normas,
+**para** ayudar a mantener la plataforma segura y de calidad.
+
+**Escenario 1 — Reporte exitoso**
+```gherkin
+Dado que el contenido existe y tengo una razón válida
+Cuando envío POST /api/v1/moderation/reports con {targetType, targetId, reason}
+Entonces recibo 201 Created con el reporte en status=OPEN
+```
+
+**Escenario 2 — Tipo de contenido inválido**
+```gherkin
+Dado que envío un targetType que no es THREAD, ANSWER, COMMENT o RESOURCE
+Cuando envío POST /api/v1/moderation/reports
+Entonces recibo 400 Bad Request
+```
+
+**Escenario 3 — Contenido no encontrado**
+```gherkin
+Dado que el targetId no existe para el targetType dado
+Cuando envío POST /api/v1/moderation/reports
+Entonces recibo 404 Not Found
+```
+
+**Escenario 4 — Ver reportes pendientes (MODERATOR/ADMIN)**
+```gherkin
+Dado que soy MODERATOR o ADMIN
+Cuando envío GET /api/v1/moderation/reports?status=OPEN
+Entonces recibo 200 OK con los reportes abiertos paginados
+```
+
+**Reglas:** RN-13, RN-19
+**Notificación:** ninguna directa al reportar
+
+---
+
+### US26 — Resolver un reporte de moderación
+
+**Como** MODERATOR o ADMIN,
+**quiero** revisar y resolver un reporte asignándole una acción concreta,
+**para** mantener la integridad del contenido en la plataforma.
+
+**Escenario 1 — Resolución exitosa**
+```gherkin
+Dado que existe un reporte en status=OPEN
+Cuando envío PATCH /api/v1/moderation/reports/{id}/resolve con {action, notes}
+Entonces recibo 200 OK con el reporte en status=RESOLVED
+Y se registra la acción en el log de auditoría (actorId + actionType + timestamp)
+```
+
+**Escenario 2 — Reporte ya resuelto**
+```gherkin
+Dado que el reporte ya está en status=RESOLVED o REJECTED
+Cuando intento resolverlo de nuevo
+Entonces recibo 409 Conflict
+```
+
+**Escenario 3 — Reporte no encontrado**
+```gherkin
+Dado que el reportId no existe
+Cuando envío PATCH /api/v1/moderation/reports/{id}/resolve
+Entonces recibo 404 Not Found
+```
+
+**Reglas:** RN-13, RN-19
+**Notificación:** ninguna directa (no se notifica al denunciado en el MVP)
+
+---
+
+### US27 — Ver mis notificaciones
+
+**Como** usuario autenticado,
+**quiero** ver mis notificaciones no leídas y marcarlas como leídas,
+**para** estar al tanto de la actividad relevante en la plataforma sin hacer polling activo.
+
+**Escenario 1 — Ver notificaciones pendientes**
+```gherkin
+Dado que soy usuario autenticado
+Cuando envío GET /api/v1/notifications/me/pending
+Entonces recibo 200 OK con notificaciones donde read_at IS NULL, ordenadas por created_at DESC
+```
+
+**Escenario 2 — Sin notificaciones pendientes**
+```gherkin
+Dado que no tengo notificaciones sin leer
+Cuando envío GET /api/v1/notifications/me/pending
+Entonces recibo 200 OK con lista vacía []
+```
+
+**Escenario 3 — Marcar notificación como leída**
+```gherkin
+Dado que existe una notificación no leída que me pertenece
+Cuando envío PATCH /api/v1/notifications/{id}/read
+Entonces recibo 200 OK con read_at actualizado al timestamp actual
+```
+
+**Escenario 4 — Notificación no encontrada o de otro usuario**
+```gherkin
+Dado que el notificationId no existe o pertenece a otro usuario
+Cuando envío PATCH /api/v1/notifications/{id}/read
+Entonces recibo 404 Not Found
+```
+
+**Tipos de notificación y su origen:**
+
+| type | Generado en | Destinatario |
+|---|---|---|
+| `new_follower` | US21: alguien te siguió | Usuario seguido |
+| `answer_received` | US13: respondieron tu hilo | Autor del hilo |
+| `comment_received` | US15: comentaron tu respuesta | Autor de la respuesta |
+| `reaction_received` | US14: reaccionaron a tu contenido | Autor del contenido |
+| `solution_submitted` | US18: enviaron resolución a tu ejercicio | Autor del ejercicio |
+| `feedback_received` | US19: el docente revisó tu resolución | Estudiante autor de la resolución |
+| `verification_processed` | US23: verificación resuelta | Solicitante |
+| `association_resolved` | US24: solicitud de asociación resuelta | Docente solicitante |
+
+**Patrón técnico obligatorio:**
+```java
+@Async("notificationExecutor")
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+```
+
+**Reglas:** ninguna adicional
+**Notificación:** recibe notificaciones de todos los eventos anteriores
+
+---
+
+### US28 — Administrar catálogo del sistema
+
+**Como** usuario ADMIN,
+**quiero** gestionar el catálogo de universidades, áreas, cursos y carreras,
+**para** mantener los datos maestros que el resto de la plataforma usa como referencia.
+
+**Escenario 1 — Crear universidad**
+```gherkin
+Dado que soy ADMIN
+Cuando envío POST /api/v1/catalog/universities con {name, city, country}
+Entonces recibo 201 Created con la universidad registrada
+```
+
+**Escenario 2 — Crear área de examen bajo una universidad**
+```gherkin
+Dado que soy ADMIN y la universidad existe
+Cuando envío POST /api/v1/catalog/universities/{id}/areas con {code, name}
+Entonces recibo 201 Created con el área registrada
+```
+
+**Escenario 3 — Crear curso y asociarlo a un área**
+```gherkin
+Dado que soy ADMIN
+Cuando envío POST /api/v1/catalog/courses con {name}
+Y envío POST /api/v1/catalog/areas/{id}/courses/{courseId}
+Entonces recibo 201 Created en cada llamada
+Y el curso queda asociado al área
+```
+
+**Escenario 4 — Crear carrera**
+```gherkin
+Dado que soy ADMIN y la universidad y el área existen
+Cuando envío POST /api/v1/catalog/universities/{id}/careers con {name, areaId}
+Entonces recibo 201 Created con la carrera registrada
+```
+
+**Escenario 5 — Rol incorrecto**
+```gherkin
+Dado que soy STUDENT, TEACHER o ACADEMY
+Cuando intento crear o modificar entidades del catálogo
+Entonces recibo 403 Forbidden
+```
+
+**Escenario 6 — Consultar catálogo (público, sin autenticación)**
+```gherkin
+Dado que soy cualquier visitante o usuario
+Cuando envío GET /api/v1/catalog/universities, /areas o /courses
+Entonces recibo 200 OK con los datos del catálogo sin necesitar token
+```
+
+> **Nota:** Los seeds iniciales del catálogo (7 universidades de Lima, áreas de examen con pesos, cursos y carreras) están documentados en `docs/seed-plan-admision-lima.md`. Se cargan como migración V9.
+
+**Reglas:** RN-03, RN-20
+**Notificación:** ninguna
+
+---
+
+## Tabla de Reglas de Negocio
+
+| ID | Regla |
+|---|---|
+| RN-01 | Cada usuario tiene exactamente un rol asignado en el registro (STUDENT, TEACHER o ACADEMY). No cambia. |
+| RN-02 | Las contraseñas se almacenan cifradas con BCrypt. Nunca en texto plano. |
+| RN-03 | Universidad, área, curso y carrera solo se pueden seleccionar desde el catálogo. No se admite texto libre. |
+| RN-04 | Un docente puede tener múltiples especialidades (universidad + área + curso). Sin límite en el MVP. |
+| RN-05 | Solo TEACHER, ACADEMY o ADMIN pueden subir recursos y activar `acepta_resoluciones`. STUDENT → 403. |
+| RN-06 | Tipos de recurso válidos: `EXAMEN`, `GUIA`, `APUNTES`, `PRACTICA`, `OTRO`. |
+| RN-07 | Un recurso requiere obligatoriamente: universidad, área, curso, tipo y título. |
+| RN-08 | Un ejercicio es un recurso con `acepta_resoluciones = true`. No es una entidad separada. |
+| RN-09 | Un estudiante puede enviar exactamente una resolución por ejercicio. Segunda solicitud → 409. |
+| RN-10 | Solo el autor del ejercicio puede ver las resoluciones y dar feedback. Acceso por otro usuario → 403. |
+| RN-11 | El feedback es inmutable una vez enviado. No se edita, no se elimina. Segunda solicitud → 409. |
+| RN-12 | Los hilos del foro deben estar asociados a un curso existente en el catálogo. |
+| RN-13 | Posts anónimos guardan `author_id` internamente. Solo MODERATOR/ADMIN puede ver la identidad real. |
+| RN-14 | Solo el autor del hilo o un MODERATOR/ADMIN puede cerrarlo. Otro rol → 403. |
+| RN-15 | Las reacciones son únicas por usuario por contenido. Funcionan como toggle (segunda llamada elimina la primera). |
+| RN-16 | Una solicitud de verificación requiere al menos un documento adjunto. Sin documentos → 400. |
+| RN-17 | Un rechazo de verificación requiere razón obligatoria. Sin razón → 400. |
+| RN-18 | La asociación docente-academia queda en PENDIENTE hasta que la academia la resuelve explícitamente. |
+| RN-19 | Toda resolución de reporte genera una entrada en el log de auditoría (actor + acción + timestamp). |
+| RN-20 | Solo ADMIN puede crear o modificar entidades del catálogo (universidades, áreas, cursos, carreras). |
+| RN-21 | Un usuario no puede seguirse a sí mismo. CHECK constraint en BD y validación en servicio → 400. |
+| RN-22 | El score del feedback está entre 0.0 y 10.0 inclusive. Fuera de rango → 400. |

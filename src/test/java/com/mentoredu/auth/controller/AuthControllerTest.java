@@ -351,10 +351,9 @@ class AuthControllerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void forgotPassword_withRegisteredEmail_returns200WithToken() throws Exception {
+    void forgotPassword_withRegisteredEmail_returns200WithMessage() throws Exception {
         var response = ForgotPasswordResponse.builder()
-                .message("Recovery token generated. In production this would be sent via email.")
-                .token("a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2")
+                .message("Si existe una cuenta con ese correo, recibirás un enlace de recuperación en breve.")
                 .build();
 
         when(authService.forgotPassword(any())).thenReturn(response);
@@ -364,7 +363,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(validForgotPasswordRequest())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.token").exists());
+                .andExpect(jsonPath("$.token").doesNotExist());
     }
 
     @Test

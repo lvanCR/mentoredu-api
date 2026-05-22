@@ -29,6 +29,8 @@ app:
   file:
     upload-dir: ${FILE_UPLOAD_DIR:uploads/resources}
     max-size-mb: ${FILE_MAX_SIZE_MB:20}
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
 
 server:
   port: 8080

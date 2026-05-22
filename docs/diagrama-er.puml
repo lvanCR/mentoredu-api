@@ -79,6 +79,7 @@ package "profile" {
     target_university : VARCHAR(120)
     target_career : VARCHAR(120)
     study_shift : VARCHAR(30)
+    target_exam_area_id : UUID <<FK>>
   }
 
   entity "teacher_profiles" as teacher_profiles {
@@ -178,6 +179,30 @@ package "library" {
     city : VARCHAR(80)
   }
 
+  entity "exam_areas" as exam_areas {
+    *id : UUID <<PK>>
+    --
+    *institution_id : UUID <<FK>>
+    *code : VARCHAR(10)
+    *name : VARCHAR(120)
+    *admission_modality : VARCHAR(30)
+    description : TEXT
+    *active : BOOLEAN
+    created_at : TIMESTAMP
+    <<UNIQUE (institution_id, code, admission_modality)>>
+  }
+
+  entity "area_subjects" as area_subjects {
+    *id : UUID <<PK>>
+    --
+    *exam_area_id : UUID <<FK>>
+    *subject_id : UUID <<FK>>
+    *weight_percentage : DECIMAL(5,2)
+    *is_eliminatory : BOOLEAN
+    min_score : DECIMAL(4,2)
+    <<UNIQUE (exam_area_id, subject_id)>>
+  }
+
   entity "subjects" as subjects {
     *id : UUID <<PK>>
     --
@@ -206,6 +231,7 @@ package "library" {
     *author_user_id : UUID <<FK>>
     subject_id : UUID <<FK>>
     institution_id : UUID <<FK>>
+    exam_area_id : UUID <<FK>>
     file_id : UUID <<FK>>
     *title : VARCHAR(160)
     description : TEXT
@@ -549,9 +575,15 @@ academies ||--o{ cycles : academy_id
 teacher_profiles ||--o{ teacher_academies : teacher_profile_id
 academies ||--o{ teacher_academies : academy_id
 
+institutions ||--o{ exam_areas : institution_id
+exam_areas ||--o{ area_subjects : exam_area_id
+subjects ||--o{ area_subjects : subject_id
+student_profiles }o--o| exam_areas : target_exam_area_id
+
 users ||--o{ academic_resources : author_user_id
 subjects ||--o{ academic_resources : subject_id
 institutions ||--o{ academic_resources : institution_id
+exam_areas ||--o{ academic_resources : exam_area_id
 academic_resources ||--|| resource_files : file_id
 academic_resources ||--o{ resource_tags : resource_id
 tags ||--o{ resource_tags : tag_id
