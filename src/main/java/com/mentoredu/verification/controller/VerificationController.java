@@ -1,5 +1,6 @@
 package com.mentoredu.verification.controller;
 
+import com.mentoredu.verification.dto.ProcessVerificationRequest;
 import com.mentoredu.verification.dto.SubmitVerificationRequest;
 import com.mentoredu.verification.dto.VerificationRequestResponse;
 import com.mentoredu.verification.service.IVerificationService;
@@ -16,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/verification/requests")
@@ -66,5 +68,28 @@ public class VerificationController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(verificationService.getMyRequests(auth.getName()));
+    }
+
+    // -------------------------------------------------------------------------
+    // F3.1 — Process verification request (MODERATOR/ADMIN)
+    // -------------------------------------------------------------------------
+
+    @PatchMapping("/{requestId}/process")
+    @Operation(
+        summary = "F3.1 - Procesar solicitud de verificación",
+        description = "Aprueba o rechaza una solicitud de verificación pendiente. "
+            + "Solo moderadores y administradores pueden ejecutar esta acción. "
+            + "status acepta: VERIFIED o REJECTED. "
+            + "Notifica al solicitante tras el commit de la transacción. "
+            + "Requiere autenticación JWT."
+    )
+    public ResponseEntity<VerificationRequestResponse> processRequest(
+            @PathVariable UUID requestId,
+            @Valid @RequestBody ProcessVerificationRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(verificationService.processRequest(requestId, request.getStatus(), auth.getName()));
     }
 }

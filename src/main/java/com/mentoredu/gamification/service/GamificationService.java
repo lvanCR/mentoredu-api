@@ -5,6 +5,8 @@ import com.mentoredu.gamification.dto.CoinsRequest;
 import com.mentoredu.gamification.dto.CoinsResponse;
 import com.mentoredu.gamification.dto.LevelProgressResponse;
 import com.mentoredu.gamification.dto.PointsResponse;
+import com.mentoredu.gamification.event.BadgeAwardedEvent;
+import com.mentoredu.gamification.event.LevelUpEvent;
 import com.mentoredu.gamification.model.Badge;
 import com.mentoredu.gamification.model.CoinWallet;
 import com.mentoredu.gamification.model.LevelProgress;
@@ -17,6 +19,7 @@ import com.mentoredu.gamification.repository.LevelProgressRepository;
 import com.mentoredu.gamification.repository.PointTransactionRepository;
 import com.mentoredu.gamification.repository.UserBadgeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +44,7 @@ public class GamificationService implements IGamificationService {
     private final LevelProgressRepository levelProgressRepository;
     private final BadgeRepository badgeRepository;
     private final UserBadgeRepository userBadgeRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // -------------------------------------------------------------------------
     // US30 — Earn experience points
@@ -160,10 +164,14 @@ public class GamificationService implements IGamificationService {
 
         LevelProgress progress = levelProgressRepository.findById(userId)
                 .orElse(LevelProgress.builder().userId(userId).build());
+        int previousLevel = progress.getCurrentLevel() != null ? progress.getCurrentLevel() : 0;
         progress.setCurrentLevel(level);
         progress.setExperience(totalXP);
         progress.setProgressPercentage(new BigDecimal(progressInLevel));
         levelProgressRepository.save(progress);
+        if (previousLevel > 0 && level > previousLevel) {
+            eventPublisher.publishEvent(new LevelUpEvent(userId, level));
+        }
     }
 
     // RN-31: badge milestones evaluated internally after each XP event.
@@ -198,6 +206,7 @@ public class GamificationService implements IGamificationService {
                         .userId(userId)
                         .badgeId(badge.getId())
                         .build());
+                eventPublisher.publishEvent(new BadgeAwardedEvent(userId, badge.getCode(), badge.getName()));
             }
         });
     }

@@ -85,6 +85,7 @@ public class SubscriptionService implements ISubscriptionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SubscriptionResponse> getUserSubscriptions(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new PlanNotFoundException("Usuario no encontrado: " + userEmail));
@@ -94,6 +95,7 @@ public class SubscriptionService implements ISubscriptionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<SubscriptionResponse> getActiveSubscription(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new PlanNotFoundException("Usuario no encontrado: " + userEmail));

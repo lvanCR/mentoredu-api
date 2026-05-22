@@ -5,8 +5,11 @@ import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.forum.exception.UserNotFoundException;
 import com.mentoredu.verification.dto.SubmitVerificationRequest;
 import com.mentoredu.verification.dto.VerificationRequestResponse;
+import com.mentoredu.verification.event.VerificationProcessedEvent;
 import com.mentoredu.verification.exception.DuplicateVerificationRequestException;
 import com.mentoredu.verification.exception.UnauthorizedVerificationException;
+import com.mentoredu.verification.exception.VerificationAlreadyProcessedException;
+import com.mentoredu.verification.exception.VerificationRequestNotFoundException;
 import com.mentoredu.verification.model.VerificationDocument;
 import com.mentoredu.verification.model.VerificationRequest;
 import com.mentoredu.verification.model.enums.EntityType;
@@ -14,10 +17,13 @@ import com.mentoredu.verification.model.enums.VerificationStatus;
 import com.mentoredu.verification.repository.VerificationDocumentRepository;
 import com.mentoredu.verification.repository.VerificationRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +32,7 @@ public class VerificationService implements IVerificationService {
     private final VerificationRequestRepository verificationRequestRepository;
     private final VerificationDocumentRepository verificationDocumentRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -72,6 +79,41 @@ public class VerificationService implements IVerificationService {
         VerificationDocument savedDocument = verificationDocumentRepository.save(document);
 
         return new VerificationRequestResponse(saved, savedDocument);
+    }
+
+    @Override
+    @Transactional
+    public VerificationRequestResponse processRequest(UUID requestId, String newStatus, String moderatorEmail) {
+        User moderator = userRepository.findByEmail(moderatorEmail)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + moderatorEmail));
+
+        String roleName = moderator.getRole().getName();
+        if (!"MODERATOR".equals(roleName) && !"ADMIN".equals(roleName)) {
+            throw new UnauthorizedVerificationException(
+                    "Solo moderadores y administradores pueden procesar solicitudes de verificación");
+        }
+
+        VerificationRequest request = verificationRequestRepository.findById(requestId)
+                .orElseThrow(() -> new VerificationRequestNotFoundException(
+                        "Solicitud no encontrada: " + requestId));
+
+        if (request.getStatus() != VerificationStatus.PENDING) {
+            throw new VerificationAlreadyProcessedException(
+                    "La solicitud ya fue procesada con estado: " + request.getStatus().name());
+        }
+
+        VerificationStatus status = VerificationStatus.valueOf(newStatus);
+        request.setStatus(status);
+        request.setReviewedBy(moderator);
+        request.setReviewedAt(LocalDateTime.now());
+        verificationRequestRepository.save(request);
+
+        eventPublisher.publishEvent(new VerificationProcessedEvent(
+                request.getUser().getId(), request.getEntityType().name(), status.name()));
+
+        List<VerificationDocument> docs = verificationDocumentRepository.findByRequestId(requestId);
+        VerificationDocument doc = docs.isEmpty() ? null : docs.get(0);
+        return new VerificationRequestResponse(request, doc);
     }
 
     @Override

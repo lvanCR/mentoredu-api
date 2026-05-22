@@ -3,6 +3,7 @@ package com.mentoredu.profile.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.profile.dto.CreateStudentProfileRequest;
+import com.mentoredu.profile.dto.ProfileMeResponse;
 import com.mentoredu.profile.dto.CreateTeacherProfileRequest;
 import com.mentoredu.profile.dto.ProfileResponse;
 import com.mentoredu.profile.dto.SelectAccountTypeRequest;
@@ -40,6 +41,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -1064,6 +1066,85 @@ class ProfileControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // F0.4 — GET /profiles/me
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Escenario 1 — Perfil STUDENT con subtipo creado → 200, isProfileComplete: true
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void getMyProfile_withCompleteStudentProfile_returns200AndIsComplete() throws Exception {
+        when(profileService.getMyProfile(eq("student@example.com")))
+                .thenReturn(buildProfileMeResponse(ProfileType.STUDENT, true));
+
+        mockMvc.perform(get("/api/v1/profiles/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileType").value("STUDENT"))
+                .andExpect(jsonPath("$.profileComplete").value(true))
+                .andExpect(jsonPath("$.userId").exists())
+                .andExpect(jsonPath("$.displayName").value("Test User"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 2 — Perfil base sin subtipo creado → 200, isProfileComplete: false
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "incomplete@example.com")
+    void getMyProfile_withIncompleteProfile_returns200AndIsNotComplete() throws Exception {
+        when(profileService.getMyProfile(eq("incomplete@example.com")))
+                .thenReturn(buildProfileMeResponse(ProfileType.TEACHER, false));
+
+        mockMvc.perform(get("/api/v1/profiles/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileType").value("TEACHER"))
+                .andExpect(jsonPath("$.profileComplete").value(false));
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 3 — Sin autenticación → 401
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getMyProfile_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/profiles/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // -------------------------------------------------------------------------
+    // Escenario 4 — Usuario sin perfil base (US04 no ejecutada) → 404
+    // -------------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(username = "noprofile@example.com")
+    void getMyProfile_whenProfileNotFound_returns404() throws Exception {
+        when(profileService.getMyProfile(eq("noprofile@example.com")))
+                .thenThrow(new ProfileNotFoundException("Profile not found for user: noprofile@example.com"));
+
+        mockMvc.perform(get("/api/v1/profiles/me"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Profile not found for user: noprofile@example.com"));
+    }
+
+    // =========================================================================
+    // Helpers F0.4
+    // =========================================================================
+
+    private ProfileMeResponse buildProfileMeResponse(ProfileType type, boolean isProfileComplete) {
+        Profile profile = Profile.builder()
+                .id(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .displayName("Test User")
+                .profileType(type.name())
+                .createdAt(LocalDateTime.now())
+                .build();
+        return new ProfileMeResponse(profile, isProfileComplete);
     }
 
     // =========================================================================

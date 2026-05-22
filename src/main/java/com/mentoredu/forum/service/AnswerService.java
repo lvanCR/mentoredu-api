@@ -3,6 +3,7 @@ package com.mentoredu.forum.service;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.forum.dto.AnswerResponse;
 import com.mentoredu.forum.dto.CreateAnswerRequest;
+import com.mentoredu.forum.event.AnswerCreatedEvent;
 import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.model.Answer;
@@ -11,6 +12,7 @@ import com.mentoredu.forum.repository.ThreadRepository;
 import com.mentoredu.gamification.model.enums.PointSourceType;
 import com.mentoredu.gamification.service.IGamificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ public class AnswerService implements IAnswerService {
     private final ThreadRepository threadRepository;
     private final UserRepository userRepository;
     private final IGamificationService gamificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final int ANSWER_GIVEN_XP = 5;
 
@@ -54,8 +57,11 @@ public class AnswerService implements IAnswerService {
                 .build();
 
         Answer saved = answerRepository.save(answer);
-        // US30: award XP for contributing an answer (RN-31)
         gamificationService.awardPoints(user.getId(), PointSourceType.ANSWER_GIVEN, saved.getId(), ANSWER_GIVEN_XP);
+        if (!thread.getAuthor().getId().equals(user.getId())) {
+            eventPublisher.publishEvent(new AnswerCreatedEvent(
+                    saved.getId(), thread.getAuthor().getId(), user.getId(), thread.getTitle()));
+        }
         return toResponse(saved);
     }
 

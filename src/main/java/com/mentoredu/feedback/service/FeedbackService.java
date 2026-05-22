@@ -4,6 +4,8 @@ import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.feedback.dto.FeedbackRequest;
 import com.mentoredu.feedback.dto.FeedbackResponse;
+import com.mentoredu.feedback.event.FeedbackGivenEvent;
+import com.mentoredu.feedback.event.SolutionReviewedEvent;
 import com.mentoredu.feedback.exception.FeedbackResourceAuthorshipException;
 import com.mentoredu.feedback.exception.FeedbackSolutionNotFoundException;
 import com.mentoredu.feedback.exception.FeedbackTargetNotFoundException;
@@ -18,6 +20,7 @@ import com.mentoredu.library.model.ResourceSolution;
 import com.mentoredu.library.repository.AcademicResourceRepository;
 import com.mentoredu.library.repository.ResourceSolutionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +39,7 @@ public class FeedbackService implements IFeedbackService {
     private final ResourceSolutionRepository solutionRepository;
     private final AcademicResourceRepository resourceRepository;
     private final IGamificationService gamificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -66,13 +70,16 @@ public class FeedbackService implements IFeedbackService {
                 .body(request.getBody())
                 .score(request.getScore());
 
+        ResourceSolution solution = null;
+        AcademicResource resource = null;
+
         // US40: if solutionId provided, validate RN-48 and mark solution as REVIEWED (RN-49)
         if (request.getSolutionId() != null) {
-            ResourceSolution solution = solutionRepository.findById(request.getSolutionId())
+            solution = solutionRepository.findById(request.getSolutionId())
                     .orElseThrow(() -> new FeedbackSolutionNotFoundException(
                             "Resolución no encontrada: " + request.getSolutionId()));
 
-            AcademicResource resource = resourceRepository.findById(solution.getResourceId())
+            resource = resourceRepository.findById(solution.getResourceId())
                     .orElseThrow(() -> new FeedbackSolutionNotFoundException(
                             "Recurso de la resolución no encontrado"));
 
@@ -91,12 +98,19 @@ public class FeedbackService implements IFeedbackService {
 
         FeedbackEntry saved = feedbackRepository.save(builder.build());
 
-        // Award 5 XP to the feedback author (FEEDBACK_GIVEN)
         gamificationService.awardPoints(author.getId(), PointSourceType.FEEDBACK_GIVEN, saved.getId(), FEEDBACK_GIVEN_XP);
 
-        // Award HIGHLY_RATED badge to the student if score >= 8.0 (RN from CLAUDE.md)
         if (request.getScore() != null && request.getScore().compareTo(HIGHLY_RATED_THRESHOLD) >= 0) {
             gamificationService.awardBadge(target.getId(), "HIGHLY_RATED");
+        }
+
+        eventPublisher.publishEvent(new FeedbackGivenEvent(
+                saved.getId(), target.getId(), author.getId(),
+                author.getFirstName() + " " + author.getLastName()));
+
+        if (solution != null) {
+            eventPublisher.publishEvent(new SolutionReviewedEvent(
+                    solution.getId(), target.getId(), solution.getResourceId(), resource.getTitle()));
         }
 
         return new FeedbackResponse(saved);
