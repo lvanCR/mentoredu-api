@@ -28,7 +28,7 @@ app:
     base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 management:
   endpoints:
