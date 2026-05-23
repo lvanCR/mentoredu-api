@@ -19,3 +19,5 @@ app:
     refresh-expiration-ms: 604800000
   password-reset:
     expiration-minutes: 60
+  frontend:
+    base-url: http://localhost:4200
