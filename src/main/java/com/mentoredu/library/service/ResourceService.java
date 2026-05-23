@@ -3,6 +3,7 @@ package com.mentoredu.library.service;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.catalog.repository.CareerRepository;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
@@ -15,11 +16,11 @@ import com.mentoredu.library.model.ResourceType;
 import com.mentoredu.library.repository.DownloadLogRepository;
 import com.mentoredu.library.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -100,8 +101,9 @@ public class ResourceService implements IResourceService {
     // -------------------------------------------------------------------------
 
     @Override
-    public List<ResourceResponse> search(String query, String type, UUID universityId,
-                                         UUID areaId, UUID careerId, UUID courseId) {
+    public PagedResponse<ResourceResponse> search(String query, String type, UUID universityId,
+                                                   UUID areaId, UUID careerId, UUID courseId,
+                                                   int page, int size) {
         ResourceType resourceType = null;
         if (type != null && !type.isBlank()) {
             try {
@@ -114,10 +116,10 @@ public class ResourceService implements IResourceService {
         }
         String q = (query == null || query.isBlank()) ? null : query.trim();
         String typeStr = (resourceType != null) ? resourceType.name() : null;
-        return resourceRepository.search(q, typeStr, universityId, areaId, careerId, courseId)
-                .stream()
-                .map(ResourceResponse::new)
-                .toList();
+        return PagedResponse.from(
+                resourceRepository.search(q, typeStr, universityId, areaId, careerId, courseId,
+                        PageRequest.of(page, size)),
+                ResourceResponse::new);
     }
 
     // -------------------------------------------------------------------------
@@ -136,13 +138,12 @@ public class ResourceService implements IResourceService {
     // -------------------------------------------------------------------------
 
     @Override
-    public List<ResourceResponse> getByAuthor(String authorEmail) {
+    public PagedResponse<ResourceResponse> getByAuthor(String authorEmail, int page, int size) {
         User author = userRepository.findByEmail(authorEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authorEmail));
-        return resourceRepository.findByAuthorId(author.getId())
-                .stream()
-                .map(ResourceResponse::new)
-                .toList();
+        return PagedResponse.from(
+                resourceRepository.findByAuthorId(author.getId(), PageRequest.of(page, size)),
+                ResourceResponse::new);
     }
 
     // -------------------------------------------------------------------------

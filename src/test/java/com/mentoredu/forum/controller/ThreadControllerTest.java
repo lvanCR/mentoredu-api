@@ -2,6 +2,7 @@ package com.mentoredu.forum.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.forum.dto.AnswerResponse;
 import com.mentoredu.forum.dto.CreateAnswerRequest;
 import com.mentoredu.forum.dto.CreateThreadRequest;
@@ -23,8 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -173,25 +173,25 @@ class ThreadControllerTest {
     void listThreads_authenticated_returns200() throws Exception {
         UUID courseId = UUID.randomUUID();
         when(threadService.listRecent(0, 10))
-                .thenReturn(List.of(buildThreadResponse(courseId, "Hilo de prueba", false)));
+                .thenReturn(pageOf(List.of(buildThreadResponse(courseId, "Hilo de prueba", false))));
 
         mockMvc.perform(get("/api/v1/threads"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].title").value("Hilo de prueba"))
-                .andExpect(jsonPath("$[0].status").value("OPEN"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].title").value("Hilo de prueba"))
+                .andExpect(jsonPath("$.content[0].status").value("OPEN"));
     }
 
     @Test
     @WithMockUser(username = "user@example.com")
     void listThreads_withPaginationParams_returns200() throws Exception {
-        when(threadService.listRecent(1, 5)).thenReturn(List.of());
+        when(threadService.listRecent(1, 5)).thenReturn(pageOf(List.of()));
 
         mockMvc.perform(get("/api/v1/threads")
                         .param("page", "1")
                         .param("size", "5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     @Test
@@ -355,14 +355,14 @@ class ThreadControllerTest {
     void listAnswers_whenThreadExists_returns200() throws Exception {
         UUID threadId = UUID.randomUUID();
 
-        when(answerService.listByThread(eq(threadId)))
-                .thenReturn(List.of(buildAnswerResponse(threadId)));
+        when(answerService.listByThread(eq(threadId), anyInt(), anyInt()))
+                .thenReturn(pageOf(List.of(buildAnswerResponse(threadId))));
 
         mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].threadId").value(threadId.toString()))
-                .andExpect(jsonPath("$[0].body").exists());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].threadId").value(threadId.toString()))
+                .andExpect(jsonPath("$.content[0].body").exists());
     }
 
     @Test
@@ -370,7 +370,7 @@ class ThreadControllerTest {
     void listAnswers_whenThreadNotFound_returns404() throws Exception {
         UUID threadId = UUID.randomUUID();
 
-        when(answerService.listByThread(eq(threadId)))
+        when(answerService.listByThread(eq(threadId), anyInt(), anyInt()))
                 .thenThrow(new ThreadNotFoundException("Thread not found: " + threadId));
 
         mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
@@ -534,5 +534,9 @@ class ThreadControllerTest {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+    }
+
+    private <T> PagedResponse<T> pageOf(List<T> items) {
+        return new PagedResponse<>(items, 0, 20, items.size(), items.isEmpty() ? 0 : 1, true);
     }
 }

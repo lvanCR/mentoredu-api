@@ -2,6 +2,7 @@ package com.mentoredu.forum.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.forum.dto.AnswerResponse;
 import com.mentoredu.forum.dto.CreateAnswerRequest;
 import com.mentoredu.forum.exception.ThreadClosedException;
@@ -19,8 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -157,31 +157,32 @@ class AnswerControllerTest {
     @WithMockUser(username = "user@example.com")
     void listAnswers_whenThreadExists_returns200() throws Exception {
         UUID threadId = UUID.randomUUID();
+        var items = List.of(
+                buildAnswerResponse(threadId, "Primera respuesta", "Juan"),
+                buildAnswerResponse(threadId, "Segunda respuesta", "María"));
 
-        when(answerService.listByThread(eq(threadId)))
-                .thenReturn(List.of(
-                        buildAnswerResponse(threadId, "Primera respuesta", "Juan"),
-                        buildAnswerResponse(threadId, "Segunda respuesta", "María")));
+        when(answerService.listByThread(eq(threadId), anyInt(), anyInt()))
+                .thenReturn(pageOf(items));
 
         mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].threadId").value(threadId.toString()))
-                .andExpect(jsonPath("$[0].body").value("Primera respuesta"))
-                .andExpect(jsonPath("$[1].body").value("Segunda respuesta"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].threadId").value(threadId.toString()))
+                .andExpect(jsonPath("$.content[0].body").value("Primera respuesta"))
+                .andExpect(jsonPath("$.content[1].body").value("Segunda respuesta"));
     }
 
     @Test
     @WithMockUser(username = "user@example.com")
     void listAnswers_whenThreadEmpty_returns200WithEmptyArray() throws Exception {
         UUID threadId = UUID.randomUUID();
-        when(answerService.listByThread(eq(threadId))).thenReturn(List.of());
+        when(answerService.listByThread(eq(threadId), anyInt(), anyInt())).thenReturn(pageOf(List.of()));
 
         mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content").isEmpty());
     }
 
     @Test
@@ -189,7 +190,7 @@ class AnswerControllerTest {
     void listAnswers_whenThreadNotFound_returns404() throws Exception {
         UUID threadId = UUID.randomUUID();
 
-        when(answerService.listByThread(eq(threadId)))
+        when(answerService.listByThread(eq(threadId), anyInt(), anyInt()))
                 .thenThrow(new ThreadNotFoundException("Thread not found: " + threadId));
 
         mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
@@ -222,5 +223,9 @@ class AnswerControllerTest {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+    }
+
+    private <T> PagedResponse<T> pageOf(List<T> items) {
+        return new PagedResponse<>(items, 0, 20, items.size(), items.isEmpty() ? 0 : 1, true);
     }
 }

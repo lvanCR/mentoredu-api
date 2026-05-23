@@ -1,5 +1,6 @@
 package com.mentoredu.community.controller;
 
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.CreateVerificationRequest;
 import com.mentoredu.community.dto.ReviewVerificationRequest;
 import com.mentoredu.community.dto.VerificationResponse;
@@ -61,12 +62,14 @@ public class VerificationController {
 
     @GetMapping("/requests")
     @Operation(summary = "US23 - Listar todas las solicitudes de verificación (moderadores)")
-    public ResponseEntity<List<VerificationResponse>> allRequests() {
+    public ResponseEntity<PagedResponse<VerificationResponse>> allRequests(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "20") int size) {
         Authentication auth = auth();
         if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         if (!hasModeratorRole(auth)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 
-        return ResponseEntity.ok(verificationService.getAllRequests());
+        return ResponseEntity.ok(verificationService.getAllRequests(page, size));
     }
 
     // -------------------------------------------------------------------------

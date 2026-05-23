@@ -92,7 +92,9 @@ class MentoreduApiApplicationTests {
         Thread.sleep(500);
 
         List<Notification> pending = notificationRepository
-                .findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(testUserId);
+                .findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(testUserId,
+                        org.springframework.data.domain.Pageable.unpaged())
+                .getContent();
 
         assertFalse(pending.isEmpty(), "Debe existir al menos una notificación pendiente");
         assertEquals("answer_received", pending.get(0).getType());

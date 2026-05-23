@@ -2,6 +2,7 @@ package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.CreateVerificationRequest;
 import com.mentoredu.community.dto.ReviewVerificationRequest;
 import com.mentoredu.community.dto.VerificationResponse;
@@ -14,6 +15,7 @@ import com.mentoredu.community.repository.VerificationDocRepository;
 import com.mentoredu.community.repository.VerificationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,9 +78,10 @@ public class VerificationService implements IVerificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<VerificationResponse> getAllRequests() {
-        return verificationRepository.findAll()
-                .stream().map(VerificationResponse::new).toList();
+    public PagedResponse<VerificationResponse> getAllRequests(int page, int size) {
+        return PagedResponse.from(
+                verificationRepository.findAll(PageRequest.of(page, size)),
+                VerificationResponse::new);
     }
 
     @Override

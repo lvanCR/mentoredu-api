@@ -1,5 +1,6 @@
 package com.mentoredu.community.controller;
 
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.NotificationResponse;
 import com.mentoredu.community.service.INotificationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -27,20 +27,22 @@ public class NotificationController {
 
     @GetMapping("/me")
     @Operation(summary = "US27 - Ver todas mis notificaciones")
-    public ResponseEntity<List<NotificationResponse>> getMyNotifications() {
+    public ResponseEntity<PagedResponse<NotificationResponse>> getMyNotifications(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "20") int size) {
         Authentication auth = auth();
         if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        
-        return ResponseEntity.ok(notificationService.getMyNotifications(auth.getName()));
+        return ResponseEntity.ok(notificationService.getMyNotifications(auth.getName(), page, size));
     }
 
     @GetMapping("/me/pending")
     @Operation(summary = "US27 - Ver mis notificaciones no leídas")
-    public ResponseEntity<List<NotificationResponse>> getPendingNotifications() {
+    public ResponseEntity<PagedResponse<NotificationResponse>> getPendingNotifications(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "20") int size) {
         Authentication auth = auth();
         if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        
-        return ResponseEntity.ok(notificationService.getPendingNotifications(auth.getName()));
+        return ResponseEntity.ok(notificationService.getPendingNotifications(auth.getName(), page, size));
     }
 
     @PatchMapping("/{id}/read")

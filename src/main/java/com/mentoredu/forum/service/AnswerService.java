@@ -1,6 +1,7 @@
 package com.mentoredu.forum.service;
 
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.forum.dto.AnswerResponse;
 import com.mentoredu.forum.dto.CreateAnswerRequest;
 import com.mentoredu.forum.event.AnswerCreatedEvent;
@@ -11,10 +12,10 @@ import com.mentoredu.forum.repository.AnswerRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -57,14 +58,13 @@ public class AnswerService implements IAnswerService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AnswerResponse> listByThread(UUID threadId) {
+    public PagedResponse<AnswerResponse> listByThread(UUID threadId, int page, int size) {
         if (!threadRepository.existsById(threadId)) {
             throw new ThreadNotFoundException("Thread not found: " + threadId);
         }
-        return answerRepository.findAllByThread_IdOrderByCreatedAtAsc(threadId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return PagedResponse.from(
+                answerRepository.findAllByThread_IdOrderByCreatedAtAsc(threadId, PageRequest.of(page, size)),
+                this::toResponse);
     }
 
     private AnswerResponse toResponse(Answer a) {

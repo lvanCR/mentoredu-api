@@ -2,6 +2,7 @@ package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.NotificationResponse;
 import com.mentoredu.community.event.AssociationResolvedEvent;
 import com.mentoredu.community.event.UserFollowedEvent;
@@ -15,6 +16,7 @@ import com.mentoredu.forum.event.ReactionCreatedEvent;
 import com.mentoredu.pedagogy.event.FeedbackGivenEvent;
 import com.mentoredu.pedagogy.event.SolutionSubmittedEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -23,7 +25,6 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,22 +37,22 @@ public class NotificationService implements INotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<NotificationResponse> getMyNotifications(String userEmail) {
+    public PagedResponse<NotificationResponse> getMyNotifications(String userEmail, int page, int size) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + userEmail));
-
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId())
-                .stream().map(NotificationResponse::from).toList();
+        return PagedResponse.from(
+                notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size)),
+                NotificationResponse::from);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<NotificationResponse> getPendingNotifications(String userEmail) {
+    public PagedResponse<NotificationResponse> getPendingNotifications(String userEmail, int page, int size) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + userEmail));
-
-        return notificationRepository.findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(user.getId())
-                .stream().map(NotificationResponse::from).toList();
+        return PagedResponse.from(
+                notificationRepository.findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size)),
+                NotificationResponse::from);
     }
 
     @Override

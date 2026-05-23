@@ -3,6 +3,7 @@ package com.mentoredu.library.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
@@ -219,15 +220,16 @@ class ResourceControllerTest {
 
     @Test
     void searchResources_withNoFilters_returns200WithResults() throws Exception {
-        when(resourceService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
-                .thenReturn(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, "PUBLIC")));
+        when(resourceService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyInt(), anyInt()))
+                .thenReturn(pageOf(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, "PUBLIC"))));
 
         mockMvc.perform(get("/api/v1/resources"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].title").value("Examen UNI 2024"))
-                .andExpect(jsonPath("$[0].resourceType").value("EXAMEN_SECCION"))
-                .andExpect(jsonPath("$[0].visibility").value("PUBLIC"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].title").value("Examen UNI 2024"))
+                .andExpect(jsonPath("$.content[0].resourceType").value("EXAMEN_SECCION"))
+                .andExpect(jsonPath("$.content[0].visibility").value("PUBLIC"))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
@@ -236,8 +238,8 @@ class ResourceControllerTest {
         UUID areaId       = UUID.randomUUID();
         UUID courseId     = UUID.randomUUID();
 
-        when(resourceService.search(eq("UNI"), eq("EXAMEN_SECCION"), eq(universityId), eq(areaId), isNull(), eq(courseId)))
-                .thenReturn(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, "PUBLIC")));
+        when(resourceService.search(eq("UNI"), eq("EXAMEN_SECCION"), eq(universityId), eq(areaId), isNull(), eq(courseId), anyInt(), anyInt()))
+                .thenReturn(pageOf(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, "PUBLIC"))));
 
         mockMvc.perform(get("/api/v1/resources")
                         .param("q", "UNI")
@@ -246,26 +248,26 @@ class ResourceControllerTest {
                         .param("areaId", areaId.toString())
                         .param("courseId", courseId.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].title").value("Examen UNI 2024"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].title").value("Examen UNI 2024"));
     }
 
     @Test
     void searchResources_withNoMatches_returns200EmptyList() throws Exception {
-        when(resourceService.search(eq("XYZ_NO_EXISTE"), isNull(), isNull(), isNull(), isNull(), isNull()))
-                .thenReturn(List.of());
+        when(resourceService.search(eq("XYZ_NO_EXISTE"), isNull(), isNull(), isNull(), isNull(), isNull(), anyInt(), anyInt()))
+                .thenReturn(pageOf(List.of()));
 
         mockMvc.perform(get("/api/v1/resources")
                         .param("q", "XYZ_NO_EXISTE"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content").isEmpty());
     }
 
     @Test
     void searchResources_withoutAuth_returns200() throws Exception {
-        when(resourceService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
-                .thenReturn(List.of());
+        when(resourceService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyInt(), anyInt()))
+                .thenReturn(pageOf(List.of()));
 
         mockMvc.perform(get("/api/v1/resources"))
                 .andExpect(status().isOk());
@@ -423,13 +425,13 @@ class ResourceControllerTest {
     @Test
     @WithMockUser(username = "user@example.com")
     void getMyResources_whenAuthenticated_returns200() throws Exception {
-        when(resourceService.getByAuthor(eq("user@example.com")))
-                .thenReturn(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, "PUBLIC")));
+        when(resourceService.getByAuthor(eq("user@example.com"), anyInt(), anyInt()))
+                .thenReturn(pageOf(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, "PUBLIC"))));
 
         mockMvc.perform(get("/api/v1/resources/me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].title").value("Examen UNI 2024"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].title").value("Examen UNI 2024"));
     }
 
     @Test
@@ -525,5 +527,9 @@ class ResourceControllerTest {
                 .build();
 
         return new ResourceResponse(resource);
+    }
+
+    private <T> PagedResponse<T> pageOf(List<T> items) {
+        return new PagedResponse<>(items, 0, 20, items.size(), items.isEmpty() ? 0 : 1, true);
     }
 }
