@@ -1,0 +1,23 @@
+{
+  "name": "MentorEduAuthHU02-LoginPOST — Caso 2: Contraseña incorrecta",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/login",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "email": "ana.garcia@example.com",
+      "password": "WrongPassword99"
+    }
+  },
+  "expected_response": {
+    "status": 401,
+    "body": {
+      "status": 401,
+      "error": "Unauthorized",
+      "message": "Invalid email or password"
+    }
+  },
+  "notes": "El mensaje de error es genérico para no filtrar si el email existe o no (seguridad por oscuridad)."
+}

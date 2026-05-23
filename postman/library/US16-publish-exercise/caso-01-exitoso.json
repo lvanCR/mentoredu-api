@@ -1,0 +1,32 @@
+{
+  "name": "MentorEduLibraryUS16-PublishExercisePOST",
+  "description": "Caso 01 — Exitoso: docente publica un ejercicio con acepta_resoluciones=true y resource_type=PRACTICA. Espera 201 Created.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/resources",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "fileId": "{{file_id}}",
+      "title": "Práctica de Álgebra Lineal — Vectores",
+      "description": "Ejercicio de vectores en R3 sin solución adjunta.",
+      "resourceType": "PRACTICA",
+      "universityId": "{{university_id}}",
+      "areaId": "{{area_id}}",
+      "courseId": "{{course_id}}",
+      "acepta_resoluciones": true
+    }
+  },
+  "expectedResponse": {
+    "status": 201,
+    "body": {
+      "id": "<uuid>",
+      "title": "Práctica de Álgebra Lineal — Vectores",
+      "resourceType": "PRACTICA",
+      "acepta_resoluciones": true,
+      "createdAt": "<timestamp>"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduCommunityUS24-AcceptAssociationPATCH",
+  "description": "Caso 03 — Academia acepta la solicitud de asociación. Espera 200 OK con status ACCEPTED.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/associations/{{association_id}}/accept",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{academy_token}}" }
+    ]
+  },
+  "expectedResponse": {
+    "status": 200,
+    "body": {
+      "id": "{{association_id}}",
+      "status": "ACCEPTED",
+      "resolvedAt": "<timestamp>"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+package com.mentoredu.community.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "teacher_academy_links",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"teacher_profile_id", "academy_profile_id"}))
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+@Builder
+public class TeacherAcademyLink {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "teacher_profile_id", nullable = false, columnDefinition = "uuid")
+    private UUID teacherProfileId;
+
+    @Column(name = "academy_profile_id", nullable = false, columnDefinition = "uuid")
+    private UUID academyProfileId;
+
+    @Column(nullable = false, length = 20)
+    private String status = "PENDING";
+
+    @CreationTimestamp
+    @Column(name = "requested_at", updatable = false)
+    private LocalDateTime requestedAt;
+
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
+}

@@ -1,4 +1,6 @@
 HELP.md
+CLAUDE.md
+GEMINI.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -32,5 +34,13 @@ build/
 ### VS Code ###
 .vscode/
 
-### .env
+
+# Custom local configs
+application-local.yml
+application-local.properties
 .env
+.claude/
+
+# Uploaded files (dev local storage)
+uploads/
+

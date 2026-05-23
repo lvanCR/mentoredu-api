@@ -1,0 +1,25 @@
+{
+  "scenario": "Error — Perfil de docente ya existe (RN-09)",
+  "gherkin": "Dado que ya tengo un perfil docente creado, cuando intento crear otro, entonces el sistema lo rechaza.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/profiles/teacher",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "specialty": "Química",
+      "institutionName": "Academia Lumbre"
+    }
+  },
+  "expected_response": {
+    "status": 409,
+    "body": {
+      "status": 409,
+      "error": "Conflict",
+      "message": "Teacher profile already exists for this account."
+    }
+  },
+  "note": "Ejecutar dos veces con el mismo token de un usuario TEACHER."
+}

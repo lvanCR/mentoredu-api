@@ -1,0 +1,30 @@
+{
+  "name": "MentorEduModerationHU19-ReportOwnContentPOST",
+  "description": "Caso 03 — Intento de reportar contenido propio. Espera 400 Bad Request (SelfReportException).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/moderation/reports",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{own_content_token}}"
+      },
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "targetType": "THREAD",
+      "targetId": "{{own_thread_id}}",
+      "reason": "Motivo cualquiera"
+    }
+  },
+  "expectedResponse": {
+    "status": 400,
+    "body": {
+      "error": "Bad Request",
+      "message": "No puedes reportar tu propio contenido"
+    }
+  }
+}

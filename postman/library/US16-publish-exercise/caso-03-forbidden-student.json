@@ -1,0 +1,23 @@
+{
+  "name": "MentorEduLibraryUS16-PublishExerciseForbiddenPOST",
+  "description": "Caso 03 — Prohibido: estudiante intenta activar acepta_resoluciones. Espera 403 Forbidden (RN-14).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/resources",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "fileId": "{{file_id}}",
+      "title": "Ejercicio de un estudiante",
+      "resourceType": "PRACTICA",
+      "universityId": "{{university_id}}",
+      "areaId": "{{area_id}}",
+      "acepta_resoluciones": true
+    }
+  },
+  "expectedResponse": {
+    "status": 403
+  }
+}

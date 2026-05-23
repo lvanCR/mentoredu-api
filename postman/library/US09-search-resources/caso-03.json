@@ -1,0 +1,13 @@
+{
+  "name": "MentorEduLibraryHU14-SearchResourcesNoMatchesGET",
+  "description": "Caso 03 — Alternativo exitoso: filtros válidos pero sin coincidencias, devuelve lista vacía sin error. Respuesta esperada: 200 OK con array vacío [].",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/resources/search?q=RECURSO_QUE_NO_EXISTE_XYZ&type=EXAM",
+    "header": []
+  },
+  "expectedResponse": {
+    "status": 200,
+    "type": "empty array"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "MentorEduCommunityUS23-ApproveVerificationPATCH",
+  "description": "Caso 02 — Exitoso: moderador aprueba una solicitud de verificación. Espera 200 OK con status APPROVED.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/verification/requests/{{verification_id}}/review",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{moderator_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "decision": "APPROVED",
+      "notes": "Documentación válida verificada."
+    }
+  },
+  "expectedResponse": {
+    "status": 200,
+    "body": {
+      "id": "{{verification_id}}",
+      "status": "APPROVED",
+      "reviewedAt": "<timestamp>"
+    }
+  }
+}

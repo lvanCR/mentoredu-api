@@ -1,0 +1,21 @@
+{
+  "description": "Caso 1: Reseteo de contraseña con token válido y vigente",
+  "prerequisite": "Ejecutar HU03 caso-01 y copiar el token de la respuesta",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/reset-password",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "token": "<token_obtenido_de_forgot_password>",
+      "newPassword": "NewPassword456"
+    }
+  },
+  "expected_response": {
+    "status": 200,
+    "body": {
+      "message": "Password reset successfully. All active sessions have been closed."
+    }
+  }
+}

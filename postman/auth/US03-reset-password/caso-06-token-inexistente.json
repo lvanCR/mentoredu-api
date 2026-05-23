@@ -1,0 +1,22 @@
+{
+  "description": "Caso 6: Token que no existe en la base de datos",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/reset-password",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "token": "0000000000000000000000000000000000000000000000000000000000000000",
+      "newPassword": "NewPassword456"
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Bad Request",
+      "message": "Token not found or invalid"
+    }
+  }
+}

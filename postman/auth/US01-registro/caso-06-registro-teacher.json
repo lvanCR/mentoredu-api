@@ -1,0 +1,38 @@
+{
+  "escenario": "Caso 6 — Registro exitoso con rol TEACHER",
+  "gherkin": "Dado que soy un docente, cuando me registro con role=TEACHER, entonces recibo 201 con access token, refresh token y perfil base con profile_type=TEACHER.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/auth/register",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "firstName": "Carlos",
+      "lastName": "Mendoza",
+      "email": "carlos.mendoza@example.com",
+      "password": "Docente2024",
+      "role": "TEACHER"
+    }
+  },
+  "expected_response": {
+    "status": 201,
+    "body": {
+      "id": "<uuid-generado-por-el-sistema>",
+      "firstName": "Carlos",
+      "lastName": "Mendoza",
+      "email": "carlos.mendoza@example.com",
+      "role": "TEACHER",
+      "status": "ACTIVE",
+      "accessToken": "<jwt-token>",
+      "refreshToken": "<uuid-token>",
+      "tokenType": "Bearer",
+      "expiresIn": 900
+    }
+  },
+  "notas": [
+    "US01 Escenario 1 (rol TEACHER): recibe 201 con tokens.",
+    "Se crea perfil base en profiles con profile_type=TEACHER.",
+    "Este usuario podrá usar PATCH /api/v1/profiles/me y POST /api/v1/profiles/teacher."
+  ]
+}

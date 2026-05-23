@@ -3,13 +3,18 @@ services:
     image: postgres:16
     container_name: mentoredu_db
     environment:
-      POSTGRES_DB: mentoredu_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mentoredu
+      POSTGRES_USER: mentoredu
+      POSTGRES_PASSWORD: mentoredu
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mentoredu -d mentoredu"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   pgadmin:
     image: dpage/pgadmin4
@@ -20,7 +25,8 @@ services:
     ports:
       - "8082:80"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
 volumes:
   pgdata:

@@ -1,0 +1,25 @@
+{
+  "name": "MentorEduCommunityUS23-RejectVerificationPATCH",
+  "description": "Caso 03 — Rechazar: moderador rechaza con razón obligatoria. Espera 200 OK con status REJECTED (RN-17).",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/verification/requests/{{verification_id}}/review",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{moderator_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "decision": "REJECTED",
+      "notes": "El documento adjunto no es legible. Por favor reenviar con mayor resolución."
+    }
+  },
+  "expectedResponse": {
+    "status": 200,
+    "body": {
+      "id": "{{verification_id}}",
+      "status": "REJECTED",
+      "notes": "El documento adjunto no es legible. Por favor reenviar con mayor resolución.",
+      "reviewedAt": "<timestamp>"
+    }
+  }
+}

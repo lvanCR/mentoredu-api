@@ -1,0 +1,13 @@
+{
+  "name": "MentorEduLibraryHU14-SearchResourcesInvalidTypeGET",
+  "description": "Caso 02 — Error: parámetro 'type' con valor no permitido. Respuesta esperada: 400 Bad Request con message.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/resources/search?type=LIBRO",
+    "header": []
+  },
+  "expectedResponse": {
+    "status": 400,
+    "fields": ["error", "message"]
+  }
+}

@@ -1,0 +1,445 @@
+@startuml
+title Diagrama de Clases UML — MentorEdu v2.0\npor Bounded Context
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #444444
+skinparam DefaultFontName Arial
+
+' =========================
+' AUTH
+' =========================
+package "auth" {
+  enum UserStatus {
+    ACTIVE
+    PENDING
+    SUSPENDED
+    DELETED
+  }
+
+  enum AuthProvider {
+    EMAIL
+  }
+
+  class User {
+    +id : UUID
+    +firstName : String
+    +lastName : String
+    +email : String
+    +passwordHash : String
+    +provider : AuthProvider
+    +status : UserStatus
+    +role : Role
+    +createdAt : LocalDateTime
+    +updatedAt : LocalDateTime
+  }
+
+  class Role {
+    +id : UUID
+    +name : String
+    +description : String
+  }
+
+  class PasswordResetToken {
+    +id : UUID
+    +token : String
+    +expiresAt : LocalDateTime
+    +used : Boolean
+    +createdAt : LocalDateTime
+
+    +isValid() : Boolean
+    +markAsUsed() : void
+  }
+
+  class Session {
+    +id : UUID
+    +refreshToken : String
+    +expiresAt : LocalDateTime
+    +revokedAt : LocalDateTime
+    +createdAt : LocalDateTime
+
+    +revoke() : void
+    +isRevoked() : Boolean
+  }
+}
+
+' =========================
+' CATALOG
+' =========================
+package "catalog" {
+  class University {
+    +id : UUID
+    +name : String
+    +city : String
+  }
+
+  class Area {
+    +id : UUID
+    +name : String
+    +description : String
+    +university : University
+  }
+
+  class Course {
+    +id : UUID
+    +name : String
+    +description : String
+  }
+
+  class Career {
+    +id : UUID
+    +name : String
+    +description : String
+    +university : University
+    +area : Area
+  }
+}
+
+' =========================
+' PROFILE
+' =========================
+package "profile" {
+  enum ProfileType {
+    STUDENT
+    TEACHER
+    ACADEMY
+  }
+
+  class Profile {
+    +id : UUID
+    +user : User
+    +displayName : String
+    +avatarUrl : String
+    +city : String
+    +bio : String
+    +profileType : ProfileType
+    +createdAt : LocalDateTime
+    +updatedAt : LocalDateTime
+  }
+
+  class StudentProfile {
+    +profile : Profile
+    +schoolName : String
+    +gradeLevel : String
+    +studyShift : String
+    +targetUniversity : University
+    +targetArea : Area
+    +targetCareer : Career
+  }
+
+  class TeacherProfile {
+    +profile : Profile
+    +bioProfessional : String
+  }
+
+  class AcademyProfile {
+    +profile : Profile
+    +academyName : String
+    +ruc : String
+    +website : String
+    +contactEmail : String
+  }
+}
+
+' =========================
+' LIBRARY
+' =========================
+package "library" {
+  enum ResourceType {
+    EXAMEN_COMPLETO
+    EXAMEN_SECCION
+    GUIA
+    APUNTES
+    PRACTICA
+    OTRO
+  }
+
+  enum ResourceVisibility {
+    PUBLIC
+    PRIVATE
+  }
+
+  class Resource {
+    +id : UUID
+    +authorUser : User
+    +university : University
+    +area : Area
+    +career : Career
+    +course : Course
+    +fileUrl : String
+    +fileName : String
+    +mimeType : String
+    +sizeBytes : Long
+    +title : String
+    +description : String
+    +resourceType : ResourceType
+    +visibility : ResourceVisibility
+    +aceptaResoluciones : Boolean
+    +createdAt : LocalDateTime
+    +updatedAt : LocalDateTime
+  }
+
+  class DownloadLog {
+    +id : UUID
+    +user : User
+    +resource : Resource
+    +downloadedAt : LocalDateTime
+  }
+}
+
+' =========================
+' FORUM
+' =========================
+package "forum" {
+  enum ThreadStatus {
+    OPEN
+    CLOSED
+  }
+
+  enum ReactionType {
+    LIKE
+    DISLIKE
+  }
+
+  class Thread {
+    +id : UUID
+    +authorUser : User
+    +university : University
+    +area : Area
+    +course : Course
+    +career : Career
+    +title : String
+    +body : String
+    +isAnonymous : Boolean
+    +status : ThreadStatus
+    +createdAt : LocalDateTime
+    +updatedAt : LocalDateTime
+
+    +close() : void
+    +isOpen() : Boolean
+  }
+
+  class Answer {
+    +id : UUID
+    +thread : Thread
+    +authorUser : User
+    +body : String
+    +isAccepted : Boolean
+    +createdAt : LocalDateTime
+    +updatedAt : LocalDateTime
+  }
+
+  class Comment {
+    +id : UUID
+    +thread : Thread
+    +answer : Answer
+    +authorUser : User
+    +body : String
+    +createdAt : LocalDateTime
+    +updatedAt : LocalDateTime
+  }
+
+  class Reaction {
+    +id : UUID
+    +user : User
+    +targetType : String
+    +targetId : UUID
+    +reactionType : String
+    +createdAt : LocalDateTime
+  }
+}
+
+' =========================
+' PEDAGOGY
+' =========================
+package "pedagogy" {
+  enum SolutionStatus {
+    SUBMITTED
+    REVIEWED
+  }
+
+  class Solution {
+    +id : UUID
+    +resource : Resource
+    +student : User
+    +fileUrl : String
+    +content : String
+    +status : SolutionStatus
+    +submittedAt : LocalDateTime
+
+    +markAsReviewed() : void
+  }
+
+  class FeedbackEntry {
+    +id : UUID
+    +solution : Solution
+    +authorUser : User
+    +score : BigDecimal
+    +body : String
+    +createdAt : LocalDateTime
+  }
+}
+
+' =========================
+' COMMUNITY
+' =========================
+package "community" {
+  enum EntityType {
+    TEACHER
+    ACADEMY
+  }
+
+  enum VerificationStatus {
+    PENDING
+    APPROVED
+    REJECTED
+  }
+
+  enum LinkStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+  }
+
+  enum ReportStatus {
+    OPEN
+    RESOLVED
+  }
+
+  class Follow {
+    +id : UUID
+    +follower : User
+    +followed : User
+    +createdAt : LocalDateTime
+  }
+
+  class VerificationRequest {
+    +id : UUID
+    +user : User
+    +entityType : EntityType
+    +status : VerificationStatus
+    +notes : String
+    +submittedAt : LocalDateTime
+    +reviewedBy : User
+    +reviewedAt : LocalDateTime
+
+    +approve(reviewer: User) : void
+    +reject(reviewer: User, reason: String) : void
+    +isPending() : Boolean
+  }
+
+  class VerificationDoc {
+    +id : UUID
+    +request : VerificationRequest
+    +documentType : String
+    +fileUrl : String
+    +uploadedAt : LocalDateTime
+  }
+
+  class TeacherAcademyLink {
+    +id : UUID
+    +teacherProfile : TeacherProfile
+    +academyProfile : AcademyProfile
+    +status : LinkStatus
+    +requestedAt : LocalDateTime
+    +resolvedAt : LocalDateTime
+
+    +accept() : void
+    +reject() : void
+  }
+
+  class Report {
+    +id : UUID
+    +reporterUser : User
+    +targetType : String
+    +targetId : UUID
+    +reason : String
+    +status : ReportStatus
+    +resolutionNote : String
+    +resolvedBy : User
+    +createdAt : LocalDateTime
+    +resolvedAt : LocalDateTime
+
+    +resolve(moderator: User, note: String) : void
+    +isOpen() : Boolean
+  }
+
+  class Notification {
+    +id : UUID
+    +user : User
+    +type : String
+    +payload : Map<String, Object>
+    +readAt : LocalDateTime
+    +createdAt : LocalDateTime
+
+    +markAsRead() : void
+    +isPending() : Boolean
+  }
+}
+
+' =========================
+' RELATIONSHIPS
+' =========================
+
+' AUTH
+User "0..*" --> "1" Role : has
+User "1" *-- "0..*" PasswordResetToken : generates
+User "1" *-- "0..*" Session : opens
+
+' CATALOG
+University "1" *-- "0..*" Area : has
+University "1" *-- "0..*" Career : offers
+Area "1" -- "0..*" Career : groups
+Area "0..*" -- "0..*" Course : area_courses
+Career "0..*" -- "0..*" Course : career_courses
+
+' PROFILE
+User "1" *-- "0..1" Profile : owns
+Profile <|-- StudentProfile
+Profile <|-- TeacherProfile
+Profile <|-- AcademyProfile
+StudentProfile "0..*" --> "0..1" University : targets
+StudentProfile "0..*" --> "0..1" Area : targets
+StudentProfile "0..*" --> "0..1" Career : targets
+' LIBRARY
+User "1" -- "0..*" Resource : publishes
+Resource "0..*" --> "1" University : classified by
+Resource "0..*" --> "1" Area : classified by
+Resource "0..*" --> "0..1" Career : classified by (optional)
+Resource "0..*" --> "0..1" Course : classified by (optional)
+User "1" -- "0..*" DownloadLog : generates
+Resource "1" -- "0..*" DownloadLog : tracked in
+
+' FORUM
+User "1" -- "0..*" Thread : creates
+Thread "0..*" --> "0..1" University : contextualized by
+Thread "0..*" --> "0..1" Area : contextualized by
+Thread "0..*" --> "0..1" Course : contextualized by
+Thread "0..*" --> "0..1" Career : contextualized by
+Thread "1" *-- "0..*" Answer : contains
+Answer "1" *-- "0..*" Comment : receives
+Thread "1" *-- "0..*" Comment : contains
+User "1" -- "0..*" Answer : answers
+User "1" -- "0..*" Comment : comments
+User "1" -- "0..*" Reaction : reacts
+
+' PEDAGOGY
+Resource "1" -- "0..*" Solution : receives
+User "1" -- "0..*" Solution : submits
+Solution "1" *-- "0..1" FeedbackEntry : evaluated by
+User "1" -- "0..*" FeedbackEntry : provides
+
+' COMMUNITY
+User "1" -- "0..*" Follow : as follower
+User "1" -- "0..*" Follow : as followed
+User "1" -- "0..*" VerificationRequest : requests
+VerificationRequest "1" *-- "1..*" VerificationDoc : attaches
+TeacherProfile "1" -- "0..*" TeacherAcademyLink : requests
+AcademyProfile "1" -- "0..*" TeacherAcademyLink : resolves
+User "1" -- "0..*" Report : files
+User "1" -- "0..*" Notification : receives
+
+@enduml

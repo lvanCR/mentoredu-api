@@ -1,0 +1,29 @@
+{
+  "name": "MentorEduModerationHU19-ReportContentNoReasonPOST",
+  "description": "Caso 02 — Reporte sin motivo (reason vacío). Espera 400 Bad Request por validación.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/moderation/reports",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      },
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "targetType": "THREAD",
+      "targetId": "{{thread_id}}",
+      "reason": ""
+    }
+  },
+  "expectedResponse": {
+    "status": 400,
+    "body": {
+      "error": "Validation failed"
+    }
+  }
+}

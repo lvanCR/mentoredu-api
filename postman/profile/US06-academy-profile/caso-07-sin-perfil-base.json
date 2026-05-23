@@ -1,0 +1,24 @@
+{
+  "scenario": "Error — Sin perfil base (US04 no ejecutada)",
+  "gherkin": "Dado que falta un dato obligatorio (perfil base no existe), cuando intento crear el perfil, entonces el sistema rechaza la creación.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/profiles/organization",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer {{access_token}}"
+    },
+    "body": {
+      "organizationName": "Academia Lima"
+    }
+  },
+  "expected_response": {
+    "status": 404,
+    "body": {
+      "status": 404,
+      "error": "Not Found",
+      "message": "Profile not found for user: <email>"
+    }
+  },
+  "note": "Usar un token de una cuenta recién registrada que NO completó US04."
+}

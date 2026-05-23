@@ -1,0 +1,25 @@
+{
+  "escenario": "Caso 3 — Contraseña no cumple la política de seguridad",
+  "gherkin": "Dado que la contraseña no cumple la política, cuando envío el formulario, entonces el sistema rechaza el registro.",
+  "politica_contrasena": "Mínimo 8 caracteres · máximo 72 · al menos 1 mayúscula · 1 minúscula · 1 dígito.",
+  "request": {
+    "method": "POST",
+    "url": "{{base_url}}/{{api_v1}}/auth/register",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "firstName": "Luis",
+      "lastName": "Pérez",
+      "email": "luis.perez@example.com",
+      "password": "sinmayuscula1",
+      "role": "STUDENT"
+    }
+  },
+  "expected_response": {
+    "status": 400,
+    "campo_fallido": "password",
+    "notas": "La contraseña 'sinmayuscula1' no tiene mayúsculas, por lo que no supera la validación @Pattern. Otros ejemplos inválidos: 'SINMINUSCULA1' (sin minúscula), 'SinDigito' (sin dígito), 'Cor1' (menos de 8 chars)."
+  },
+  "reglas_aplicadas": ["RN-03"]
+}

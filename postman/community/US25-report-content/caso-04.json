@@ -1,0 +1,30 @@
+{
+  "name": "MentorEduModerationHU19-ReportNonexistentContentPOST",
+  "description": "Caso 04 — Contenido inexistente. Espera 404 Not Found (ReportedContentNotFoundException).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/moderation/reports",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      },
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "targetType": "THREAD",
+      "targetId": "{{nonexistent_id}}",
+      "reason": "Contenido sospechoso"
+    }
+  },
+  "expectedResponse": {
+    "status": 404,
+    "body": {
+      "error": "Not Found",
+      "message": "Hilo no encontrado: {{nonexistent_id}}"
+    }
+  }
+}

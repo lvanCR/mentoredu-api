@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduCommunityUS24-RejectAssociationPATCH",
+  "description": "Caso 04 — Academia rechaza la solicitud de asociación. Espera 200 OK con status REJECTED.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/associations/{{association_id}}/reject",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{academy_token}}" }
+    ]
+  },
+  "expectedResponse": {
+    "status": 200,
+    "body": {
+      "id": "{{association_id}}",
+      "status": "REJECTED",
+      "resolvedAt": "<timestamp>"
+    }
+  }
+}

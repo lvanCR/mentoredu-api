@@ -1,19 +1,31 @@
 spring:
+  config:
+    import: optional:dotenv:.env
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mentoredu}
+    username: ${DB_USERNAME:mentoredu}
+    password: ${DB_PASSWORD:mentoredu}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-  sql:
-    init:
-      mode: always
-      platform: postgres
+  flyway:
+    enabled: false  # Gestionado manualmente en FlywayConfig para garantizar orden con JPA
 server:
   port: 8080
+
+app:
+  flyway:
+    manual: true
+  jwt:
+    # Base64 de: mentoredu-local-dev-secret-key-must-be-at-least-256-bits-long-for-hs256 (73 bytes = 584 bits)
+    # SOLO para desarrollo local — reemplazar con variable de entorno JWT_SECRET en producción
+    secret: ${JWT_SECRET:bWVudG9yZWR1LWxvY2FsLWRldi1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHMtbG9uZy1mb3ItaHMyNTY=}
+    expiration-ms: 900000          # 15 minutos
+    refresh-expiration-ms: 604800000  # 7 días
+  password-reset:
+    expiration-minutes: 60         # 1 hora

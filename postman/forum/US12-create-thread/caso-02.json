@@ -1,0 +1,26 @@
+{
+  "name": "MentorEduForumHU16-CrearHiloBodyVacioPOST",
+  "description": "Escenario error: el body del hilo está vacío. Espera 400 con detalles de validación en el campo 'body'.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/threads",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"title\": \"¿Cómo resolver integrales dobles?\",\n  \"body\": \"\",\n  \"subjectId\": \"{{subject_id}}\"\n}"
+    }
+  },
+  "response": {
+    "status": 400,
+    "description": "Error de validación: body no puede estar vacío."
+  }
+}

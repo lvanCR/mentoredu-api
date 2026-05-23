@@ -1,0 +1,26 @@
+{
+  "name": "MentorEduForumHU28-ComentarRespuestaBodyVacioPOST",
+  "description": "Error: body vacío. El sistema debe rechazar el comentario con 400 y detallar el campo inválido.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/answers/{{answer_id}}/comments",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"body\": \"\"\n}"
+    }
+  },
+  "response": {
+    "status": 400,
+    "description": "Validation failed. El campo 'body' es requerido y no puede estar vacío."
+  }
+}

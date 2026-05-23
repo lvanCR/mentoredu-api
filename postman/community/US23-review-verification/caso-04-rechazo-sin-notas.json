@@ -1,0 +1,18 @@
+{
+  "name": "MentorEduCommunityUS23-RejectWithoutNotesPATCH",
+  "description": "Caso 04 — Error: rechazo sin campo notes obligatorio. Espera 400 Bad Request (RN-17).",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/verification/requests/{{verification_id}}/review",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{moderator_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "decision": "REJECTED"
+    }
+  },
+  "expectedResponse": {
+    "status": 400
+  }
+}

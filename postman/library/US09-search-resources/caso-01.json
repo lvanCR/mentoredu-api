@@ -1,0 +1,13 @@
+{
+  "name": "MentorEduLibraryHU14-SearchResourcesGET",
+  "description": "Caso 01 — Exitoso: búsqueda sin filtros, devuelve todos los recursos PUBLIC y PREMIUM. Respuesta esperada: 200 OK con array de recursos.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/resources/search",
+    "header": []
+  },
+  "expectedResponse": {
+    "status": 200,
+    "type": "array"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "MentorEduForumHU16-CrearHiloPOST",
+  "description": "Escenario exitoso: crea un hilo de foro con título, body y subjectId válidos. Espera 201 con el hilo creado y status=OPEN.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/threads",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"title\": \"¿Cómo resolver integrales dobles con trigonometría?\",\n  \"body\": \"Estoy teniendo problemas para resolver integrales dobles cuando la función contiene términos trigonométricos. ¿Pueden ayudarme con algún método?\",\n  \"subjectId\": \"{{subject_id}}\",\n  \"anonymous\": false\n}"
+    }
+  },
+  "response": {
+    "status": 201,
+    "description": "Hilo creado exitosamente. Devuelve id, title, body, status=OPEN, subjectId, authorDisplay y createdAt."
+  }
+}

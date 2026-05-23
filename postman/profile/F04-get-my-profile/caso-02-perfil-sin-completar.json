@@ -1,0 +1,30 @@
+{
+  "escenario": "Caso 2 — Perfil base creado pero subtipo pendiente",
+  "gherkin": "Dado que el usuario eligió tipo STUDENT (US04) pero no creó su perfil de estudiante (US06), cuando consulto GET /profiles/me, entonces el sistema devuelve isProfileComplete=false.",
+  "prerequisito": "El usuario completó US04 pero NO US06.",
+  "request": {
+    "method": "GET",
+    "url": "{{base_url}}/{{api_v1}}/profiles/me",
+    "headers": {
+      "Authorization": "Bearer {{token}}"
+    }
+  },
+  "expected_response": {
+    "status": 200,
+    "body": {
+      "id": "<uuid-perfil>",
+      "userId": "<uuid-usuario>",
+      "displayName": "Ana García",
+      "avatarUrl": null,
+      "city": null,
+      "bio": null,
+      "profileType": "STUDENT",
+      "isProfileComplete": false,
+      "createdAt": "<datetime>"
+    }
+  },
+  "notas": [
+    "isProfileComplete=false porque NO existe fila en 'student_profiles' para este UUID.",
+    "El frontend usa esta respuesta para redirigir al formulario de US06 (crear perfil de estudiante)."
+  ]
+}

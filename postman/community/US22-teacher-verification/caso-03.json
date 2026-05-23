@@ -1,0 +1,25 @@
+{
+  "name": "MentorEduVerificationHU21-SubmitTeacherVerificationPOST",
+  "description": "Caso 03 — Alternativo exitoso: docente adjunta título universitario válido. Espera 201 Created con status PENDING.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/verification/requests",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
+      { "key": "Content-Type",  "value": "application/json" }
+    ],
+    "body": {
+      "entityType": "TEACHER",
+      "documentType": "TITULO_UNIVERSITARIO",
+      "fileUrl": "https://docs.example.com/titulo-universitario.pdf"
+    }
+  },
+  "expectedResponse": {
+    "status": 201,
+    "body": {
+      "entityType": "TEACHER",
+      "status": "PENDING",
+      "documentType": "TITULO_UNIVERSITARIO"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "MentorEduCommunityUS23-ListVerificationsGET",
+  "description": "Caso 01 — Exitoso: moderador lista todas las solicitudes de verificación. Espera 200 OK.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/verification/requests",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{moderator_token}}" }
+    ]
+  },
+  "expectedResponse": {
+    "status": 200,
+    "body": [
+      {
+        "id": "<uuid>",
+        "userId": "<uuid>",
+        "entityType": "TEACHER",
+        "status": "PENDING",
+        "documentType": "DNI",
+        "submittedAt": "<timestamp>"
+      }
+    ]
+  }
+}
