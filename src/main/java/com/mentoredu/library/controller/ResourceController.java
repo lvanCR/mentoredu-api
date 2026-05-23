@@ -1,5 +1,6 @@
 package com.mentoredu.library.controller;
 
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
@@ -17,7 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -63,17 +63,19 @@ public class ResourceController {
     @Operation(
         summary = "Buscar recursos académicos por filtros",
         description = "Todos los filtros son opcionales. careerId filtra por carrera específica dentro del área. "
-            + "Recursos PRIVATE nunca aparecen en resultados."
+            + "Recursos PRIVATE nunca aparecen en resultados. Soporta paginación con page (default 0) y size (default 20)."
     )
-    public ResponseEntity<List<ResourceResponse>> search(
+    public ResponseEntity<PagedResponse<ResourceResponse>> search(
             @RequestParam(required = false, name = "q") String query,
             @RequestParam(required = false)              String type,
             @RequestParam(required = false)              UUID universityId,
             @RequestParam(required = false)              UUID areaId,
             @RequestParam(required = false)              UUID careerId,
-            @RequestParam(required = false)              UUID courseId) {
+            @RequestParam(required = false)              UUID courseId,
+            @RequestParam(defaultValue = "0")            int page,
+            @RequestParam(defaultValue = "20")           int size) {
 
-        return ResponseEntity.ok(resourceService.search(query, type, universityId, areaId, careerId, courseId));
+        return ResponseEntity.ok(resourceService.search(query, type, universityId, areaId, careerId, courseId, page, size));
     }
 
     // -------------------------------------------------------------------------
@@ -94,10 +96,12 @@ public class ResourceController {
 
     @GetMapping("/me")
     @Operation(summary = "Ver mis recursos publicados (US11)")
-    public ResponseEntity<List<ResourceResponse>> getMyResources() {
+    public ResponseEntity<PagedResponse<ResourceResponse>> getMyResources(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "20") int size) {
         Authentication a = auth();
         if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(resourceService.getByAuthor(a.getName()));
+        return ResponseEntity.ok(resourceService.getByAuthor(a.getName(), page, size));
     }
 
     // -------------------------------------------------------------------------

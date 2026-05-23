@@ -1,5 +1,6 @@
 package com.mentoredu.forum.controller;
 
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.forum.dto.CreateThreadRequest;
 import com.mentoredu.forum.dto.ThreadResponse;
 import com.mentoredu.forum.service.IThreadService;
@@ -15,7 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -61,7 +61,7 @@ public class ThreadController {
             + "Parámetros de paginación: page (default 0) y size (default 10). "
             + "Requiere autenticación JWT."
     )
-    public ResponseEntity<List<ThreadResponse>> listRecent(
+    public ResponseEntity<PagedResponse<ThreadResponse>> listRecent(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

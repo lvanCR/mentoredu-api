@@ -1,5 +1,6 @@
 package com.mentoredu.community.controller;
 
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.ReportRequest;
 import com.mentoredu.community.dto.ReportResponse;
 import com.mentoredu.community.dto.ResolveReportRequest;
@@ -16,7 +17,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -40,12 +40,13 @@ public class ReportController {
 
     @GetMapping
     @Operation(summary = "US26 - Listar reportes abiertos (MODERATOR/ADMIN)")
-    public ResponseEntity<List<ReportResponse>> listOpen() {
+    public ResponseEntity<PagedResponse<ReportResponse>> listOpen(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "20") int size) {
         Authentication auth = auth();
         if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         if (!hasModeratorRole(auth)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        
-        return ResponseEntity.ok(reportService.listOpen());
+        return ResponseEntity.ok(reportService.listOpen(page, size));
     }
 
     @PatchMapping("/{id}/resolve")

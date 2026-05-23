@@ -2,6 +2,7 @@ package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.ReportRequest;
 import com.mentoredu.community.dto.ReportResponse;
 import com.mentoredu.community.dto.ResolveReportRequest;
@@ -12,11 +13,11 @@ import com.mentoredu.community.model.Report;
 import com.mentoredu.community.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -51,11 +52,10 @@ public class ReportService implements IReportService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReportResponse> listOpen() {
-        return reportRepository.findByStatus("OPEN")
-                .stream()
-                .map(ReportResponse::from)
-                .toList();
+    public PagedResponse<ReportResponse> listOpen(int page, int size) {
+        return PagedResponse.from(
+                reportRepository.findByStatus("OPEN", PageRequest.of(page, size)),
+                ReportResponse::from);
     }
 
     @Override

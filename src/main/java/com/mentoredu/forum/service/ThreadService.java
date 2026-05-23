@@ -5,6 +5,7 @@ import com.mentoredu.catalog.repository.AreaRepository;
 import com.mentoredu.catalog.repository.CareerRepository;
 import com.mentoredu.catalog.repository.CourseRepository;
 import com.mentoredu.catalog.repository.UniversityRepository;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.forum.dto.CreateThreadRequest;
 import com.mentoredu.forum.dto.ThreadResponse;
 import com.mentoredu.forum.exception.ThreadClosedException;
@@ -17,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -59,11 +59,10 @@ public class ThreadService implements IThreadService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ThreadResponse> listRecent(int page, int size) {
-        return threadRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size))
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    public PagedResponse<ThreadResponse> listRecent(int page, int size) {
+        return PagedResponse.from(
+                threadRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size)),
+                this::toResponse);
     }
 
     @Override

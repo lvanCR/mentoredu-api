@@ -3,6 +3,11 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
+      connection-timeout: 20000
+      initialization-fail-timeout: 60000
   mail:
     host: smtp.sendgrid.net
     port: 587

@@ -343,7 +343,7 @@ Email: admin@mentoredu.com
 Password: admin
 ```
 Servidor a conectar: host `mentoredu_db`, puerto `5432`, BD `mentoredu`, usuario `mentoredu`, contraseña `mentoredu`.
-
+- Nota si el puerto `5432` no funciona, usa el `5433`
 ---
 
 ## 7. Solución de problemas frecuentes

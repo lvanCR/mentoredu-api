@@ -2,6 +2,7 @@ package com.mentoredu.community.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.ReportRequest;
 import com.mentoredu.community.dto.ReportResponse;
 import com.mentoredu.community.dto.ResolveReportRequest;
@@ -21,8 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -128,22 +128,22 @@ class ReportControllerTest {
     void listOpenReports_asModerator_returns200() throws Exception {
         var response = new ReportResponse(UUID.randomUUID(), UUID.randomUUID(), "THREAD", UUID.randomUUID(), "Spam", "OPEN", LocalDateTime.now());
 
-        when(reportService.listOpen()).thenReturn(List.of(response));
+        when(reportService.listOpen(anyInt(), anyInt())).thenReturn(pageOf(List.of(response)));
 
         mockMvc.perform(get("/api/v1/moderation/reports"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].status").value("OPEN"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].status").value("OPEN"));
     }
 
     @Test
     @WithMockUser(username = "admin@example.com", roles = "ADMIN")
     void listOpenReports_asAdmin_returns200() throws Exception {
-        when(reportService.listOpen()).thenReturn(List.of());
+        when(reportService.listOpen(anyInt(), anyInt())).thenReturn(pageOf(List.of()));
 
         mockMvc.perform(get("/api/v1/moderation/reports"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     @Test
@@ -239,5 +239,9 @@ class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new ResolveReportRequest("nota"))))
                 .andExpect(status().isUnauthorized());
+    }
+
+    private <T> PagedResponse<T> pageOf(List<T> items) {
+        return new PagedResponse<>(items, 0, 20, items.size(), items.isEmpty() ? 0 : 1, true);
     }
 }
