@@ -42,3 +42,9 @@ management:
   endpoint:
     health:
       show-details: never
+
+# AÑADE ESTO AL FINAL DE TU ARCHIVO
+management:
+  health:
+    mail:
+      enabled: false
