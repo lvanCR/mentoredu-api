@@ -4,6 +4,7 @@ import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.community.event.UserFollowedEvent;
 import com.mentoredu.community.exception.SelfFollowException;
+import com.mentoredu.forum.exception.UserNotFoundException;
 import com.mentoredu.community.model.Follow;
 import com.mentoredu.community.repository.FollowRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class FollowService implements IFollowService {
         }
 
         User followed = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario objetivo no encontrado: " + targetUserId));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + targetUserId));
 
         Optional<Follow> existing = followRepository.findByFollowerIdAndFollowedId(follower.getId(), followed.getId());
 

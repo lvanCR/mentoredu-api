@@ -26,6 +26,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -323,6 +324,95 @@ class ResourceControllerTest {
     @Test
     void getResourceById_withoutAuth_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/resources/{id}", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // PATCH /resources/{id}/settings (US16 Escenario 2)
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void updateSettings_activateAceptaResoluciones_returns200() throws Exception {
+        UUID id = UUID.randomUUID();
+        String body = "{\"aceptaResoluciones\": true}";
+
+        when(resourceService.updateSettings(eq(id), any(), eq("user@example.com")))
+                .thenReturn(buildResponse("Práctica UNI", ResourceType.PRACTICA, "PUBLIC"));
+
+        mockMvc.perform(patch("/api/v1/resources/{id}/settings", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void updateSettings_resourceNotFound_returns404() throws Exception {
+        UUID id = UUID.randomUUID();
+        String body = "{\"aceptaResoluciones\": true}";
+
+        when(resourceService.updateSettings(eq(id), any(), eq("user@example.com")))
+                .thenThrow(new ResourceNotFoundException("Resource not found: " + id));
+
+        mockMvc.perform(patch("/api/v1/resources/{id}/settings", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void updateSettings_studentForbidden_returns403() throws Exception {
+        UUID id = UUID.randomUUID();
+        String body = "{\"aceptaResoluciones\": true}";
+
+        when(resourceService.updateSettings(eq(id), any(), eq("student@example.com")))
+                .thenThrow(new com.mentoredu.library.exception.ResourceAccessDeniedException(
+                        "Solo docentes, academias y administradores pueden activar aceptaResoluciones (RN-05)"));
+
+        mockMvc.perform(patch("/api/v1/resources/{id}/settings", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Forbidden"));
+    }
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void updateSettings_nonPracticaType_returns400() throws Exception {
+        UUID id = UUID.randomUUID();
+        String body = "{\"aceptaResoluciones\": true}";
+
+        when(resourceService.updateSettings(eq(id), any(), eq("teacher@example.com")))
+                .thenThrow(new IllegalArgumentException("Solo los recursos de tipo PRACTICA aceptan resoluciones (RN-08)"));
+
+        mockMvc.perform(patch("/api/v1/resources/{id}/settings", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Solo los recursos de tipo PRACTICA aceptan resoluciones (RN-08)"));
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void updateSettings_missingField_returns400() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(patch("/api/v1/resources/{id}/settings", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.aceptaResoluciones").exists());
+    }
+
+    @Test
+    void updateSettings_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(patch("/api/v1/resources/{id}/settings", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"aceptaResoluciones\": true}"))
                 .andExpect(status().isUnauthorized());
     }
 

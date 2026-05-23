@@ -95,6 +95,6 @@ class MentoreduApiApplicationTests {
                 .findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(testUserId);
 
         assertFalse(pending.isEmpty(), "Debe existir al menos una notificación pendiente");
-        assertEquals("ANSWER_RECEIVED", pending.get(0).getType());
+        assertEquals("answer_received", pending.get(0).getType());
     }
 }

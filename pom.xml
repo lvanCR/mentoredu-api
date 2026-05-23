@@ -116,6 +116,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Rate limiting (auth endpoints) -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>8.10.1</version>
+        </dependency>
+
         <!-- Mail (SendGrid SMTP en producción — F1.9) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -6,6 +6,7 @@ import com.mentoredu.catalog.repository.CareerRepository;
 import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
+import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
 import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
 import com.mentoredu.library.model.DownloadLog;
@@ -142,6 +143,44 @@ public class ResourceService implements IResourceService {
                 .stream()
                 .map(ResourceResponse::new)
                 .toList();
+    }
+
+    // -------------------------------------------------------------------------
+    // Update resource settings (US16 Escenario 2)
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public ResourceResponse updateSettings(UUID resourceId, UpdateResourceSettingsRequest request, String requesterEmail) {
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
+
+        User requester = userRepository.findByEmail(requesterEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + requesterEmail));
+
+        if (!resource.getAuthor().getId().equals(requester.getId())) {
+            throw new ResourceAccessDeniedException("Solo el autor puede modificar la configuración del recurso");
+        }
+
+        boolean activate = Boolean.TRUE.equals(request.getAceptaResoluciones());
+
+        // RN-05: STUDENT no puede activar acepta_resoluciones
+        if (activate) {
+            String role = requester.getRole().getName();
+            if (!"TEACHER".equals(role) && !"ACADEMY".equals(role) && !"ADMIN".equals(role)) {
+                throw new ResourceAccessDeniedException(
+                        "Solo docentes, academias y administradores pueden activar aceptaResoluciones (RN-05)");
+            }
+        }
+
+        // RN-08: acepta_resoluciones solo válido para PRACTICA
+        if (activate && resource.getResourceType() != ResourceType.PRACTICA) {
+            throw new IllegalArgumentException(
+                    "Solo los recursos de tipo PRACTICA aceptan resoluciones (RN-08)");
+        }
+
+        resource.setAceptaResoluciones(activate);
+        return new ResourceResponse(resourceRepository.save(resource));
     }
 
     // -------------------------------------------------------------------------

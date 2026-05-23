@@ -3,6 +3,7 @@ package com.mentoredu.library.controller;
 import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
+import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
 import com.mentoredu.library.service.IResourceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -97,6 +98,21 @@ public class ResourceController {
         Authentication a = auth();
         if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(resourceService.getByAuthor(a.getName()));
+    }
+
+    // -------------------------------------------------------------------------
+    // PATCH /resources/{id}/settings — Update resource settings (US16 Escenario 2)
+    // -------------------------------------------------------------------------
+
+    @PatchMapping("/{id}/settings")
+    @Operation(summary = "Actualizar configuración de un recurso (US16)",
+               description = "Permite al autor activar o desactivar acepta_resoluciones. Solo válido para PRACTICA (RN-08). STUDENT → 403 (RN-05).")
+    public ResponseEntity<ResourceResponse> updateSettings(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateResourceSettingsRequest request) {
+        Authentication a = auth();
+        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(resourceService.updateSettings(id, request, a.getName()));
     }
 
     // -------------------------------------------------------------------------
