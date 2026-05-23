@@ -1,11 +1,8 @@
 package com.mentoredu.forum.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import jakarta.validation.constraints.Size;
 
-@Data
-public class CreateCommentRequest {
-
-    @NotBlank(message = "Body is required")
-    private String body;
-}
+public record CreateCommentRequest(
+    @NotBlank(message = "Body is required") @Size(max = 2000) String body
+) {}

@@ -1,0 +1,26 @@
+{
+  "name": "MentorEduCommunityUS24-RequestAssociationPOST",
+  "description": "Caso 01 — Exitoso: docente solicita asociación con una academia. Espera 201 Created con status PENDING (RN-18).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/associations",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "academyProfileId": "{{academy_profile_id}}"
+    }
+  },
+  "expectedResponse": {
+    "status": 201,
+    "body": {
+      "id": "<uuid>",
+      "teacherProfileId": "<uuid>",
+      "academyProfileId": "{{academy_profile_id}}",
+      "status": "PENDING",
+      "createdAt": "<timestamp>",
+      "resolvedAt": null
+    }
+  }
+}

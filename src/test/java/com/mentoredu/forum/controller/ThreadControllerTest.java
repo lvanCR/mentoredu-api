@@ -270,8 +270,7 @@ class ThreadControllerTest {
     @WithMockUser(username = "teacher@example.com")
     void createAnswer_withDetailedExplanation_returns201() throws Exception {
         UUID threadId = UUID.randomUUID();
-        var request = new CreateAnswerRequest();
-        request.setBody("Para resolver integrales dobles, primero define el dominio de integración y luego aplica Fubini.");
+        var request = new CreateAnswerRequest("Para resolver integrales dobles, primero define el dominio de integración y luego aplica Fubini.");
         var response = buildAnswerResponse(threadId,
                 "Para resolver integrales dobles, primero define el dominio de integración y luego aplica Fubini.",
                 "María López");
@@ -290,8 +289,7 @@ class ThreadControllerTest {
     @WithMockUser(username = "user@example.com")
     void createAnswer_withEmptyBody_returns400() throws Exception {
         UUID threadId = UUID.randomUUID();
-        var request = new CreateAnswerRequest();
-        request.setBody("");
+        var request = new CreateAnswerRequest("");
 
         mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -518,9 +516,7 @@ class ThreadControllerTest {
     }
 
     private CreateAnswerRequest validAnswerRequest() {
-        var r = new CreateAnswerRequest();
-        r.setBody("Los límites de integración deben seguir el orden correcto.");
-        return r;
+        return new CreateAnswerRequest("Los límites de integración deben seguir el orden correcto.");
     }
 
     private AnswerResponse buildAnswerResponse(UUID threadId) {

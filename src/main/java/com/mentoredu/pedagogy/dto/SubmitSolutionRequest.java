@@ -1,6 +1,8 @@
 package com.mentoredu.pedagogy.dto;
 
+import jakarta.validation.constraints.Size;
+
 public record SubmitSolutionRequest(
-    String fileUrl,
-    String content
+    @Size(max = 500) String fileUrl,
+    @Size(max = 10000) String content
 ) {}

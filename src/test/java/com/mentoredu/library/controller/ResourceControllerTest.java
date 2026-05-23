@@ -221,7 +221,7 @@ class ResourceControllerTest {
         when(resourceService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, "PUBLIC")));
 
-        mockMvc.perform(get("/api/v1/resources/search"))
+        mockMvc.perform(get("/api/v1/resources"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].title").value("Examen UNI 2024"))
@@ -238,7 +238,7 @@ class ResourceControllerTest {
         when(resourceService.search(eq("UNI"), eq("EXAMEN_SECCION"), eq(universityId), eq(areaId), isNull(), eq(courseId)))
                 .thenReturn(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, "PUBLIC")));
 
-        mockMvc.perform(get("/api/v1/resources/search")
+        mockMvc.perform(get("/api/v1/resources")
                         .param("q", "UNI")
                         .param("type", "EXAMEN_SECCION")
                         .param("universityId", universityId.toString())
@@ -254,7 +254,7 @@ class ResourceControllerTest {
         when(resourceService.search(eq("XYZ_NO_EXISTE"), isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/resources/search")
+        mockMvc.perform(get("/api/v1/resources")
                         .param("q", "XYZ_NO_EXISTE"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -266,13 +266,13 @@ class ResourceControllerTest {
         when(resourceService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/resources/search"))
+        mockMvc.perform(get("/api/v1/resources"))
                 .andExpect(status().isOk());
     }
 
     @Test
     void searchResources_withInvalidUuidUniversityId_returns400() throws Exception {
-        mockMvc.perform(get("/api/v1/resources/search")
+        mockMvc.perform(get("/api/v1/resources")
                         .param("universityId", "not-a-uuid"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Bad Request"))
@@ -281,7 +281,7 @@ class ResourceControllerTest {
 
     @Test
     void searchResources_withInvalidUuidAreaId_returns400() throws Exception {
-        mockMvc.perform(get("/api/v1/resources/search")
+        mockMvc.perform(get("/api/v1/resources")
                         .param("areaId", "123-abc"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Bad Request"))

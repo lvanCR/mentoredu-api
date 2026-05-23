@@ -1,16 +1,9 @@
 package com.mentoredu.community.controller;
 
-import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.community.dto.CreateVerificationRequest;
 import com.mentoredu.community.dto.ReviewVerificationRequest;
 import com.mentoredu.community.dto.VerificationResponse;
-import com.mentoredu.community.exception.DuplicateVerificationException;
-import com.mentoredu.community.exception.VerificationNotFoundException;
-import com.mentoredu.community.model.VerificationDoc;
-import com.mentoredu.community.model.VerificationRequest;
-import com.mentoredu.community.repository.VerificationDocRepository;
-import com.mentoredu.community.repository.VerificationRequestRepository;
+import com.mentoredu.community.service.IVerificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,7 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,9 +26,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 public class VerificationController {
 
-    private final VerificationRequestRepository verificationRepository;
-    private final VerificationDocRepository     docRepository;
-    private final UserRepository                userRepository;
+    private final IVerificationService verificationService;
 
     // -------------------------------------------------------------------------
     // US22 — Solicitar verificación
@@ -48,36 +38,8 @@ public class VerificationController {
         Authentication auth = auth();
         if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        User user = userRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado"));
-
-        if (verificationRepository.existsByUserIdAndStatus(user.getId(), "PENDING")) {
-            throw new DuplicateVerificationException("Ya tienes una solicitud de verificación pendiente");
-        }
-
-        VerificationRequest vr = VerificationRequest.builder()
-                .user(user)
-                .entityType(request.getEntityType())
-                .status("PENDING")
-                .build();
-
-        VerificationRequest saved = verificationRepository.save(vr);
-
-        // Persist docs linked to the saved request
-        List<VerificationDoc> docs = request.getDocuments().stream()
-                .map(d -> VerificationDoc.builder()
-                        .request(saved)
-                        .documentType(d.getDocumentType())
-                        .fileUrl(d.getFileUrl())
-                        .build())
-                .toList();
-        docRepository.saveAll(docs);
-
-        // Reload to include docs in response
-        VerificationRequest withDocs = verificationRepository.findById(saved.getId())
-                .orElseThrow();
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new VerificationResponse(withDocs));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(verificationService.submit(request, auth.getName()));
     }
 
     // -------------------------------------------------------------------------
@@ -90,13 +52,7 @@ public class VerificationController {
         Authentication auth = auth();
         if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        User user = userRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado"));
-
-        return ResponseEntity.ok(
-                verificationRepository.findByUserId(user.getId())
-                        .stream().map(VerificationResponse::new).toList()
-        );
+        return ResponseEntity.ok(verificationService.getMyRequests(auth.getName()));
     }
 
     // -------------------------------------------------------------------------
@@ -110,10 +66,7 @@ public class VerificationController {
         if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         if (!hasModeratorRole(auth)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 
-        return ResponseEntity.ok(
-                verificationRepository.findAll()
-                        .stream().map(VerificationResponse::new).toList()
-        );
+        return ResponseEntity.ok(verificationService.getAllRequests());
     }
 
     // -------------------------------------------------------------------------
@@ -130,28 +83,7 @@ public class VerificationController {
         if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         if (!hasModeratorRole(auth)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 
-        VerificationRequest vr = verificationRepository.findById(id)
-                .orElseThrow(() -> new VerificationNotFoundException("Solicitud no encontrada: " + id));
-
-        if (!"PENDING".equals(vr.getStatus())) {
-            throw new DuplicateVerificationException("La solicitud ya fue procesada con estado: " + vr.getStatus());
-        }
-
-        // RN-17: el rechazo requiere notas obligatorias
-        if ("REJECTED".equals(request.getAction()) &&
-                (request.getNotes() == null || request.getNotes().isBlank())) {
-            throw new IllegalArgumentException("El rechazo requiere una razón (notes) obligatoria (RN-17)");
-        }
-
-        User reviewer = userRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado"));
-
-        vr.setStatus(request.getAction());
-        vr.setNotes(request.getNotes());
-        vr.setReviewedBy(reviewer);
-        vr.setReviewedAt(LocalDateTime.now());
-
-        return ResponseEntity.ok(new VerificationResponse(verificationRepository.save(vr)));
+        return ResponseEntity.ok(verificationService.review(id, request, auth.getName()));
     }
 
     private Authentication auth() {

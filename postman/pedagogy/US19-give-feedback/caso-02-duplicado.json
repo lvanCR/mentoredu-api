@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduPedagogyUS19-GiveFeedbackDuplicatePOST",
+  "description": "Caso 02 — Duplicado: ya existe feedback para esta solución. Espera 409 Conflict (RN-11).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/solutions/{{solution_id}}/feedback",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "score": 7.0,
+      "comment": "Intento de sobreescribir feedback existente."
+    }
+  },
+  "expectedResponse": {
+    "status": 409
+  }
+}

@@ -277,9 +277,7 @@ class ReactionControllerTest {
     // =========================================================================
 
     private CreateReactionRequest validRequest(String reactionType) {
-        var r = new CreateReactionRequest();
-        r.setReactionType(reactionType);
-        return r;
+        return new CreateReactionRequest(reactionType);
     }
 
     private ReactionResponse buildResponse(String targetType, UUID targetId, String reactionType) {

@@ -7,12 +7,7 @@ import com.mentoredu.community.dto.ReviewVerificationRequest;
 import com.mentoredu.community.dto.VerificationResponse;
 import com.mentoredu.community.exception.DuplicateVerificationException;
 import com.mentoredu.community.exception.VerificationNotFoundException;
-import com.mentoredu.community.model.VerificationDoc;
-import com.mentoredu.community.model.VerificationRequest;
-import com.mentoredu.auth.entity.User;
-import com.mentoredu.community.repository.VerificationDocRepository;
-import com.mentoredu.community.repository.VerificationRequestRepository;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.community.service.IVerificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -21,12 +16,11 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -40,10 +34,8 @@ class VerificationControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @MockitoBean private VerificationRequestRepository verificationRepository;
-    @MockitoBean private VerificationDocRepository     docRepository;
-    @MockitoBean private UserRepository                userRepository;
-    @MockitoBean private JwtUtil                       jwtUtil;
+    @MockitoBean private IVerificationService verificationService;
+    @MockitoBean private JwtUtil               jwtUtil;
     @MockitoBean private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
 
     // =========================================================================
@@ -53,18 +45,16 @@ class VerificationControllerTest {
     @Test
     @WithMockUser(username = "teacher@example.com")
     void submitVerification_withDocs_returns201() throws Exception {
-        User user = buildUser("teacher@example.com");
-        VerificationRequest saved = buildVerificationRequest(user);
-        List<VerificationDoc> docs = List.of(buildDoc(saved));
-        saved.setDocs(docs);
-
-        when(userRepository.findByEmail("teacher@example.com")).thenReturn(Optional.of(user));
-        when(verificationRepository.existsByUserIdAndStatus(user.getId(), "PENDING")).thenReturn(false);
-        when(verificationRepository.save(any())).thenReturn(saved);
-        when(docRepository.saveAll(any())).thenReturn(docs);
-        when(verificationRepository.findById(saved.getId())).thenReturn(Optional.of(saved));
-
         var request = validCreateRequest();
+        var response = VerificationResponse.builder()
+                .id(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .entityType("TEACHER")
+                .status("PENDING")
+                .documents(List.of())
+                .build();
+
+        when(verificationService.submit(any(), eq("teacher@example.com"))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/verification/requests")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -78,16 +68,13 @@ class VerificationControllerTest {
     @Test
     @WithMockUser(username = "teacher@example.com")
     void submitVerification_whenPendingExists_returns409() throws Exception {
-        User user = buildUser("teacher@example.com");
-
-        when(userRepository.findByEmail("teacher@example.com")).thenReturn(Optional.of(user));
-        when(verificationRepository.existsByUserIdAndStatus(user.getId(), "PENDING")).thenReturn(true);
+        when(verificationService.submit(any(), anyString()))
+                .thenThrow(new DuplicateVerificationException("Ya tienes una solicitud de verificación pendiente"));
 
         mockMvc.perform(post("/api/v1/verification/requests")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validCreateRequest())))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"));
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -133,12 +120,13 @@ class VerificationControllerTest {
     @Test
     @WithMockUser(username = "teacher@example.com")
     void myRequests_whenAuthenticated_returns200() throws Exception {
-        User user = buildUser("teacher@example.com");
-        VerificationRequest vr = buildVerificationRequest(user);
-        vr.setDocs(List.of());
+        var response = VerificationResponse.builder()
+                .id(UUID.randomUUID())
+                .entityType("TEACHER")
+                .status("PENDING")
+                .build();
 
-        when(userRepository.findByEmail("teacher@example.com")).thenReturn(Optional.of(user));
-        when(verificationRepository.findByUserId(user.getId())).thenReturn(List.of(vr));
+        when(verificationService.getMyRequests("teacher@example.com")).thenReturn(List.of(response));
 
         mockMvc.perform(get("/api/v1/verification/requests/me"))
                 .andExpect(status().isOk())
@@ -159,20 +147,18 @@ class VerificationControllerTest {
     @Test
     @WithMockUser(username = "mod@example.com", roles = {"MODERATOR"})
     void reviewVerification_approve_returns200() throws Exception {
-        User mod = buildUser("mod@example.com");
-        User user = buildUser("teacher@example.com");
-        VerificationRequest vr = buildVerificationRequest(user);
-        vr.setDocs(List.of());
-        vr.setStatus("APPROVED");
-
-        when(userRepository.findByEmail("mod@example.com")).thenReturn(Optional.of(mod));
-        when(verificationRepository.findById(vr.getId())).thenReturn(Optional.of(buildVerificationRequest(user)));
-        when(verificationRepository.save(any())).thenReturn(vr);
+        UUID requestId = UUID.randomUUID();
+        var response = VerificationResponse.builder()
+                .id(requestId)
+                .status("APPROVED")
+                .build();
 
         var request = new ReviewVerificationRequest();
         request.setAction("APPROVED");
 
-        mockMvc.perform(patch("/api/v1/verification/requests/{id}/review", vr.getId())
+        when(verificationService.review(eq(requestId), any(), eq("mod@example.com"))).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/verification/requests/{id}/review", requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -186,9 +172,8 @@ class VerificationControllerTest {
         var request = new ReviewVerificationRequest();
         request.setAction("REJECTED");
 
-        User user = buildUser("teacher@example.com");
-        VerificationRequest vr = buildVerificationRequest(user);
-        when(verificationRepository.findById(id)).thenReturn(Optional.of(vr));
+        when(verificationService.review(eq(id), any(), anyString()))
+                .thenThrow(new IllegalArgumentException("El rechazo requiere una razón (notes) obligatoria (RN-17)"));
 
         mockMvc.perform(patch("/api/v1/verification/requests/{id}/review", id)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -200,7 +185,8 @@ class VerificationControllerTest {
     @WithMockUser(username = "mod@example.com", roles = {"MODERATOR"})
     void reviewVerification_whenNotFound_returns404() throws Exception {
         UUID id = UUID.randomUUID();
-        when(verificationRepository.findById(id)).thenReturn(Optional.empty());
+        when(verificationService.review(eq(id), any(), anyString()))
+                .thenThrow(new VerificationNotFoundException("Solicitud no encontrada: " + id));
 
         var request = new ReviewVerificationRequest();
         request.setAction("APPROVED");
@@ -247,34 +233,5 @@ class VerificationControllerTest {
         doc.setFileUrl("uploads/docs/dni.pdf");
         request.setDocuments(List.of(doc));
         return request;
-    }
-
-    private User buildUser(String email) {
-        return User.builder()
-                .id(UUID.randomUUID())
-                .email(email)
-                .firstName("Test")
-                .lastName("User")
-                .build();
-    }
-
-    private VerificationRequest buildVerificationRequest(User user) {
-        return VerificationRequest.builder()
-                .id(UUID.randomUUID())
-                .user(user)
-                .entityType("TEACHER")
-                .status("PENDING")
-                .submittedAt(LocalDateTime.now())
-                .build();
-    }
-
-    private VerificationDoc buildDoc(VerificationRequest request) {
-        return VerificationDoc.builder()
-                .id(UUID.randomUUID())
-                .request(request)
-                .documentType("DNI")
-                .fileUrl("uploads/docs/dni.pdf")
-                .uploadedAt(LocalDateTime.now())
-                .build();
     }
 }

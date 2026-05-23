@@ -1,31 +1,22 @@
-# 💬 Forum — Postman
+# Forum (US12–US15)
 
-Colección de casos de prueba para el Bounded Context **Forum** (EP-05).
+Comunidad Q&A: hilos por curso, respuestas, comentarios y reacciones.
 
----
-
-## Implementadas
-
-| HU | Descripción | Casos | Endpoint |
+| US | Descripción | Endpoint | Carpeta |
 |---|---|---|---|
-| [HU16](./HU16-create-forum-thread/) | Crear hilo de foro | 4 | `POST /api/v1/threads` |
-| [HU17](./HU17-reply-to-forum-thread/) | Responder a hilo de foro | 4 | `POST /api/v1/threads/{id}/answers` |
-| [HU18](./HU18-close-forum-thread/) | Cerrar hilo de foro | 5 | `PATCH /api/v1/threads/{id}/close` |
-| [HU27](./HU27-react-to-forum-content/) | Reaccionar a contenido del foro | 4 | `POST /api/v1/threads/{id}/reactions` |
-| [HU28](./HU28-comment-on-answer/) | Comentar respuesta del foro | 4 | `POST /api/v1/answers/{id}/comments` |
-| [HU29](./HU29-follow-user/) | Seguir / dejar de seguir a un usuario | 4 | `POST /api/v1/users/{id}/follow` |
+| US12 | Crear hilo en el foro | `POST /api/v1/threads` | `US12-create-thread/` |
+| US13 | Responder a un hilo | `POST /api/v1/threads/{id}/answers` | `US13-reply-to-thread/` |
+| US14 | Reaccionar a contenido | `POST /api/v1/threads/{id}/reactions` · `POST /api/v1/answers/{id}/reactions` · `POST /api/v1/comments/{id}/reactions` | `US14-react-to-content/` |
+| US15 | Comentar en una respuesta | `POST /api/v1/answers/{id}/comments` | `US15-comment-on-answer/` |
 
----
+## Variables de entorno
 
-## Variables de entorno requeridas
+`api_v1`, `access_token`, `university_id`, `course_id`, `thread_id`, `answer_id`, `comment_id`
 
-| Variable | Descripción | Requerida en |
-|---|---|---|
-| `{{api_v1}}` | `http://localhost:8080/api/v1` | Todas |
-| `{{access_token}}` | JWT obtenido en HU02 login (usuario autor) | HU16, HU17, HU18, HU27 |
-| `{{other_user_token}}` | JWT de un usuario distinto al autor del hilo | HU18 (caso-02) |
-| `{{subject_id}}` | UUID de una materia existente en BD | HU16 |
-| `{{thread_id}}` | UUID devuelto por HU16 | HU17, HU18, HU27 |
-| `{{closed_thread_id}}` | UUID de un hilo en estado CLOSED | HU17 (caso-03), HU18 (caso-05) |
-| `{{answer_id}}` | UUID devuelto por HU17 | HU27 (reacción a respuesta) |
-| `{{comment_id}}` | UUID devuelto por HU28 | HU27 (reacción a comentario) |
+## Notas
+
+- Un hilo requiere al menos uno de `university_id`, `course_id`, `career_id` (RN-12).
+- No se puede combinar `career_id` + `course_id` en el mismo hilo.
+- Las reacciones son toggle: mismo tipo → elimina; tipo distinto → reemplaza (RN-15).
+- Solo el autor del hilo o un MODERATOR/ADMIN puede cerrarlo (RN-14). El cierre se realiza con `PATCH /api/v1/threads/{id}/close`.
+- Todos los endpoints requieren `Authorization: Bearer {{access_token}}`.

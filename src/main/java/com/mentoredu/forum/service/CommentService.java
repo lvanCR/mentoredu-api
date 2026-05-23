@@ -43,15 +43,15 @@ public class CommentService implements ICommentService {
                 .answer(answer)
                 .thread(answer.getThread())
                 .author(user)
-                .body(request.getBody())
+                .body(request.body())
                 .build();
 
         Comment saved = commentRepository.save(comment);
         UUID answerAuthorId = answer.getAuthor().getId();
         if (!answerAuthorId.equals(user.getId())) {
-            String truncated = request.getBody().length() > 50
-                    ? request.getBody().substring(0, 50) + "..."
-                    : request.getBody();
+            String truncated = request.body().length() > 50
+                    ? request.body().substring(0, 50) + "..."
+                    : request.body();
             eventPublisher.publishEvent(new CommentCreatedEvent(
                     saved.getId(), answerAuthorId, user.getId(), truncated));
         }

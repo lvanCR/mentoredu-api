@@ -4,6 +4,7 @@ import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.forum.dto.CreateReactionRequest;
 import com.mentoredu.forum.dto.ReactionResponse;
+import com.mentoredu.forum.event.ReactionCreatedEvent;
 import com.mentoredu.forum.exception.AnswerNotFoundException;
 import com.mentoredu.forum.exception.CommentNotFoundException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
@@ -13,6 +14,7 @@ import com.mentoredu.forum.repository.CommentRepository;
 import com.mentoredu.forum.repository.ReactionRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,29 +34,48 @@ public class ReactionService implements IReactionService {
     private final AnswerRepository   answerRepository;
     private final CommentRepository  commentRepository;
     private final UserRepository     userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
     public Optional<ReactionResponse> reactToThread(UUID threadId, CreateReactionRequest request, String userEmail) {
-        threadRepository.findById(threadId)
+        var thread = threadRepository.findById(threadId)
                 .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + threadId));
-        return toggle(loadUser(userEmail), THREAD, threadId, request.getReactionType());
+        var reactor = loadUser(userEmail);
+        Optional<ReactionResponse> result = toggle(reactor, THREAD, threadId, request.reactionType());
+        if (result.isPresent() && !reactor.getId().equals(thread.getAuthor().getId())) {
+            eventPublisher.publishEvent(new ReactionCreatedEvent(
+                    reactor.getId(), thread.getAuthor().getId(), THREAD, threadId, request.reactionType()));
+        }
+        return result;
     }
 
     @Override
     @Transactional
     public Optional<ReactionResponse> reactToAnswer(UUID answerId, CreateReactionRequest request, String userEmail) {
-        answerRepository.findById(answerId)
+        var answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new AnswerNotFoundException("Answer not found: " + answerId));
-        return toggle(loadUser(userEmail), ANSWER, answerId, request.getReactionType());
+        var reactor = loadUser(userEmail);
+        Optional<ReactionResponse> result = toggle(reactor, ANSWER, answerId, request.reactionType());
+        if (result.isPresent() && !reactor.getId().equals(answer.getAuthor().getId())) {
+            eventPublisher.publishEvent(new ReactionCreatedEvent(
+                    reactor.getId(), answer.getAuthor().getId(), ANSWER, answerId, request.reactionType()));
+        }
+        return result;
     }
 
     @Override
     @Transactional
     public Optional<ReactionResponse> reactToComment(UUID commentId, CreateReactionRequest request, String userEmail) {
-        commentRepository.findById(commentId)
+        var comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException("Comment not found: " + commentId));
-        return toggle(loadUser(userEmail), COMMENT, commentId, request.getReactionType());
+        var reactor = loadUser(userEmail);
+        Optional<ReactionResponse> result = toggle(reactor, COMMENT, commentId, request.reactionType());
+        if (result.isPresent() && !reactor.getId().equals(comment.getAuthor().getId())) {
+            eventPublisher.publishEvent(new ReactionCreatedEvent(
+                    reactor.getId(), comment.getAuthor().getId(), COMMENT, commentId, request.reactionType()));
+        }
+        return result;
     }
 
     // -------------------------------------------------------------------------

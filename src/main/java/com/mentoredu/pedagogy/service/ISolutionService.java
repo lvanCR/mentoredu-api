@@ -1,5 +1,6 @@
 package com.mentoredu.pedagogy.service;
 
+import com.mentoredu.pedagogy.dto.MySolutionWithFeedbackResponse;
 import com.mentoredu.pedagogy.dto.SolutionResponse;
 import com.mentoredu.pedagogy.dto.SubmitSolutionRequest;
 
@@ -8,6 +9,6 @@ import java.util.UUID;
 
 public interface ISolutionService {
     SolutionResponse submit(UUID resourceId, SubmitSolutionRequest request, String studentEmail);
-    SolutionResponse getMine(UUID resourceId, String studentEmail);
+    MySolutionWithFeedbackResponse getMyWithFeedback(UUID resourceId, String studentEmail);
     List<SolutionResponse> listByResource(UUID resourceId, String requesterEmail);
 }

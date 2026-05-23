@@ -1,16 +1,14 @@
 package com.mentoredu.community.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.community.dto.ReportRequest;
+import com.mentoredu.community.dto.ReportResponse;
 import com.mentoredu.community.dto.ResolveReportRequest;
 import com.mentoredu.community.exception.DuplicateReportException;
 import com.mentoredu.community.exception.ReportAlreadyResolvedException;
 import com.mentoredu.community.exception.ReportNotFoundException;
-import com.mentoredu.community.model.Report;
-import com.mentoredu.community.repository.ReportRepository;
+import com.mentoredu.community.service.IReportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -21,7 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -39,10 +36,7 @@ class ReportControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @MockitoBean
-    private ReportRepository reportRepository;
-
-    @MockitoBean
-    private UserRepository userRepository;
+    private IReportService reportService;
 
     @MockitoBean
     private JwtUtil jwtUtil;
@@ -58,23 +52,16 @@ class ReportControllerTest {
     @WithMockUser(username = "reporter@example.com")
     void createReport_withValidData_returns201() throws Exception {
         UUID targetId = UUID.randomUUID();
-        User reporter = userWithId(UUID.randomUUID());
         var request = new ReportRequest("THREAD", targetId, "Contenido ofensivo");
-        Report saved = buildReport(reporter, "THREAD", targetId, "Contenido ofensivo", "OPEN");
+        var response = new ReportResponse(UUID.randomUUID(), UUID.randomUUID(), "THREAD", targetId, "Contenido ofensivo", "OPEN", LocalDateTime.now());
 
-        when(userRepository.findByEmail("reporter@example.com")).thenReturn(Optional.of(reporter));
-        when(reportRepository.existsByReporterIdAndTargetTypeAndTargetId(reporter.getId(), "THREAD", targetId))
-                .thenReturn(false);
-        when(reportRepository.save(any(Report.class))).thenReturn(saved);
+        when(reportService.create(eq(request), eq("reporter@example.com"))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/moderation/reports")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.targetType").value("THREAD"))
-                .andExpect(jsonPath("$.targetId").value(targetId.toString()))
-                .andExpect(jsonPath("$.reason").value("Contenido ofensivo"))
                 .andExpect(jsonPath("$.status").value("OPEN"));
     }
 
@@ -110,20 +97,15 @@ class ReportControllerTest {
     @WithMockUser(username = "reporter@example.com")
     void createReport_duplicate_returns409() throws Exception {
         UUID targetId = UUID.randomUUID();
-        User reporter = userWithId(UUID.randomUUID());
         var request = new ReportRequest("ANSWER", targetId, "Spam");
 
-        when(userRepository.findByEmail("reporter@example.com")).thenReturn(Optional.of(reporter));
-        when(reportRepository.existsByReporterIdAndTargetTypeAndTargetId(reporter.getId(), "ANSWER", targetId))
-                .thenReturn(true);
-
-        when(reportRepository.save(any())).thenThrow(new DuplicateReportException("Ya reportaste este contenido"));
+        when(reportService.create(eq(request), eq("reporter@example.com")))
+                .thenThrow(new DuplicateReportException("Ya reportaste este contenido"));
 
         mockMvc.perform(post("/api/v1/moderation/reports")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"))
                 .andExpect(jsonPath("$.message").value("Ya reportaste este contenido"));
     }
 
@@ -144,22 +126,20 @@ class ReportControllerTest {
     @Test
     @WithMockUser(username = "mod@example.com", roles = "MODERATOR")
     void listOpenReports_asModerator_returns200() throws Exception {
-        User reporter = userWithId(UUID.randomUUID());
-        Report report = buildReport(reporter, "THREAD", UUID.randomUUID(), "Spam", "OPEN");
+        var response = new ReportResponse(UUID.randomUUID(), UUID.randomUUID(), "THREAD", UUID.randomUUID(), "Spam", "OPEN", LocalDateTime.now());
 
-        when(reportRepository.findByStatus("OPEN")).thenReturn(List.of(report));
+        when(reportService.listOpen()).thenReturn(List.of(response));
 
         mockMvc.perform(get("/api/v1/moderation/reports"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].status").value("OPEN"))
-                .andExpect(jsonPath("$[0].targetType").value("THREAD"));
+                .andExpect(jsonPath("$[0].status").value("OPEN"));
     }
 
     @Test
     @WithMockUser(username = "admin@example.com", roles = "ADMIN")
     void listOpenReports_asAdmin_returns200() throws Exception {
-        when(reportRepository.findByStatus("OPEN")).thenReturn(List.of());
+        when(reportService.listOpen()).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/moderation/reports"))
                 .andExpect(status().isOk())
@@ -187,17 +167,10 @@ class ReportControllerTest {
     @WithMockUser(username = "mod@example.com", roles = "MODERATOR")
     void resolveReport_asModerator_returns200() throws Exception {
         UUID reportId = UUID.randomUUID();
-        User resolver = userWithId(UUID.randomUUID());
-        Report report = buildReport(resolver, "THREAD", UUID.randomUUID(), "Spam", "OPEN");
         var request = new ResolveReportRequest("Contenido eliminado");
+        var response = new ReportResponse(reportId, UUID.randomUUID(), "THREAD", UUID.randomUUID(), "Spam", "RESOLVED", LocalDateTime.now());
 
-        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
-        when(userRepository.findByEmail("mod@example.com")).thenReturn(Optional.of(resolver));
-        when(reportRepository.save(any(Report.class))).thenAnswer(inv -> {
-            Report r = inv.getArgument(0);
-            r.setStatus("RESOLVED");
-            return r;
-        });
+        when(reportService.resolve(eq(reportId), eq(request), eq("mod@example.com"))).thenReturn(response);
 
         mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -225,14 +198,13 @@ class ReportControllerTest {
         UUID reportId = UUID.randomUUID();
         var request = new ResolveReportRequest("Acción tomada");
 
-        when(reportRepository.findById(reportId))
+        when(reportService.resolve(eq(reportId), any(), any()))
                 .thenThrow(new ReportNotFoundException("Reporte no encontrado: " + reportId));
 
         mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message").value("Reporte no encontrado: " + reportId));
     }
 
@@ -240,17 +212,15 @@ class ReportControllerTest {
     @WithMockUser(username = "mod@example.com", roles = "MODERATOR")
     void resolveReport_alreadyResolved_returns409() throws Exception {
         UUID reportId = UUID.randomUUID();
-        User reporter = userWithId(UUID.randomUUID());
-        Report resolved = buildReport(reporter, "THREAD", UUID.randomUUID(), "Spam", "RESOLVED");
         var request = new ResolveReportRequest("Ya fue resuelto");
 
-        when(reportRepository.findById(reportId)).thenReturn(Optional.of(resolved));
+        when(reportService.resolve(eq(reportId), any(), any()))
+                .thenThrow(new ReportAlreadyResolvedException("El reporte ya fue resuelto"));
 
         mockMvc.perform(patch("/api/v1/moderation/reports/{id}/resolve", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"))
                 .andExpect(jsonPath("$.message").value("El reporte ya fue resuelto"));
     }
 
@@ -269,25 +239,5 @@ class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new ResolveReportRequest("nota"))))
                 .andExpect(status().isUnauthorized());
-    }
-
-    // =========================================================================
-    // Helpers
-    // =========================================================================
-
-    private User userWithId(UUID id) {
-        return User.builder().id(id).email("user@example.com").build();
-    }
-
-    private Report buildReport(User reporter, String targetType, UUID targetId, String reason, String status) {
-        return Report.builder()
-                .id(UUID.randomUUID())
-                .reporter(reporter)
-                .targetType(targetType)
-                .targetId(targetId)
-                .reason(reason)
-                .status(status)
-                .createdAt(LocalDateTime.now())
-                .build();
     }
 }

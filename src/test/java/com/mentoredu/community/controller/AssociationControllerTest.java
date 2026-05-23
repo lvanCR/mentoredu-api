@@ -1,31 +1,25 @@
 package com.mentoredu.community.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.community.dto.AssociationResponse;
 import com.mentoredu.community.dto.CreateAssociationRequest;
 import com.mentoredu.community.exception.AssociationNotFoundException;
 import com.mentoredu.community.exception.DuplicateAssociationException;
 import com.mentoredu.community.model.TeacherAcademyLink;
-import com.mentoredu.community.repository.TeacherAcademyLinkRepository;
-import com.mentoredu.profile.model.AcademyProfile;
-import com.mentoredu.profile.model.Profile;
-import com.mentoredu.profile.repository.AcademyProfileRepository;
-import com.mentoredu.profile.repository.ProfileRepository;
-import com.mentoredu.profile.repository.TeacherProfileRepository;
+import com.mentoredu.community.service.IAssociationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -42,12 +36,8 @@ class AssociationControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @MockitoBean private TeacherAcademyLinkRepository linkRepository;
-    @MockitoBean private ProfileRepository            profileRepository;
-    @MockitoBean private TeacherProfileRepository     teacherProfileRepository;
-    @MockitoBean private AcademyProfileRepository     academyProfileRepository;
-    @MockitoBean private UserRepository               userRepository;
-    @MockitoBean private JwtUtil                      jwtUtil;
+    @MockitoBean private IAssociationService associationService;
+    @MockitoBean private JwtUtil jwtUtil;
     @MockitoBean private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
 
     // =========================================================================
@@ -58,21 +48,11 @@ class AssociationControllerTest {
     @WithMockUser(username = "teacher@example.com")
     void requestAssociation_asTeacher_returns201() throws Exception {
         UUID academyProfileId = UUID.randomUUID();
-        User user = buildUser("teacher@example.com");
-        Profile profile = buildProfile(user.getId(), "TEACHER");
-        AcademyProfile academy = buildAcademyProfile(academyProfileId);
-        TeacherAcademyLink link = buildLink(profile.getId(), academyProfileId);
+        AssociationResponse response = new AssociationResponse(buildLink(UUID.randomUUID(), academyProfileId));
 
-        when(userRepository.findByEmail("teacher@example.com")).thenReturn(Optional.of(user));
-        when(profileRepository.findByUserId(user.getId())).thenReturn(Optional.of(profile));
-        when(teacherProfileRepository.existsById(profile.getId())).thenReturn(true);
-        when(academyProfileRepository.findById(academyProfileId)).thenReturn(Optional.of(academy));
-        when(linkRepository.findByTeacherProfileIdAndAcademyProfileId(
-                profile.getId(), academyProfileId)).thenReturn(Optional.empty());
-        when(linkRepository.save(any())).thenReturn(link);
+        when(associationService.requestAssociation(any(), eq("teacher@example.com"))).thenReturn(response);
 
-        var request = new CreateAssociationRequest();
-        request.setAcademyProfileId(academyProfileId);
+        var request = new CreateAssociationRequest(academyProfileId);
 
         mockMvc.perform(post("/api/v1/associations/teacher-academy")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -85,21 +65,10 @@ class AssociationControllerTest {
     @Test
     @WithMockUser(username = "teacher@example.com")
     void requestAssociation_whenDuplicate_returns409() throws Exception {
-        UUID academyProfileId = UUID.randomUUID();
-        User user = buildUser("teacher@example.com");
-        Profile profile = buildProfile(user.getId(), "TEACHER");
-        AcademyProfile academy = buildAcademyProfile(academyProfileId);
+        when(associationService.requestAssociation(any(), eq("teacher@example.com")))
+                .thenThrow(new DuplicateAssociationException("Ya existe una solicitud de asociación con esta academia"));
 
-        when(userRepository.findByEmail("teacher@example.com")).thenReturn(Optional.of(user));
-        when(profileRepository.findByUserId(user.getId())).thenReturn(Optional.of(profile));
-        when(teacherProfileRepository.existsById(profile.getId())).thenReturn(true);
-        when(academyProfileRepository.findById(academyProfileId)).thenReturn(Optional.of(academy));
-        when(linkRepository.findByTeacherProfileIdAndAcademyProfileId(
-                profile.getId(), academyProfileId))
-                .thenReturn(Optional.of(buildLink(profile.getId(), academyProfileId)));
-
-        var request = new CreateAssociationRequest();
-        request.setAcademyProfileId(academyProfileId);
+        var request = new CreateAssociationRequest(UUID.randomUUID());
 
         mockMvc.perform(post("/api/v1/associations/teacher-academy")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -111,16 +80,10 @@ class AssociationControllerTest {
     @Test
     @WithMockUser(username = "teacher@example.com")
     void requestAssociation_asNonTeacher_returns403() throws Exception {
-        UUID academyProfileId = UUID.randomUUID();
-        User user = buildUser("teacher@example.com");
-        Profile profile = buildProfile(user.getId(), "STUDENT");
+        when(associationService.requestAssociation(any(), eq("teacher@example.com")))
+                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo docentes pueden solicitar asociaciones"));
 
-        when(userRepository.findByEmail("teacher@example.com")).thenReturn(Optional.of(user));
-        when(profileRepository.findByUserId(user.getId())).thenReturn(Optional.of(profile));
-        when(teacherProfileRepository.existsById(profile.getId())).thenReturn(false);
-
-        var request = new CreateAssociationRequest();
-        request.setAcademyProfileId(academyProfileId);
+        var request = new CreateAssociationRequest(UUID.randomUUID());
 
         mockMvc.perform(post("/api/v1/associations/teacher-academy")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -130,13 +93,61 @@ class AssociationControllerTest {
 
     @Test
     void requestAssociation_withoutAuth_returns401() throws Exception {
-        var request = new CreateAssociationRequest();
-        request.setAcademyProfileId(UUID.randomUUID());
+        var request = new CreateAssociationRequest(UUID.randomUUID());
 
         mockMvc.perform(post("/api/v1/associations/teacher-academy")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // US24 — Ver mis asociaciones (docente)
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void getMyAssociations_returns200() throws Exception {
+        UUID teacherProfileId = UUID.randomUUID();
+        AssociationResponse response = new AssociationResponse(buildLink(teacherProfileId, UUID.randomUUID()));
+
+        when(associationService.getMyAssociations("teacher@example.com")).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/api/v1/associations/teacher-academy/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("PENDING"));
+    }
+
+    @Test
+    void getMyAssociations_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/associations/teacher-academy/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // US24 — Ver solicitudes recibidas (academia)
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "academy@example.com")
+    void getAcademyRequests_returns200() throws Exception {
+        AssociationResponse response = new AssociationResponse(buildLink(UUID.randomUUID(), UUID.randomUUID()));
+
+        when(associationService.getAcademyRequests("academy@example.com")).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/api/v1/associations/teacher-academy/academy"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("PENDING"));
+    }
+
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void getAcademyRequests_asNonAcademy_returns403() throws Exception {
+        when(associationService.getAcademyRequests("student@example.com"))
+                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo academias pueden ver solicitudes recibidas"));
+
+        mockMvc.perform(get("/api/v1/associations/teacher-academy/academy"))
+                .andExpect(status().isForbidden());
     }
 
     // =========================================================================
@@ -146,28 +157,20 @@ class AssociationControllerTest {
     @Test
     @WithMockUser(username = "academy@example.com")
     void acceptAssociation_returns200WithAccepted() throws Exception {
-        User user = buildUser("academy@example.com");
-        UUID academyProfileId = UUID.randomUUID();
-        Profile profile = buildProfile(user.getId(), "ACADEMY");
-        profile.setId(academyProfileId);
-        TeacherAcademyLink link = buildLink(UUID.randomUUID(), academyProfileId);
-
-        when(userRepository.findByEmail("academy@example.com")).thenReturn(Optional.of(user));
-        when(profileRepository.findByUserId(user.getId())).thenReturn(Optional.of(profile));
-        when(academyProfileRepository.existsById(academyProfileId)).thenReturn(true);
-        when(linkRepository.findById(link.getId())).thenReturn(Optional.of(link));
-
+        UUID id = UUID.randomUUID();
         TeacherAcademyLink accepted = TeacherAcademyLink.builder()
-                .id(link.getId())
-                .teacherProfileId(link.getTeacherProfileId())
-                .academyProfileId(academyProfileId)
+                .id(id)
+                .teacherProfileId(UUID.randomUUID())
+                .academyProfileId(UUID.randomUUID())
                 .status("ACCEPTED")
-                .requestedAt(link.getRequestedAt())
+                .requestedAt(LocalDateTime.now())
                 .resolvedAt(LocalDateTime.now())
                 .build();
-        when(linkRepository.save(any())).thenReturn(accepted);
 
-        mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/accept", link.getId()))
+        when(associationService.acceptAssociation(eq(id), eq("academy@example.com")))
+                .thenReturn(new AssociationResponse(accepted));
+
+        mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/accept", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACCEPTED"));
     }
@@ -176,15 +179,9 @@ class AssociationControllerTest {
     @WithMockUser(username = "academy@example.com")
     void acceptAssociation_whenNotFound_returns404() throws Exception {
         UUID id = UUID.randomUUID();
-        User user = buildUser("academy@example.com");
-        UUID academyProfileId = UUID.randomUUID();
-        Profile profile = buildProfile(user.getId(), "ACADEMY");
-        profile.setId(academyProfileId);
 
-        when(userRepository.findByEmail("academy@example.com")).thenReturn(Optional.of(user));
-        when(profileRepository.findByUserId(user.getId())).thenReturn(Optional.of(profile));
-        when(academyProfileRepository.existsById(academyProfileId)).thenReturn(true);
-        when(linkRepository.findById(id)).thenReturn(Optional.empty());
+        when(associationService.acceptAssociation(eq(id), eq("academy@example.com")))
+                .thenThrow(new AssociationNotFoundException("Solicitud no encontrada: " + id));
 
         mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/accept", id))
                 .andExpect(status().isNotFound());
@@ -197,34 +194,45 @@ class AssociationControllerTest {
     }
 
     // =========================================================================
-    // Helpers
+    // US24 — Academia rechaza solicitud
     // =========================================================================
 
-    private User buildUser(String email) {
-        return User.builder()
-                .id(UUID.randomUUID())
-                .email(email)
-                .firstName("Test")
-                .lastName("User")
+    @Test
+    @WithMockUser(username = "academy@example.com")
+    void rejectAssociation_returns200WithRejected() throws Exception {
+        UUID id = UUID.randomUUID();
+        TeacherAcademyLink rejected = TeacherAcademyLink.builder()
+                .id(id)
+                .teacherProfileId(UUID.randomUUID())
+                .academyProfileId(UUID.randomUUID())
+                .status("REJECTED")
+                .requestedAt(LocalDateTime.now())
+                .resolvedAt(LocalDateTime.now())
                 .build();
+
+        when(associationService.rejectAssociation(eq(id), eq("academy@example.com")))
+                .thenReturn(new AssociationResponse(rejected));
+
+        mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/reject", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJECTED"));
     }
 
-    private Profile buildProfile(UUID userId, String profileType) {
-        return Profile.builder()
-                .id(UUID.randomUUID())
-                .userId(userId)
-                .displayName("Test User")
-                .profileType(profileType)
-                .createdAt(LocalDateTime.now())
-                .build();
+    @Test
+    @WithMockUser(username = "academy@example.com")
+    void rejectAssociation_whenAlreadyResolved_returns409() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(associationService.rejectAssociation(eq(id), eq("academy@example.com")))
+                .thenThrow(new DuplicateAssociationException("La solicitud ya fue resuelta con estado: ACCEPTED"));
+
+        mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/reject", id))
+                .andExpect(status().isConflict());
     }
 
-    private AcademyProfile buildAcademyProfile(UUID profileId) {
-        return AcademyProfile.builder()
-                .profileId(profileId)
-                .academyName("Academia Test")
-                .build();
-    }
+    // =========================================================================
+    // Helpers
+    // =========================================================================
 
     private TeacherAcademyLink buildLink(UUID teacherProfileId, UUID academyProfileId) {
         return TeacherAcademyLink.builder()

@@ -1,11 +1,10 @@
 package com.mentoredu.community.controller;
 
-import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.community.dto.NotificationResponse;
-import com.mentoredu.community.exception.NotificationNotFoundException;
-import com.mentoredu.community.model.Notification;
-import com.mentoredu.community.repository.NotificationRepository;
+import com.mentoredu.community.service.INotificationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,53 +13,51 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
+@Tag(name = "Notificaciones", description = "Consultar y marcar notificaciones (US27)")
+@SecurityRequirement(name = "bearerAuth")
 public class NotificationController {
 
-    private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
+    private final INotificationService notificationService;
 
     @GetMapping("/me")
+    @Operation(summary = "US27 - Ver todas mis notificaciones")
     public ResponseEntity<List<NotificationResponse>> getMyNotifications() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        User user = userRepository.findByEmail(auth.getName())
-            .orElseThrow(() -> new IllegalStateException("Usuario no encontrado"));
-        return ResponseEntity.ok(
-            notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId())
-                .stream().map(NotificationResponse::from).toList()
-        );
+        Authentication auth = auth();
+        if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        
+        return ResponseEntity.ok(notificationService.getMyNotifications(auth.getName()));
     }
 
     @GetMapping("/me/pending")
+    @Operation(summary = "US27 - Ver mis notificaciones no leídas")
     public ResponseEntity<List<NotificationResponse>> getPendingNotifications() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        User user = userRepository.findByEmail(auth.getName())
-            .orElseThrow(() -> new IllegalStateException("Usuario no encontrado"));
-        return ResponseEntity.ok(
-            notificationRepository.findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(user.getId())
-                .stream().map(NotificationResponse::from).toList()
-        );
+        Authentication auth = auth();
+        if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        
+        return ResponseEntity.ok(notificationService.getPendingNotifications(auth.getName()));
     }
 
     @PatchMapping("/{id}/read")
+    @Operation(summary = "US27 - Marcar una notificación como leída")
     public ResponseEntity<Void> markAsRead(@PathVariable UUID id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Notification notification = notificationRepository.findById(id)
-            .orElseThrow(() -> new NotificationNotFoundException("Notificación no encontrada: " + id));
-        notification.setReadAt(LocalDateTime.now());
-        notificationRepository.save(notification);
+        Authentication auth = auth();
+        if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        notificationService.markAsRead(id, auth.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    private Authentication auth() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    private boolean isUnauthenticated(Authentication a) {
+        return a == null || !a.isAuthenticated() || a instanceof AnonymousAuthenticationToken;
     }
 }

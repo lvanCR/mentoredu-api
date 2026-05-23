@@ -42,7 +42,7 @@ public class AnswerService implements IAnswerService {
         Answer answer = Answer.builder()
                 .thread(thread)
                 .author(user)
-                .body(request.getBody())
+                .body(request.body())
                 .isAccepted(false)
                 .build();
 

@@ -1,0 +1,15 @@
+{
+  "name": "MentorEduPedagogyUS17-ViewSolutionsEmptyGET",
+  "description": "Caso 02 — Sin resoluciones: ejercicio válido pero sin envíos. Espera 200 OK con array vacío.",
+  "request": {
+    "method": "GET",
+    "url": "{{api_v1}}/resources/{{resource_id}}/solutions",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" }
+    ]
+  },
+  "expectedResponse": {
+    "status": 200,
+    "body": []
+  }
+}

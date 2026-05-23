@@ -58,7 +58,7 @@ public class ResourceController {
     // GET /resources/search — Search resources (US09)
     // -------------------------------------------------------------------------
 
-    @GetMapping("/search")
+    @GetMapping
     @Operation(
         summary = "Buscar recursos académicos por filtros",
         description = "Todos los filtros son opcionales. careerId filtra por carrera específica dentro del área. "

@@ -1,0 +1,19 @@
+{
+  "name": "MentorEduAuthHU02-LoginPOST — Caso 1: Login exitoso",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/auth/login",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "email": "ana.garcia@example.com",
+      "password": "Segura2024"
+    }
+  },
+  "expected_response": {
+    "status": 200,
+    "body_contains": ["accessToken", "refreshToken", "tokenType", "expiresIn", "user"]
+  },
+  "notes": "El usuario debe estar previamente registrado con HU01. Guarda el accessToken en la variable de entorno {{access_token}}."
+}

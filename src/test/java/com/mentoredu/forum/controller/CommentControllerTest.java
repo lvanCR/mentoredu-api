@@ -73,8 +73,7 @@ class CommentControllerTest {
     void createComment_withDetailedContent_returns201() throws Exception {
         UUID answerId = UUID.randomUUID();
         UUID threadId = UUID.randomUUID();
-        var request = new CreateCommentRequest();
-        request.setBody("Complementando la respuesta: recuerda que el Jacobiano en coordenadas polares es r.");
+        var request = new CreateCommentRequest("Complementando la respuesta: recuerda que el Jacobiano en coordenadas polares es r.");
         var response = buildCommentResponse(answerId, threadId,
                 "Complementando la respuesta: recuerda que el Jacobiano en coordenadas polares es r.",
                 "María López");
@@ -94,8 +93,7 @@ class CommentControllerTest {
     @WithMockUser(username = "user@example.com")
     void createComment_withEmptyBody_returns400() throws Exception {
         UUID answerId = UUID.randomUUID();
-        var request = new CreateCommentRequest();
-        request.setBody("");
+        var request = new CreateCommentRequest("");
 
         mockMvc.perform(post("/api/v1/answers/{answerId}/comments", answerId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -203,9 +201,7 @@ class CommentControllerTest {
     // =========================================================================
 
     private CreateCommentRequest validCommentRequest() {
-        var r = new CreateCommentRequest();
-        r.setBody("Exactamente, ese es el punto clave.");
-        return r;
+        return new CreateCommentRequest("Exactamente, ese es el punto clave.");
     }
 
     private CommentResponse buildCommentResponse(UUID answerId, UUID threadId, String body, String author) {

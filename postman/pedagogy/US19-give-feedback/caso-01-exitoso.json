@@ -1,0 +1,27 @@
+{
+  "name": "MentorEduPedagogyUS19-GiveFeedbackPOST",
+  "description": "Caso 01 — Exitoso: docente da feedback a la resolución de un estudiante. Espera 201 Created.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/solutions/{{solution_id}}/feedback",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "score": 8.5,
+      "comment": "Buen desarrollo. Revisar el cálculo del determinante en el paso 3."
+    }
+  },
+  "expectedResponse": {
+    "status": 201,
+    "body": {
+      "id": "<uuid>",
+      "solutionId": "{{solution_id}}",
+      "score": 8.5,
+      "comment": "Buen desarrollo. Revisar el cálculo del determinante en el paso 3.",
+      "reviewerId": "<uuid>",
+      "createdAt": "<timestamp>"
+    }
+  }
+}

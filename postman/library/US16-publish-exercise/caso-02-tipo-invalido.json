@@ -1,0 +1,26 @@
+{
+  "name": "MentorEduLibraryUS16-PublishExerciseInvalidTypePOST",
+  "description": "Caso 02 — Error: acepta_resoluciones=true en tipo GUIA (no PRACTICA). Espera 400 Bad Request (RN-08).",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/resources",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "fileId": "{{file_id}}",
+      "title": "Guía de Matemáticas",
+      "resourceType": "GUIA",
+      "universityId": "{{university_id}}",
+      "areaId": "{{area_id}}",
+      "acepta_resoluciones": true
+    }
+  },
+  "expectedResponse": {
+    "status": 400,
+    "body": {
+      "message": "acepta_resoluciones solo es válido para recursos de tipo PRACTICA"
+    }
+  }
+}

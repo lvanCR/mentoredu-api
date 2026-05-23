@@ -3,6 +3,7 @@ package com.mentoredu.pedagogy.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.library.exception.ResourceNotFoundException;
+import com.mentoredu.pedagogy.dto.MySolutionWithFeedbackResponse;
 import com.mentoredu.pedagogy.dto.SolutionResponse;
 import com.mentoredu.pedagogy.dto.SubmitSolutionRequest;
 import com.mentoredu.pedagogy.exception.DuplicateSolutionException;
@@ -132,18 +133,20 @@ class SolutionControllerTest {
 
     @Test
     @WithMockUser(username = "student@example.com")
-    void getMySolution_whenExists_returns200() throws Exception {
+    void getMySolution_withFeedback_returns200() throws Exception {
         UUID resourceId = UUID.randomUUID();
-        var response = buildSolutionResponse(resourceId, null, "Mi resolución.");
+        var sol = buildSolutionResponse(resourceId, null, "Mi resolución.");
+        var wrapped = new MySolutionWithFeedbackResponse(sol, null);
 
-        when(solutionService.getMine(eq(resourceId), eq("student@example.com"))).thenReturn(response);
+        when(solutionService.getMyWithFeedback(eq(resourceId), eq("student@example.com"))).thenReturn(wrapped);
 
         mockMvc.perform(get("/api/v1/resources/{resourceId}/solutions/mine", resourceId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resourceId").value(resourceId.toString()))
-                .andExpect(jsonPath("$.content").value("Mi resolución."))
-                .andExpect(jsonPath("$.status").value("PENDING"))
-                .andExpect(jsonPath("$.submittedAt").exists());
+                .andExpect(jsonPath("$.solution.resourceId").value(resourceId.toString()))
+                .andExpect(jsonPath("$.solution.content").value("Mi resolución."))
+                .andExpect(jsonPath("$.solution.status").value("PENDING"))
+                .andExpect(jsonPath("$.solution.submittedAt").exists())
+                .andExpect(jsonPath("$.feedback").doesNotExist());
     }
 
     @Test
@@ -151,7 +154,7 @@ class SolutionControllerTest {
     void getMySolution_whenNotFound_returns404() throws Exception {
         UUID resourceId = UUID.randomUUID();
 
-        when(solutionService.getMine(eq(resourceId), eq("student@example.com")))
+        when(solutionService.getMyWithFeedback(eq(resourceId), eq("student@example.com")))
                 .thenThrow(new SolutionNotFoundException("No tienes resolución para este ejercicio"));
 
         mockMvc.perform(get("/api/v1/resources/{resourceId}/solutions/mine", resourceId))

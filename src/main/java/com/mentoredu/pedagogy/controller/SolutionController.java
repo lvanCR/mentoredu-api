@@ -1,5 +1,6 @@
 package com.mentoredu.pedagogy.controller;
 
+import com.mentoredu.pedagogy.dto.MySolutionWithFeedbackResponse;
 import com.mentoredu.pedagogy.dto.SolutionResponse;
 import com.mentoredu.pedagogy.dto.SubmitSolutionRequest;
 import com.mentoredu.pedagogy.service.ISolutionService;
@@ -34,11 +35,11 @@ public class SolutionController {
     }
 
     @GetMapping("/{resourceId}/solutions/mine")
-    public ResponseEntity<SolutionResponse> getMine(@PathVariable UUID resourceId) {
+    public ResponseEntity<MySolutionWithFeedbackResponse> getMine(@PathVariable UUID resourceId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(solutionService.getMine(resourceId, auth.getName()));
+        return ResponseEntity.ok(solutionService.getMyWithFeedback(resourceId, auth.getName()));
     }
 
     @GetMapping("/{resourceId}/solutions")

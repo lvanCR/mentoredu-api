@@ -1,37 +1,28 @@
-# 📚 Library — Postman
+# Library (US07–US11, US16)
 
-Colección de casos de prueba para el Bounded Context **Library** (EP-04).
+Ciclo de vida de recursos académicos: subir, registrar, buscar, descargar y publicar ejercicios.
 
----
-
-## Implementadas
-
-| HU | Descripción | Casos | Endpoint |
+| US | Descripción | Endpoint | Carpeta |
 |---|---|---|---|
-| [HU12](./HU12-upload-pdf-resource/) | Subir archivo PDF académico | 4 | `POST /api/v1/resources/files` |
-| [HU13](./HU13-register-resource-metadata/) | Registrar metadatos del recurso | 4 | `POST /api/v1/resources` |
-| [HU14](./HU14-search-resources/) | Buscar recursos por filtros | 4 | `GET /api/v1/resources/search` |
-| [HU15](./HU15-download-resource/) | Descargar recurso académico | 4 | `GET /api/v1/resources/{id}/download` |
-| [HU39](./HU39-submit-solution/) | Enviar resolución de recurso académico | 5 | `POST /api/v1/resources/{resourceId}/solutions` |
+| US07 | Subir archivo PDF | `POST /api/v1/resources/files` | `US07-upload-pdf/` |
+| US08 | Registrar metadatos del recurso | `POST /api/v1/resources` | `US08-register-metadata/` |
+| US09 | Buscar y filtrar recursos | `GET /api/v1/resources/search` | `US09-search-resources/` |
+| US10 | Descargar un recurso | `GET /api/v1/resources/{id}/download` | `US10-download-resource/` |
+| US11 | Ver mis recursos publicados | `GET /api/v1/resources/me` | `US11-my-resources/` |
+| US16 | Publicar ejercicio sin solución | `POST /api/v1/resources` con `acepta_resoluciones=true` | `US16-publish-exercise/` |
 
----
+## Flujo US07 → US08
 
-## Flujo completo US12 → US13 → US14 → US15
+1. `POST /api/v1/resources/files` (multipart/form-data) → devuelve `fileId`
+2. `POST /api/v1/resources` con el `fileId` del paso anterior → devuelve el recurso creado
 
-1. **US12** `POST /api/v1/resources/files` — sube el PDF, devuelve `{ id, fileUrl, ... }`
-2. **US13** `POST /api/v1/resources` — registra los metadatos, referencia el archivo con `fileId`
-3. **US14** `GET /api/v1/resources/search` — busca recursos públicos por filtros opcionales
-4. **US15** `GET /api/v1/resources/{id}/download` — descarga el PDF (requiere JWT + permisos según visibilidad)
+## Variables de entorno
 
----
+`api_v1`, `access_token`, `teacher_token`, `file_id`, `resource_id`, `university_id`, `area_id`, `course_id`
 
-## Variables de entorno requeridas
+## Notas
 
-| Variable | Descripción | Requerida en |
-|---|---|---|
-| `{{api_v1}}` | `http://localhost:8080/api/v1` | Todas |
-| `{{access_token}}` | JWT obtenido en HU02 login | HU12, HU13, HU15 |
-| `{{file_id}}` | UUID devuelto por HU12 | HU13 |
-| `{{resource_id}}` | UUID devuelto por HU13 | HU15 |
-| `{{institution_id}}` | UUID de una institución existente en BD | HU13, HU14 |
-| `{{subject_id}}` | UUID de una materia existente en BD | HU13, HU14 |
+- Solo TEACHER, ACADEMY o ADMIN pueden subir recursos (RN-05).
+- `acepta_resoluciones=true` solo es válido para `resource_type=PRACTICA` (RN-08).
+- `course_id` es opcional para tipos `EXAMEN_COMPLETO`, `GUIA` y `APUNTES`.
+- Si `career_id` está presente, debe pertenecer al mismo área que el recurso (RN-23).

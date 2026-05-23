@@ -2,6 +2,8 @@ package com.mentoredu.community.dto;
 
 import com.mentoredu.community.model.VerificationDoc;
 import com.mentoredu.community.model.VerificationRequest;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -9,6 +11,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Getter
+@Builder
+@AllArgsConstructor
 public class VerificationResponse {
 
     private final UUID id;
@@ -33,6 +37,8 @@ public class VerificationResponse {
     }
 
     @Getter
+    @Builder
+    @AllArgsConstructor
     public static class DocInfo {
         private final UUID id;
         private final String documentType;
