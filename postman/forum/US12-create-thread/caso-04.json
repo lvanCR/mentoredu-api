@@ -1,22 +1,19 @@
 {
-  "name": "MentorEduForumHU16-CrearHiloSinTokenPOST",
-  "description": "Escenario alternativo error: intento crear hilo sin estar autenticado. Espera 401.",
+  "name": "US12-CrearHilo-SinAutenticacion",
+  "description": "Caso 04 — Error: intento crear hilo sin token JWT. Espera 401 Unauthorized.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/threads",
     "header": [
-      {
-        "key": "Content-Type",
-        "value": "application/json"
-      }
+      { "key": "Content-Type", "value": "application/json" }
     ],
     "body": {
       "mode": "raw",
-      "raw": "{\n  \"title\": \"¿Cómo resolver integrales dobles?\",\n  \"body\": \"Necesito ayuda con este tema.\",\n  \"subjectId\": \"00000000-0000-0000-0000-000000000001\"\n}"
+      "raw": "{\n  \"title\": \"¿Cómo resolver integrales dobles?\",\n  \"body\": \"Necesito ayuda con este tema.\",\n  \"courseId\": \"b2000000-0000-0000-0000-000000000005\"\n}"
     }
   },
   "response": {
     "status": 401,
-    "description": "Acceso rechazado: se requiere autenticación para crear un hilo."
+    "description": "Acceso rechazado: se requiere autenticación JWT para crear un hilo."
   }
 }

@@ -1,16 +1,20 @@
-# HU12 — Subir archivo PDF académico
+# US07 — Subir archivo PDF académico
 
-**Épica:** EP-04 Library  
-**Endpoint:** `POST /api/v1/resources/files`  
-**Auth:** Bearer JWT (requerido)  
-**Content-Type:** `multipart/form-data`
+**Epic**: EP-02 Library
+**Bounded Context**: `library`
+**Estado**: Implementada — 2026-05-22 `develop`
 
 ---
 
-## Descripción
+## Endpoint
 
-Sube un archivo PDF al servidor y genera su referencia interna.  
-El `id` devuelto debe usarse como `fileId` en HU13 al registrar los metadatos del recurso.
+```
+POST /api/v1/resources/files
+Authorization: Bearer {{teacher_token}}
+Content-Type: multipart/form-data
+```
+
+Solo TEACHER, ACADEMY o ADMIN pueden usar este endpoint (RN-05).
 
 ---
 
@@ -20,24 +24,28 @@ El `id` devuelto debe usarse como `fileId` en HU13 al registrar los metadatos de
 |---|---|---|---|
 | `file` | File | ✅ | Archivo PDF. Solo `application/pdf`. Máx 20 MB. |
 
-## Response 201 Created
+---
+
+## Respuesta exitosa — 201 Created
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
   "fileUrl": "uploads/resources/550e8400-e29b-41d4-a716-446655440000.pdf",
   "fileName": "examen-uni-2024.pdf",
   "mimeType": "application/pdf",
-  "sizeBytes": 204800,
-  "createdAt": "2026-05-16T21:00:00"
+  "sizeBytes": 204800
 }
 ```
 
-## Response 400 Bad Request
+> **No existe campo `id` ni `fileId` en la respuesta.** Los 4 campos (`fileUrl`, `fileName`, `mimeType`, `sizeBytes`) deben copiarse directamente en el body de `POST /api/v1/resources` (US08).
+
+---
+
+## Respuesta 400 Bad Request
 
 ```json
 {
-  "timestamp": "2026-05-16T21:00:00",
+  "timestamp": "2026-05-22T10:00:00",
   "status": 400,
   "error": "Bad Request",
   "message": "Only PDF files are accepted. Received content type: image/png"
@@ -48,15 +56,16 @@ El `id` devuelto debe usarse como `fileId` en HU13 al registrar los metadatos de
 
 ## Casos de prueba
 
-| Archivo | Escenario | Status esperado |
-|---|---|---|
-| [caso-01-exitoso.json](./caso-01-exitoso.json) | PDF válido, tamaño permitido | 201 Created |
-| [caso-02-tipo-invalido.json](./caso-02-tipo-invalido.json) | Archivo no es PDF (Word/imagen) | 400 Bad Request |
-| [caso-03-excede-tamano.json](./caso-03-excede-tamano.json) | PDF mayor a 20 MB | 400 Bad Request |
-| [caso-04-archivo-corrupto.json](./caso-04-archivo-corrupto.json) | Archivo con header inválido (corrupto) | 400 Bad Request |
+| # | Archivo | Escenario | Status esperado |
+|---|---|---|---|
+| 01 | `caso-01-exitoso.json` | PDF válido, tamaño permitido | 201 Created |
+| 02 | `caso-02-tipo-invalido.json` | Archivo no es PDF (Word/imagen) | 400 Bad Request |
+| 03 | `caso-03-excede-tamano.json` | PDF mayor a 20 MB | 400 Bad Request |
+| 04 | `caso-04-archivo-corrupto.json` | Archivo con header inválido | 400 Bad Request |
 
 ---
 
-## Nombre del request en colección
+## Flujo obligatorio
 
-`MentorEduLibraryHU12-SubirPdfPOST`
+1. Ejecutar este endpoint → copiar los 4 campos de la respuesta.
+2. Pegar esos campos en `POST /api/v1/resources` (US08) para registrar los metadatos.

@@ -1,6 +1,6 @@
 {
-  "name": "MentorEduNotificationsHU25-MarkAsReadPATCH",
-  "description": "Caso 04 — Marcar notificación como leída. Espera 200 OK con read=true. Idempotente: si ya estaba leída, responde igualmente 200.",
+  "name": "US27-Notifications-MarcarLeida",
+  "description": "Caso 04 — Marcar notificación como leída. Espera 204 No Content (sin body). El endpoint es idempotente.",
   "request": {
     "method": "PATCH",
     "header": [
@@ -17,7 +17,8 @@
     }
   },
   "response": {
-    "status": 200,
-    "body": "{\"id\":\"...\",\"userId\":\"...\",\"type\":\"FORUM_REPLY\",\"title\":\"...\",\"message\":\"...\",\"read\":true,\"createdAt\":\"...\"}"
+    "status": 204,
+    "body": null,
+    "description": "204 No Content — cuerpo vacío. La notificación queda marcada con read_at=now()."
   }
 }

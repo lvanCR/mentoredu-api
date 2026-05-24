@@ -19,18 +19,19 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/resources/files")
 @RequiredArgsConstructor
-@Tag(name = "Archivos de recursos", description = "Subida de archivos PDF académicos (US12).")
+@Tag(name = "Archivos de recursos", description = "Subida de archivos PDF académicos (US07).")
 @SecurityRequirement(name = "bearerAuth")
 public class ResourceFileController {
 
     private final IResourceFileService resourceFileService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(
-        summary = "US12 - Subir archivo PDF académico",
+        summary = "US07 - Subir archivo PDF académico",
         description = "Sube un archivo PDF al servidor y genera su referencia interna. "
             + "Solo se aceptan archivos con tipo MIME application/pdf y tamaño máximo configurable (default 20 MB). "
-            + "El ID devuelto (id) debe usarse en US13 al registrar los metadatos del recurso (campo fileId). "
+            + "Los campos devueltos (fileUrl, fileName, mimeType, sizeBytes) deben copiarse al body de US08 para registrar los metadatos. "
             + "Requiere autenticación JWT."
     )
     public ResponseEntity<ResourceFileResponse> upload(

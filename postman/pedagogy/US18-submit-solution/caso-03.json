@@ -1,23 +1,18 @@
 {
-  "description": "US39 — Error: solución duplicada (RN-45)",
-  "scenario": "Dado que el estudiante ya envió una resolución para este recurso, cuando intenta enviar otra, entonces el sistema la rechaza con 409 Conflict.",
+  "description": "US18 — Caso 03: solución duplicada para el mismo recurso (RN-09).",
+  "scenario": "Dado que el estudiante ya envió una resolución para este recurso, cuando intenta enviar otra, entonces el sistema responde 409 Conflict.",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/resources/{{resourceId}}/solutions",
+    "url": "{{api_v1}}/resources/{{resource_id}}/solutions",
     "headers": {
       "Authorization": "Bearer {{student_token}}",
       "Content-Type": "application/json"
     },
     "body": {
-      "fileId": "{{another_fileId}}"
+      "content": "Segunda resolución (debe ser rechazada)."
     }
   },
   "expected_response": {
-    "status": 409,
-    "body": {
-      "status": 409,
-      "error": "Conflict",
-      "message": "Ya enviaste una resolución para este recurso (RN-45)"
-    }
+    "status": 409
   }
 }

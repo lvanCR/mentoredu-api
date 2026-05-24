@@ -5,7 +5,6 @@ import com.mentoredu.profile.dto.*;
 import java.util.UUID;
 
 public interface IProfileService {
-    ProfileResponse selectAccountType(String email, SelectAccountTypeRequest request);
     ProfileResponse updateProfile(String email, UpdateProfileRequest request);
     ProfileMeResponse getMyProfile(String email);
     ProfileResponse getPublicProfile(UUID userId);

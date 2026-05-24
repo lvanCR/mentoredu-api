@@ -1,4 +1,4 @@
-# HU27 — React to forum content
+# US14 — Reaccionar a contenido del foro
 
 Endpoint de reacción con comportamiento **toggle** (reaccionar / quitar reacción) aplicable a hilos, respuestas y comentarios.
 

@@ -34,6 +34,7 @@ public class VerificationController {
     // -------------------------------------------------------------------------
 
     @PostMapping("/requests")
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "US22 - Solicitar verificación de identidad")
     public ResponseEntity<VerificationResponse> submit(@Valid @RequestBody CreateVerificationRequest request) {
         Authentication auth = auth();

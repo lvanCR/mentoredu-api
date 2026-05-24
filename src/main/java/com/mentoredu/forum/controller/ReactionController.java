@@ -4,6 +4,10 @@ import com.mentoredu.forum.dto.CreateReactionRequest;
 import com.mentoredu.forum.dto.ReactionResponse;
 import com.mentoredu.forum.service.IReactionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -20,19 +24,23 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Foro — Reacciones", description = "Reacciones a hilos, respuestas y comentarios (US27).")
+@Tag(name = "Foro — Reacciones", description = "Reacciones a hilos, respuestas y comentarios (US14).")
 @SecurityRequirement(name = "bearerAuth")
 public class ReactionController {
 
     private final IReactionService reactionService;
 
     // -------------------------------------------------------------------------
-    // US27 — React to thread
+    // US14 — React to thread
     // -------------------------------------------------------------------------
 
     @PostMapping("/api/v1/threads/{id}/reactions")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Reacción registrada", content = @Content(schema = @Schema(implementation = ReactionResponse.class))),
+        @ApiResponse(responseCode = "204", description = "Reacción eliminada (toggle off)", content = @Content)
+    })
     @Operation(
-        summary = "US27 - Reaccionar a un hilo",
+        summary = "US14 - Reaccionar a un hilo",
         description = "Registra o elimina la reacción del usuario autenticado sobre un hilo. "
             + "Comportamiento toggle: si el usuario ya tiene la misma reacción, se elimina (204). "
             + "Si es una reacción distinta, se reemplaza (200). Si no existe, se crea (201). "
@@ -51,12 +59,16 @@ public class ReactionController {
     }
 
     // -------------------------------------------------------------------------
-    // US27 — React to answer
+    // US14 — React to answer
     // -------------------------------------------------------------------------
 
     @PostMapping("/api/v1/answers/{id}/reactions")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Reacción registrada", content = @Content(schema = @Schema(implementation = ReactionResponse.class))),
+        @ApiResponse(responseCode = "204", description = "Reacción eliminada (toggle off)", content = @Content)
+    })
     @Operation(
-        summary = "US27 - Reaccionar a una respuesta",
+        summary = "US14 - Reaccionar a una respuesta",
         description = "Registra o elimina la reacción del usuario autenticado sobre una respuesta. "
             + "Comportamiento toggle: misma reacción = elimina (204), distinta = reemplaza (201). "
             + "Devuelve 404 si la respuesta no existe. Requiere autenticación JWT."
@@ -74,12 +86,16 @@ public class ReactionController {
     }
 
     // -------------------------------------------------------------------------
-    // US27 — React to comment
+    // US14 — React to comment
     // -------------------------------------------------------------------------
 
     @PostMapping("/api/v1/comments/{id}/reactions")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Reacción registrada", content = @Content(schema = @Schema(implementation = ReactionResponse.class))),
+        @ApiResponse(responseCode = "204", description = "Reacción eliminada (toggle off)", content = @Content)
+    })
     @Operation(
-        summary = "US27 - Reaccionar a un comentario",
+        summary = "US14 - Reaccionar a un comentario",
         description = "Registra o elimina la reacción del usuario autenticado sobre un comentario. "
             + "Comportamiento toggle: misma reacción = elimina (204), distinta = reemplaza (201). "
             + "Devuelve 404 si el comentario no existe. Requiere autenticación JWT."

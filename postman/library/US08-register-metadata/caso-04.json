@@ -1,27 +1,20 @@
 {
-  "name": "MentorEduLibraryHU13-RegisterResourceInvalidYearPOST",
-  "description": "Caso 04 — Alternativo error: año fuera del rango válido (1900–2099). Respuesta esperada: 400 Bad Request con details.year.",
+  "name": "US08-RegisterResource-CareerInconsistente",
+  "description": "Caso 04 — Error: careerId no pertenece al areaId enviado (RN-23). Respuesta esperada: 400 Bad Request.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/resources",
     "header": [
-      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
       { "key": "Content-Type",  "value": "application/json" }
     ],
     "body": {
       "mode": "raw",
-      "raw": {
-        "title": "Examen Antiguo",
-        "fileId": "{{file_id}}",
-        "institutionId": "{{institution_id}}",
-        "subjectId": "{{subject_id}}",
-        "year": 1800,
-        "type": "EXAM"
-      }
+      "raw": "{\n  \"title\": \"Examen con Carrera Inconsistente\",\n  \"universityId\": \"{{university_id}}\",\n  \"areaId\": \"{{area_id}}\",\n  \"careerId\": \"b4000000-0000-0000-0000-000000000099\",\n  \"resourceType\": \"EXAMEN_COMPLETO\",\n  \"fileUrl\": \"{{file_url}}\",\n  \"fileName\": \"{{file_name}}\",\n  \"mimeType\": \"{{mime_type}}\",\n  \"sizeBytes\": \"{{size_bytes}}\"\n}"
     }
   },
   "expectedResponse": {
     "status": 400,
-    "fields": ["details.year"]
+    "description": "El careerId no pertenece al areaId enviado (RN-23)."
   }
 }

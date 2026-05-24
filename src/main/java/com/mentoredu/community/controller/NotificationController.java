@@ -46,6 +46,7 @@ public class NotificationController {
     }
 
     @PatchMapping("/{id}/read")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "US27 - Marcar una notificación como leída")
     public ResponseEntity<Void> markAsRead(@PathVariable UUID id) {
         Authentication auth = auth();

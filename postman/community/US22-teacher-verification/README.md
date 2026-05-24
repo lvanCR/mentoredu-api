@@ -1,4 +1,4 @@
-# HU21 — Request teacher verification
+# US22 — Solicitar verificación de docente
 
 **Endpoint principal:** `POST /api/v1/verification/requests`  
 **Endpoint consulta:** `GET /api/v1/verification/requests/me`  

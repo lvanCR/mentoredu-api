@@ -1,4 +1,4 @@
-# HU22 — Request organization verification
+# US22 — Solicitar verificación de academia
 
 **Endpoint principal:** `POST /api/v1/verification/requests`  
 **Endpoint consulta:** `GET /api/v1/verification/requests/me`  

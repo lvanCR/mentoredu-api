@@ -1,6 +1,8 @@
-# HU16 — Create forum thread
+# US12 — Crear hilo en el foro
 
-Endpoint para crear un nuevo hilo de discusión en el foro.
+**Epic**: EP-03 Forum
+**Bounded Context**: `forum`
+**Estado**: Implementada — 2026-05-22 `develop`
 
 ---
 
@@ -8,43 +10,59 @@ Endpoint para crear un nuevo hilo de discusión en el foro.
 
 | Método | Path | Descripción |
 |---|---|---|
-| `POST` | `/api/v1/threads` | Crear un nuevo hilo de foro |
+| `POST` | `/api/v1/threads` | Crear un nuevo hilo de discusión |
+| `GET`  | `/api/v1/threads` | Listar hilos recientes (paginado) |
+| `GET`  | `/api/v1/threads/{id}` | Obtener hilo por ID |
+| `PATCH`| `/api/v1/threads/{id}/close` | Cerrar hilo (solo autor o MODERATOR/ADMIN) |
+
+**Auth requerida:** `Authorization: Bearer {{access_token}}`
 
 ---
 
-## Headers requeridos
+## Body — POST (clasificación multi-modal, RN-12)
 
-```
-Authorization: Bearer {{access_token}}
-Content-Type: application/json
-```
-
-## Body fields
-
-| Campo | Tipo | Requerido | Validación |
+| Campo         | Tipo    | Requerido | Notas |
 |---|---|---|---|
-| `subjectId` | `UUID` | Sí | Debe corresponder a una materia existente (RN-16) |
-| `title` | `string` | Sí | No puede estar vacío (`@NotBlank`) |
-| `body` | `string` | Sí | No puede estar vacío (`@NotBlank`) |
-| `isAnonymous` | `boolean` | Sí | `true` oculta el nombre público; `author_user_id` se guarda internamente |
+| `title`       | String  | ✅ Sí     | No vacío, máx. 160 chars |
+| `body`        | String  | ✅ Sí     | No vacío |
+| `anonymous`   | Boolean | No        | Default `false`. Si `true`, el autor aparece como "Anónimo" (se guarda internamente, RN-13) |
+| `universityId`| UUID    | Condicional | Requerido si se envía `areaId`. |
+| `areaId`      | UUID    | No        | Solo válido si `universityId` está presente. |
+| `courseId`    | UUID    | Condicional | No puede coexistir con `careerId`. |
+| `careerId`    | UUID    | Condicional | No puede coexistir con `courseId`. |
 
-## Reglas de negocio
+> **Regla RN-12**: Al menos uno de `universityId`, `courseId` o `careerId` debe estar presente. No se puede enviar `areaId` sin `universityId`. No se puede enviar `careerId` + `courseId` simultáneamente.
 
-- El hilo debe estar asociado a un `subjectId` válido (RN-16).
-- Si `isAnonymous = true`, el nombre del autor no se expone en la respuesta, pero se conserva internamente para moderación (RN-04).
-- El hilo se crea con estado `OPEN`.
-- Requiere autenticación JWT.
+---
+
+## Respuesta exitosa — 201 Created
+
+```json
+{
+  "id": "uuid",
+  "title": "¿Cómo resolver integrales por partes?",
+  "body": "Tengo problemas con este tipo de integrales...",
+  "anonymous": false,
+  "authorDisplay": "Juan Pérez",
+  "status": "OPEN",
+  "universityId": "b1000000-0000-0000-0000-000000000001",
+  "areaId": null,
+  "courseId": "b2000000-0000-0000-0000-000000000005",
+  "careerId": null,
+  "createdAt": "2026-05-22T12:00:00"
+}
+```
 
 ---
 
 ## Casos de prueba
 
-| Archivo | Escenario | Status esperado |
-|---|---|---|
-| `caso-01.json` | Hilo válido no anónimo | 201 Created |
-| `caso-02.json` | Body vacío / título vacío | 400 Bad Request |
-| `caso-03.json` | Hilo anónimo válido | 201 Created |
-| `caso-04.json` | Sin autenticación (token ausente) | 401 Unauthorized |
+| # | Archivo | Escenario | HTTP esperado |
+|---|---|---|---|
+| 01 | `caso-01.json` | Hilo válido con courseId (no anónimo) | 201 Created |
+| 02 | `caso-02.json` | Title o body vacío | 400 Bad Request |
+| 03 | `caso-03.json` | Hilo anónimo válido con universityId | 201 Created |
+| 04 | `caso-04.json` | Sin autenticación | 401 Unauthorized |
 
 ---
 
@@ -52,24 +70,7 @@ Content-Type: application/json
 
 | Variable | Descripción |
 |---|---|
-| `{{api_v1}}` | `http://localhost:8080/api/v1` |
-| `{{access_token}}` | JWT obtenido en HU02 login |
-| `{{subject_id}}` | UUID de una materia existente en BD |
-
----
-
-## Response body (201 — creado)
-
-```json
-{
-  "id": "uuid",
-  "subjectId": "uuid",
-  "title": "¿Cómo resolver integrales por partes?",
-  "body": "Tengo problemas con este tipo de integrales...",
-  "isAnonymous": false,
-  "authorDisplay": "Juan Pérez",
-  "status": "OPEN",
-  "createdAt": "2026-05-17T12:00:00",
-  "updatedAt": "2026-05-17T12:00:00"
-}
-```
+| `{{access_token}}` | JWT obtenido en US02 login |
+| `{{university_id}}` | UUID de universidad del seed V9 (ej. `b1000000-0000-0000-0000-000000000001`) |
+| `{{course_id}}` | UUID de curso del seed V9 (ej. `b2000000-0000-0000-0000-000000000005`) |
+| `{{career_id}}` | UUID de carrera del seed V9 |

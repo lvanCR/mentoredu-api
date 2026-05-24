@@ -21,19 +21,20 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/answers")
 @RequiredArgsConstructor
-@Tag(name = "Foro — Comentarios", description = "Comentarios sobre respuestas del foro (US28).")
+@Tag(name = "Foro — Comentarios", description = "Comentarios sobre respuestas del foro (US15).")
 @SecurityRequirement(name = "bearerAuth")
 public class CommentController {
 
     private final ICommentService commentService;
 
     // -------------------------------------------------------------------------
-    // US28 — Comment on forum answer
+    // US15 — Comment on forum answer
     // -------------------------------------------------------------------------
 
     @PostMapping("/{answerId}/comments")
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(
-        summary = "US28 - Comentar una respuesta del foro",
+        summary = "US15 - Comentar una respuesta del foro",
         description = "Publica un comentario sobre una respuesta existente. "
             + "El body no puede estar vacío. "
             + "Devuelve 404 si la respuesta no existe. Requiere autenticación JWT."
@@ -51,7 +52,7 @@ public class CommentController {
 
     @GetMapping("/{answerId}/comments")
     @Operation(
-        summary = "US28 - Listar comentarios de una respuesta",
+        summary = "US15 - Listar comentarios de una respuesta",
         description = "Devuelve todos los comentarios de una respuesta ordenados del más antiguo al más reciente. "
             + "Devuelve 404 si la respuesta no existe. Requiere autenticación JWT."
     )

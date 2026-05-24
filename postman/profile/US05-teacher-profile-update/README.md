@@ -1,83 +1,55 @@
-# HU09 — Actualizar especialidad del docente
+# US05 — Actualizar perfil de docente
 
-**Epic**: EP-02 Profile  
-**Endpoint**: `PATCH /api/v1/profiles/teacher/me`  
-**Autenticación**: Bearer Token requerido  
-**Nombre Postman**: `MentorEduProfileHU09-UpdateTeacherSpecialtyPATCH`
-
----
-
-## Descripción
-
-Permite al docente autenticado actualizar su especialidad y, opcionalmente, su institución y bio profesional, sin modificar el resto de campos del perfil.
-
-**Flujo previo requerido**:
-1. US01 — Registrar cuenta
-2. US02 — Iniciar sesión (obtener token)
-3. US04 — Seleccionar tipo de cuenta (TEACHER)
-4. US08 — Crear perfil de docente
+**Epic**: EP-01 Profile
+**Bounded Context**: `profile`
+**Estado**: Implementada — 2026-05-22 `develop`
 
 ---
 
-## Headers requeridos
+## Endpoint
 
-| Header | Valor |
-|---|---|
-| `Content-Type` | `application/json` |
-| `Authorization` | `Bearer {{access_token}}` |
-
----
-
-## Body (JSON)
-
-```json
-{
-  "specialty": "string (obligatorio, no vacío)",
-  "institutionName": "string (opcional)",
-  "bioProfessional": "string (opcional)"
-}
+```
+PATCH /api/v1/profiles/teacher/me
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
 ```
 
-### Campos del body
+---
 
-| Campo | Tipo | Requerido | Validación |
+## Body
+
+| Campo             | Tipo   | Requerido | Validación |
 |---|---|---|---|
-| `specialty` | string | ✅ Sí | No puede estar vacío, máx. 120 caracteres |
-| `institutionName` | string | No | Máx. 120 caracteres |
-| `bioProfessional` | string | No | Máx. 2000 caracteres |
+| `bioProfessional` | String | No        | Máx. 2000 chars. Si se omite, conserva el valor actual. |
 
-> Los campos opcionales se actualizan solo si se envían; los omitidos conservan su valor actual.
+> Solo existe el campo `bioProfessional`. No existen campos `specialty` ni `institutionName`.
 
 ---
 
-## Reglas de negocio aplicables
-
-| Regla | Descripción |
-|---|---|
-| RN-09 | El docente solo puede tener un perfil profesional |
-| RN-11 | Solo se actualizan los campos enviados; los demás no se modifican |
-
----
-
-## Escenarios Gherkin → casos de prueba
-
-| Escenario | Archivo | Status esperado |
-|---|---|---|
-| Exitoso: perfil docente existe, specialty válida enviada | `caso-01-exitoso.json` | 200 OK |
-| Alt exitoso: solo specialty, demás campos sin cambios | `caso-02-solo-specialty.json` | 200 OK |
-| Error: specialty vacía | `caso-03-specialty-vacio.json` | 400 Bad Request |
-| Alt error: perfil de docente no existe | `caso-04-perfil-no-existe.json` | 404 Not Found |
-| Sin autenticación | `caso-05-sin-autenticacion.json` | 401 Unauthorized |
-
----
-
-## Respuesta exitosa (200)
+## Respuesta exitosa — 200 OK
 
 ```json
 {
-  "profileId": "uuid",
-  "specialty": "Química",
-  "institutionName": "Instituto Preuniversitario El Triunfo",
-  "bioProfessional": "Docente con 10 años de experiencia."
+  "profileId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "bioProfessional": "Docente con 10 años de experiencia en química."
 }
 ```
+
+---
+
+## Escenarios de aceptación
+
+| # | Archivo | Escenario | HTTP esperado |
+|---|---|---|---|
+| 01 | `caso-01-exitoso.json` | Actualizar bioProfessional válida | 200 OK |
+| 02 | `caso-02-bio-larga.json` | bioProfessional excede 2000 chars | 400 Bad Request |
+| 03 | `caso-03-perfil-no-existe.json` | Perfil docente no existe aún | 404 Not Found |
+| 04 | `caso-04-sin-autenticacion.json` | Sin token | 401 Unauthorized |
+
+---
+
+## Flujo previo requerido
+
+1. `POST /api/v1/auth/login` → obtener `{{access_token}}`
+2. `POST /api/v1/profiles/teacher` → crear perfil (US05)
+3. Este PATCH → actualizar datos

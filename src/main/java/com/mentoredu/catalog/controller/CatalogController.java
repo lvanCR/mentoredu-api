@@ -6,8 +6,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,30 +19,38 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/catalog")
 @RequiredArgsConstructor
+@Tag(name = "Catálogo", description = "Administración de universidades, áreas, cursos y carreras. Solo ADMIN puede crear/modificar (US28).")
+@SecurityRequirement(name = "bearerAuth")
 public class CatalogController {
 
     private final ICatalogService catalogService;
 
     // ── Universities ──────────────────────────────────────
     @GetMapping("/universities")
+    @Operation(summary = "US28 - Listar universidades del catálogo")
     public ResponseEntity<List<UniversityResponse>> listUniversities() {
         return ResponseEntity.ok(catalogService.listUniversities());
     }
 
     @PostMapping("/universities")
+    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "US28 - Crear universidad (solo ADMIN)")
     public ResponseEntity<UniversityResponse> createUniversity(@Valid @RequestBody CreateUniversityRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(catalogService.createUniversity(request));
     }
 
     // ── Areas ──────────────────────────────────────────────
     @GetMapping("/universities/{universityId}/areas")
+    @Operation(summary = "US28 - Listar áreas de una universidad")
     public ResponseEntity<List<AreaResponse>> listAreas(@PathVariable UUID universityId) {
         return ResponseEntity.ok(catalogService.listAreasByUniversity(universityId));
     }
 
     @PostMapping("/universities/{universityId}/areas")
+    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "US28 - Crear área en una universidad (solo ADMIN)")
     public ResponseEntity<AreaResponse> createArea(
             @PathVariable UUID universityId,
             @Valid @RequestBody CreateAreaRequest request) {
@@ -47,23 +59,29 @@ public class CatalogController {
 
     // ── Courses ────────────────────────────────────────────
     @GetMapping("/courses")
+    @Operation(summary = "US28 - Listar todos los cursos del catálogo")
     public ResponseEntity<List<CourseResponse>> listCourses() {
         return ResponseEntity.ok(catalogService.listCourses());
     }
 
     @GetMapping("/areas/{areaId}/courses")
+    @Operation(summary = "US28 - Listar cursos de un área")
     public ResponseEntity<List<CourseResponse>> listCoursesByArea(@PathVariable UUID areaId) {
         return ResponseEntity.ok(catalogService.listCoursesByArea(areaId));
     }
 
     @PostMapping("/courses")
+    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "US28 - Crear curso (solo ADMIN)")
     public ResponseEntity<CourseResponse> createCourse(@Valid @RequestBody CreateCourseRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(catalogService.createCourse(request));
     }
 
     @PostMapping("/areas/{areaId}/courses/{courseId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "US28 - Asociar curso a un área (solo ADMIN)")
     public ResponseEntity<Void> linkCourseToArea(@PathVariable UUID areaId, @PathVariable UUID courseId) {
         catalogService.linkCourseToArea(areaId, courseId);
         return ResponseEntity.noContent().build();
@@ -71,12 +89,15 @@ public class CatalogController {
 
     // ── Careers ────────────────────────────────────────────
     @GetMapping("/universities/{universityId}/careers")
+    @Operation(summary = "US28 - Listar carreras de una universidad")
     public ResponseEntity<List<CareerResponse>> listCareers(@PathVariable UUID universityId) {
         return ResponseEntity.ok(catalogService.listCareersByUniversity(universityId));
     }
 
     @PostMapping("/universities/{universityId}/careers")
+    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "US28 - Crear carrera en una universidad (solo ADMIN)")
     public ResponseEntity<CareerResponse> createCareer(
             @PathVariable UUID universityId,
             @Valid @RequestBody CreateCareerRequest request) {
@@ -84,7 +105,9 @@ public class CatalogController {
     }
 
     @PostMapping("/careers/{careerId}/courses/{courseId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "US28 - Asociar curso a una carrera (solo ADMIN)")
     public ResponseEntity<Void> linkCourseToCareer(@PathVariable UUID careerId, @PathVariable UUID courseId) {
         catalogService.linkCourseToCareer(careerId, courseId);
         return ResponseEntity.noContent().build();

@@ -1,30 +1,20 @@
 {
-  "name": "MentorEduLibraryHU13-RegisterResourceFullPOST",
-  "description": "Caso 03 — Alternativo exitoso: todos los campos incluyendo opcionales. Recurso queda listo para búsqueda. Respuesta esperada: 201 Created.",
+  "name": "US08-RegisterResource-TodosLosCampos",
+  "description": "Caso 03 — Exitoso: PRACTICA con todos los campos opcionales (courseId, careerId, description, visibility PREMIUM, aceptaResoluciones=true). Respuesta esperada: 201 Created.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/resources",
     "header": [
-      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
       { "key": "Content-Type",  "value": "application/json" }
     ],
     "body": {
       "mode": "raw",
-      "raw": {
-        "title": "Solucionario Examen UNI 2024-I — Matemática",
-        "fileId": "{{file_id}}",
-        "institutionId": "{{institution_id}}",
-        "subjectId": "{{subject_id}}",
-        "year": 2024,
-        "type": "SOLUTION",
-        "visibility": "PREMIUM",
-        "description": "Solucionario completo del examen de admisión UNI ciclo 2024-I, área de Matemática.",
-        "examCycle": "2024-I"
-      }
+      "raw": "{\n  \"title\": \"Práctica de Álgebra — Vectores en R3\",\n  \"universityId\": \"{{university_id}}\",\n  \"areaId\": \"{{area_id}}\",\n  \"courseId\": \"{{course_id}}\",\n  \"careerId\": \"{{career_id}}\",\n  \"resourceType\": \"PRACTICA\",\n  \"visibility\": \"PREMIUM\",\n  \"description\": \"Práctica completa de vectores en el espacio tridimensional.\",\n  \"aceptaResoluciones\": true,\n  \"fileUrl\": \"{{file_url}}\",\n  \"fileName\": \"{{file_name}}\",\n  \"mimeType\": \"{{mime_type}}\",\n  \"sizeBytes\": \"{{size_bytes}}\"\n}"
     }
   },
   "expectedResponse": {
     "status": 201,
-    "fields": ["id", "title", "type", "visibility", "fileId", "description", "examCycle", "createdAt"]
+    "fields": ["id", "title", "resourceType", "visibility", "aceptaResoluciones", "universityId", "areaId", "courseId", "careerId", "description", "fileUrl", "createdAt"]
   }
 }

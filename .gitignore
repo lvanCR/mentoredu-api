@@ -40,6 +40,8 @@ application-local.yml
 application-local.properties
 .env
 .claude/
+historias-usuario-documentacion.md
+EVALUACION_TB3.md
 
 # Uploaded files (dev local storage)
 uploads/

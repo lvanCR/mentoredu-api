@@ -29,6 +29,7 @@ public class ReportController {
     private final IReportService reportService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "US25 - Reportar contenido inapropiado")
     public ResponseEntity<ReportResponse> create(@Valid @RequestBody ReportRequest request) {
         Authentication auth = auth();

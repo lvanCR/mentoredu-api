@@ -66,8 +66,8 @@ El frontend llama este endpoint inmediatamente después del login para decidir a
 | `avatarUrl` | URL de foto de perfil (null si no se configuró) |
 | `city` | Ciudad del usuario (null si no se configuró) |
 | `bio` | Biografía del usuario (null si no se configuró) |
-| `profileType` | `STUDENT`, `TEACHER` u `ORGANIZATION` |
-| `isProfileComplete` | `true` si el subtipo específico existe (`student_profiles`, `teacher_profiles` u `organization_profiles`) |
+| `profileType` | `STUDENT`, `TEACHER` o `ACADEMY` |
+| `isProfileComplete` | `true` si el subtipo específico existe (`student_profiles`, `teacher_profiles` o `academy_profiles`) |
 | `createdAt` | Fecha de creación del perfil base |
 
 ---
@@ -81,7 +81,7 @@ El frontend llama este endpoint inmediatamente después del login para decidir a
 
 ### Caso 2 — Perfil base sin completar
 **Archivo**: `caso-02-perfil-sin-completar.json`  
-**Prerequisito**: el usuario completó US04 pero NO US06/08/10.  
+**Prerequisito**: el usuario se registró pero aún no creó perfil específico (US04/US05/US06).  
 **Status esperado**: `200 OK` con `isProfileComplete: false`
 
 ### Caso 3 — Sin autenticación

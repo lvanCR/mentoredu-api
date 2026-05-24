@@ -1,6 +1,6 @@
 {
-  "description": "US39 — Error: recurso no existe",
-  "scenario": "Dado que el resourceId no corresponde a ningún recurso registrado, cuando el estudiante intenta enviar la resolución, entonces el sistema responde con 404 Not Found.",
+  "description": "US18 — Caso 04: recurso no existe.",
+  "scenario": "Dado que el resourceId no corresponde a ningún recurso registrado, cuando el estudiante intenta enviar la resolución, entonces el sistema responde 404 Not Found.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/resources/00000000-0000-0000-0000-000000000000/solutions",
@@ -9,15 +9,10 @@
       "Content-Type": "application/json"
     },
     "body": {
-      "fileId": "{{fileId}}"
+      "fileUrl": "{{file_url}}"
     }
   },
   "expected_response": {
-    "status": 404,
-    "body": {
-      "status": 404,
-      "error": "Not Found",
-      "message": "Recurso no encontrado: 00000000-0000-0000-0000-000000000000"
-    }
+    "status": 404
   }
 }

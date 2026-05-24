@@ -16,13 +16,13 @@ Solo usuarios con rol ADMIN pueden crear, modificar y consultar universidades, �
 
 ## Casos
 
-| # | Escenario | Status esperado |
-|---|---|---|
-| 01 | ADMIN lista universidades disponibles | 200 OK |
-| 02 | ADMIN crea nueva universidad | 201 Created |
-| 03 | ADMIN crea área dentro de una universidad | 201 Created |
-| 04 | No-ADMIN intenta crear una universidad | 403 Forbidden |
-| 05 | Nombre de universidad duplicado en la misma universidad | 409 Conflict |
+| # | Archivo | Escenario | Status esperado |
+|---|---|---|---|
+| 01 | `caso-01-listar-universidades.json` | ADMIN lista universidades disponibles | 200 OK |
+| 02 | `caso-02-crear-universidad.json` | ADMIN crea nueva universidad | 201 Created |
+| 03 | `caso-03-forbidden.json` | No-ADMIN intenta crear universidad | 403 Forbidden |
+
+> **Faltan** casos para: crear área (POST /catalog/areas), crear carrera (POST /catalog/careers), nombre duplicado (409). Agregar `caso-04` a `caso-06` cuando se implementen.
 
 ## Nota
 

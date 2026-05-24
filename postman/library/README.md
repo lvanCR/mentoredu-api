@@ -6,19 +6,21 @@ Ciclo de vida de recursos académicos: subir, registrar, buscar, descargar y pub
 |---|---|---|---|
 | US07 | Subir archivo PDF | `POST /api/v1/resources/files` | `US07-upload-pdf/` |
 | US08 | Registrar metadatos del recurso | `POST /api/v1/resources` | `US08-register-metadata/` |
-| US09 | Buscar y filtrar recursos | `GET /api/v1/resources/search` | `US09-search-resources/` |
+| US09 | Buscar y filtrar recursos | `GET /api/v1/resources` | `US09-search-resources/` |
 | US10 | Descargar un recurso | `GET /api/v1/resources/{id}/download` | `US10-download-resource/` |
 | US11 | Ver mis recursos publicados | `GET /api/v1/resources/me` | `US11-my-resources/` |
 | US16 | Publicar ejercicio sin solución | `POST /api/v1/resources` con `acepta_resoluciones=true` | `US16-publish-exercise/` |
 
 ## Flujo US07 → US08
 
-1. `POST /api/v1/resources/files` (multipart/form-data) → devuelve `fileId`
-2. `POST /api/v1/resources` con el `fileId` del paso anterior → devuelve el recurso creado
+1. `POST /api/v1/resources/files` (multipart/form-data) → devuelve `fileUrl`, `fileName`, `mimeType`, `sizeBytes`
+2. Copiar esos 4 campos en el body de `POST /api/v1/resources` → devuelve el recurso creado
+
+> **No existe campo `fileId`**. Los metadatos del archivo se copian directamente del paso 1 al paso 2.
 
 ## Variables de entorno
 
-`api_v1`, `access_token`, `teacher_token`, `file_id`, `resource_id`, `university_id`, `area_id`, `course_id`
+`api_v1`, `access_token`, `teacher_token`, `resource_id`, `university_id`, `area_id`, `course_id`
 
 ## Notas
 
