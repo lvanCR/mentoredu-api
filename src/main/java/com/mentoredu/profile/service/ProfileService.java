@@ -25,32 +25,6 @@ public class ProfileService implements IProfileService {
     private final UserRepository               userRepository;
 
     // -------------------------------------------------------------------------
-    // US04 — Select account type
-    // -------------------------------------------------------------------------
-
-    @Override
-    @Transactional
-    public ProfileResponse selectAccountType(String email, SelectAccountTypeRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
-
-        if (profileRepository.findByUserId(user.getId()).isPresent()) {
-            throw new ProfileAlreadyExistsException(
-                    "User already has a profile. Account type cannot be changed.");
-        }
-
-        String displayName = (user.getFirstName() + " " + user.getLastName()).trim();
-
-        Profile profile = Profile.builder()
-                .userId(user.getId())
-                .displayName(displayName)
-                .profileType(request.getProfileType().name())
-                .build();
-
-        return new ProfileResponse(profileRepository.save(profile));
-    }
-
-    // -------------------------------------------------------------------------
     // US05 — Update common profile data
     // -------------------------------------------------------------------------
 

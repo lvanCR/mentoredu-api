@@ -47,24 +47,11 @@ public class ProfileController {
     }
 
     // -------------------------------------------------------------------------
-    // US04 — Select account type
-    // -------------------------------------------------------------------------
-
-    @PostMapping("/account-type")
-    @Operation(summary = "US04 - Seleccionar tipo de cuenta (STUDENT, TEACHER, ACADEMY)")
-    public ResponseEntity<ProfileResponse> selectAccountType(@Valid @RequestBody SelectAccountTypeRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(profileService.selectAccountType(a.getName(), request));
-    }
-
-    // -------------------------------------------------------------------------
     // US05 — Update common profile data
     // -------------------------------------------------------------------------
 
     @PatchMapping("/me")
-    @Operation(summary = "US05 - Actualizar datos comunes del perfil")
+    @Operation(summary = "Actualizar datos comunes del perfil")
     public ResponseEntity<ProfileResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
         Authentication a = auth();
         if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -76,7 +63,8 @@ public class ProfileController {
     // -------------------------------------------------------------------------
 
     @PostMapping("/student")
-    @Operation(summary = "US06 - Crear perfil de estudiante")
+    @Operation(summary = "US04 - Crear perfil de estudiante")
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<StudentProfileResponse> createStudentProfile(
             @Valid @RequestBody CreateStudentProfileRequest request) {
         Authentication a = auth();
@@ -86,13 +74,13 @@ public class ProfileController {
     }
 
     @GetMapping("/student/{userId}")
-    @Operation(summary = "Obtener perfil de estudiante por userId")
+    @Operation(summary = "US04 - Obtener perfil de estudiante por userId")
     public ResponseEntity<StudentProfileResponse> getStudentProfile(@PathVariable UUID userId) {
         return ResponseEntity.ok(profileService.getStudentProfile(userId));
     }
 
     @PatchMapping("/student/me")
-    @Operation(summary = "Actualizar perfil de estudiante")
+    @Operation(summary = "US04 - Actualizar perfil de estudiante")
     public ResponseEntity<StudentProfileResponse> updateStudentProfile(
             @Valid @RequestBody UpdateStudentProfileRequest request) {
         Authentication a = auth();
@@ -105,7 +93,8 @@ public class ProfileController {
     // -------------------------------------------------------------------------
 
     @PostMapping("/teacher")
-    @Operation(summary = "Crear perfil de docente")
+    @Operation(summary = "US05 - Crear perfil de docente")
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<TeacherProfileResponse> createTeacherProfile(
             @Valid @RequestBody CreateTeacherProfileRequest request) {
         Authentication a = auth();
@@ -115,7 +104,7 @@ public class ProfileController {
     }
 
     @PatchMapping("/teacher/me")
-    @Operation(summary = "Actualizar perfil de docente")
+    @Operation(summary = "US05 - Actualizar perfil de docente")
     public ResponseEntity<TeacherProfileResponse> updateTeacherProfile(
             @Valid @RequestBody UpdateTeacherProfileRequest request) {
         Authentication a = auth();
@@ -129,6 +118,7 @@ public class ProfileController {
 
     @PostMapping("/academy")
     @Operation(summary = "US06 - Crear perfil de academia")
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<AcademyProfileResponse> createAcademyProfile(
             @Valid @RequestBody CreateAcademyProfileRequest request) {
         Authentication a = auth();
@@ -151,7 +141,7 @@ public class ProfileController {
     // -------------------------------------------------------------------------
 
     @GetMapping("/{userId}")
-    @Operation(summary = "US06 - Ver perfil público de cualquier usuario")
+    @Operation(summary = "Ver perfil público de cualquier usuario")
     public ResponseEntity<ProfileResponse> getPublicProfile(@PathVariable UUID userId) {
         Authentication a = auth();
         if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

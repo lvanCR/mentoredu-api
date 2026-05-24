@@ -1,6 +1,6 @@
 {
-  "name": "MentorEduLibraryUS16-PublishExercisePOST",
-  "description": "Caso 01 — Exitoso: docente publica un ejercicio con acepta_resoluciones=true y resource_type=PRACTICA. Espera 201 Created.",
+  "name": "US16-PublishExercise-Exitoso",
+  "description": "Caso 01 — Exitoso: docente publica un ejercicio con aceptaResoluciones=true y resourceType=PRACTICA. Espera 201 Created.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/resources",
@@ -9,14 +9,8 @@
       { "key": "Content-Type", "value": "application/json" }
     ],
     "body": {
-      "fileId": "{{file_id}}",
-      "title": "Práctica de Álgebra Lineal — Vectores",
-      "description": "Ejercicio de vectores en R3 sin solución adjunta.",
-      "resourceType": "PRACTICA",
-      "universityId": "{{university_id}}",
-      "areaId": "{{area_id}}",
-      "courseId": "{{course_id}}",
-      "acepta_resoluciones": true
+      "mode": "raw",
+      "raw": "{\n  \"title\": \"Práctica de Álgebra Lineal — Vectores\",\n  \"description\": \"Ejercicio de vectores en R3 sin solución adjunta.\",\n  \"resourceType\": \"PRACTICA\",\n  \"universityId\": \"{{university_id}}\",\n  \"areaId\": \"{{area_id}}\",\n  \"courseId\": \"{{course_id}}\",\n  \"aceptaResoluciones\": true,\n  \"fileUrl\": \"{{file_url}}\",\n  \"fileName\": \"{{file_name}}\",\n  \"mimeType\": \"{{mime_type}}\",\n  \"sizeBytes\": \"{{size_bytes}}\"\n}"
     }
   },
   "expectedResponse": {
@@ -25,7 +19,7 @@
       "id": "<uuid>",
       "title": "Práctica de Álgebra Lineal — Vectores",
       "resourceType": "PRACTICA",
-      "acepta_resoluciones": true,
+      "aceptaResoluciones": true,
       "createdAt": "<timestamp>"
     }
   }

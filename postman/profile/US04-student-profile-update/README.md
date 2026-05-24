@@ -1,85 +1,69 @@
-# HU07 — Actualizar universidad objetivo del estudiante
+# US04 — Actualizar perfil de estudiante
 
-**Epic**: EP-02 Profile  
-**Endpoint**: `PATCH /api/v1/profiles/student/me`  
-**Autenticación**: Bearer Token requerido  
-**Nombre Postman**: `MentorEduProfileHU07-UpdateTargetUniversityPATCH`
-
----
-
-## Descripción
-
-Permite al estudiante autenticado actualizar su universidad objetivo sin modificar el resto de campos de su perfil académico.
-
-**Flujo previo requerido**:
-1. US01 — Registrar cuenta
-2. US02 — Iniciar sesión (obtener token)
-3. US04 — Seleccionar tipo de cuenta (STUDENT)
-4. US06 — Crear perfil de estudiante
+**Epic**: EP-01 Profile
+**Bounded Context**: `profile`
+**Estado**: Implementada — 2026-05-22 `develop`
 
 ---
 
-## Headers requeridos
+## Endpoint
 
-| Header | Valor |
-|---|---|
-| `Content-Type` | `application/json` |
-| `Authorization` | `Bearer {{access_token}}` |
-
----
-
-## Body (JSON)
-
-```json
-{
-  "targetUniversity": "string (obligatorio, no vacío)"
-}
+```
+PATCH /api/v1/profiles/student/me
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
 ```
 
-### Campos del body
-
-| Campo | Tipo | Requerido | Validación |
-|---|---|---|---|
-| `targetUniversity` | string | ✅ Sí | No puede estar vacío, máx. 120 caracteres |
-| `schoolName` | string | No | Máx. 120 caracteres |
-| `gradeLevel` | string | No | Máx. 20 caracteres |
-| `targetCareer` | string | No | Máx. 120 caracteres |
-| `studyShift` | string | No | Máx. 30 caracteres |
-
-> Los campos opcionales se actualizan solo si se envían; los omitidos conservan su valor actual.
-
 ---
 
-## Reglas de negocio aplicables
+## Body — Todos los campos son opcionales
 
-| Regla | Descripción |
-|---|---|
-| RN-08 | El estudiante solo puede tener un perfil académico principal |
-| RN-11 | Solo se actualizan los campos enviados; los demás no se modifican |
-
----
-
-## Escenarios Gherkin → casos de prueba
-
-| Escenario | Archivo | Status esperado |
+| Campo                | Tipo   | Validación |
 |---|---|---|
-| Exitoso: perfil existe, targetUniversity válida enviada | `caso-01-exitoso.json` | 200 OK |
-| Alt exitoso: solo targetUniversity, demás campos sin cambios | `caso-02-solo-target-university.json` | 200 OK |
-| Error: targetUniversity vacío | `caso-03-targetuniversity-vacio.json` | 400 Bad Request |
-| Alt error: perfil de estudiante no existe | `caso-04-perfil-no-existe.json` | 404 Not Found |
-| Sin autenticación | `caso-05-sin-autenticacion.json` | 401 Unauthorized |
+| `schoolName`         | String | Máx. 120 chars |
+| `gradeLevel`         | String | Máx. 20 chars. Ej: `5TO_SECUNDARIA`, `EGRESADO` |
+| `studyShift`         | String | Máx. 30 chars. Ej: `MAÑANA`, `TARDE` |
+| `targetUniversityId` | UUID   | ID de universidad del catálogo (V9). Inexistente → 400 |
+| `targetAreaId`       | UUID   | ID de área del catálogo (V9). Inexistente → 400 |
+| `targetCareerId`     | UUID   | ID de carrera del catálogo (V9). Inexistente → 400 |
+
+> Los campos omitidos conservan su valor actual. Ningún campo es obligatorio en el PATCH.
+>
+> Los IDs de catálogo se obtienen con `GET /api/v1/catalog/universities`, `/api/v1/catalog/areas`, etc.
 
 ---
 
-## Respuesta exitosa (200)
+## Respuesta exitosa — 200 OK
 
 ```json
 {
-  "profileId": "uuid",
-  "schoolName": "Colegio Nacional",
+  "profileId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "gradeLevel": "5TO_SECUNDARIA",
-  "targetUniversity": "Universidad Nacional Mayor de San Marcos",
-  "targetCareer": "Ingeniería de Sistemas",
-  "studyShift": "MAÑANA"
+  "schoolName": "Colegio Nacional San Marcos",
+  "studyShift": "MAÑANA",
+  "targetUniversityId": "b1000000-0000-0000-0000-000000000001",
+  "targetAreaId": "b3000000-0000-0000-0000-000000000002",
+  "targetCareerId": "b4000000-0000-0000-0000-000000000009"
 }
 ```
+
+---
+
+## Escenarios de aceptación
+
+| # | Archivo | Escenario | HTTP esperado |
+|---|---|---|---|
+| 01 | `caso-01-exitoso.json` | Actualizar gradeLevel y schoolName | 200 OK |
+| 02 | `caso-02-solo-universidad.json` | Solo targetUniversityId con UUID válido | 200 OK |
+| 03 | `caso-03-university-no-existe.json` | targetUniversityId no existe en el catálogo | 400 Bad Request |
+| 04 | `caso-04-perfil-no-existe.json` | Perfil estudiante no existe aún | 404 Not Found |
+| 05 | `caso-05-sin-autenticacion.json` | Sin token | 401 Unauthorized |
+
+---
+
+## Flujo previo requerido
+
+1. `POST /api/v1/auth/login` → obtener `{{access_token}}`
+2. `POST /api/v1/profiles/student` → crear perfil (US04)
+3. Consultar catálogo para obtener UUIDs → `GET /api/v1/catalog/universities`
+4. Este PATCH → actualizar datos

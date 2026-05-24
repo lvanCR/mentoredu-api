@@ -1,38 +1,83 @@
-# HU06 — Crear perfil de estudiante
+# US04 — Editar perfil de estudiante
 
-**Endpoint:** `POST /api/v1/profiles/student`  
-**Auth requerida:** `Authorization: Bearer {{access_token}}`  
-**Nombre Postman:** `MentorEduProfileHU06-CreateStudentProfilePOST`
+**Epic**: EP-01 Profile
+**Bounded Context**: `profile`
+**Estado**: Implementada — 2026-05-22 `develop`
+**Nombre en Postman**: `MentorEduProfileUS04-CreateStudentProfilePOST`
 
-## Prerrequisito
+---
 
-El usuario debe haber ejecutado **HU04** con `profileType: STUDENT`. Sin perfil base, devuelve 404.
+## Endpoints
 
-## Campos del body
-
-| Campo | Tipo | Requerido | Descripción |
-|---|---|---|---|
-| `gradeLevel` | String | ✅ Sí | Grado académico. Ej.: `5TO_SECUNDARIA`, `4TO_SECUNDARIA`, `EGRESADO`. Máx. 20 chars. |
-| `targetUniversity` | String | ✅ Sí | Universidad objetivo. Máx. 120 chars. |
-| `schoolName` | String | No | Colegio de procedencia. Máx. 120 chars. |
-| `targetCareer` | String | No | Área/carrera objetivo. Máx. 120 chars. |
-| `studyShift` | String | No | Turno de estudio. Ej.: `MAÑANA`, `TARDE`. Máx. 30 chars. |
-
-## Restricciones de negocio
-
-- **RN-08**: Solo un perfil académico por estudiante. Segundo intento → 409.
-- La cuenta debe ser de tipo `STUDENT`. Tipo distinto → 409.
-- El criterio Gherkin menciona "área de preparación" — corresponde al campo `targetCareer` del DTO (opcional, nullable en BD según diagrama-er.puml).
-
-## Casos
-
-| Archivo | Escenario | HTTP esperado |
+| Método | Path | Descripción |
 |---|---|---|
-| `caso-01-exitoso-campos-obligatorios.json` | Solo gradeLevel + targetUniversity | 201 Created |
-| `caso-02-exitoso-todos-campos.json` | Todos los campos completos | 201 Created |
-| `caso-03-gradelevel-vacio.json` | gradeLevel vacío | 400 Bad Request |
-| `caso-04-targetuniversity-vacio.json` | targetUniversity vacío | 400 Bad Request |
-| `caso-05-perfil-ya-existe.json` | Segundo intento de creación | 409 Conflict |
-| `caso-06-tipo-incorrecto.json` | Cuenta no es STUDENT (ej. TEACHER) | 409 Conflict |
-| `caso-07-sin-perfil-base.json` | US04 no ejecutada | 404 Not Found |
-| `caso-08-sin-autenticacion.json` | Sin token | 401 Unauthorized |
+| `POST`  | `/api/v1/profiles/student`    | Crear perfil de estudiante (primera vez) |
+| `PATCH` | `/api/v1/profiles/student/me` | Actualizar perfil de estudiante existente |
+| `GET`   | `/api/v1/profiles/student/{userId}` | Obtener perfil de estudiante por userId |
+
+**Auth requerida:** `Authorization: Bearer {{access_token}}` (rol `STUDENT`)
+
+---
+
+## Body — POST y PATCH
+
+| Campo               | Tipo   | Requerido | Validación |
+|---|---|---|---|
+| `gradeLevel`        | String | ✅ Sí     | No vacío (`@NotBlank`), máx. 20 chars. Ej: `5TO_SECUNDARIA`, `4TO_SECUNDARIA`, `EGRESADO` |
+| `schoolName`        | String | No        | Máx. 120 chars |
+| `studyShift`        | String | No        | Máx. 30 chars. Ej: `MAÑANA`, `TARDE` |
+| `targetUniversityId`| UUID   | No        | ID de universidad del catálogo (V9). Inexistente → 400 (RN-03) |
+| `targetAreaId`      | UUID   | No        | ID de área del catálogo (V9). Inexistente → 400 (RN-03) |
+| `targetCareerId`    | UUID   | No        | ID de carrera del catálogo (V9). Inexistente → 400 (RN-03) |
+
+> Los IDs de catálogo se obtienen con `GET /api/v1/catalog/universities`, `/api/v1/catalog/areas`, etc.
+
+---
+
+## Reglas de negocio
+
+| Código | Regla |
+|---|---|
+| RN-01  | El rol de la cuenta debe ser `STUDENT`. Cualquier otro rol → 403. |
+| RN-03  | `targetUniversityId`, `targetAreaId` y `targetCareerId` deben existir en el catálogo. |
+| —      | Solo puede existir un `student_profile` por usuario. Segunda creación → 409. |
+
+---
+
+## Respuesta exitosa — 201 Created (POST) / 200 OK (PATCH)
+
+```json
+{
+  "profileId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "gradeLevel": "5TO_SECUNDARIA",
+  "schoolName": "Colegio Nacional San Marcos",
+  "studyShift": "MAÑANA",
+  "targetUniversityId": "b1000000-0000-0000-0000-000000000001",
+  "targetAreaId": "b3000000-0000-0000-0000-000000000002",
+  "targetCareerId": "b4000000-0000-0000-0000-000000000009"
+}
+```
+
+---
+
+## Escenarios de aceptación
+
+| # | Archivo | Escenario | HTTP esperado |
+|---|---|---|---|
+| 01 | `caso-01-exitoso-campos-obligatorios.json` | Solo `gradeLevel` | 201 Created |
+| 02 | `caso-02-exitoso-todos-campos.json`         | Todos los campos completos con IDs del catálogo | 201 Created |
+| 03 | `caso-03-gradelevel-vacio.json`             | `gradeLevel` vacío | 400 Bad Request |
+| 04 | `caso-04-university-no-existe.json`         | `targetUniversityId` no existe en el catálogo | 400 Bad Request |
+| 05 | `caso-05-perfil-ya-existe.json`             | Segundo intento de creación | 409 Conflict |
+| 06 | `caso-06-tipo-incorrecto.json`              | Cuenta no es `STUDENT` (ej. `TEACHER`) | 403 Forbidden |
+| 07 | `caso-07-sin-autenticacion.json`            | Sin token | 401 Unauthorized |
+
+---
+
+## Flujo de uso
+
+1. Registrar cuenta con `role: "STUDENT"` → `POST /api/v1/auth/register`
+2. Login → `POST /api/v1/auth/login` (obtener `{{access_token}}`)
+3. Consultar catálogo para obtener UUIDs válidos → `GET /api/v1/catalog/universities`
+4. Crear perfil → `POST /api/v1/profiles/student`
+5. Actualizar datos → `PATCH /api/v1/profiles/student/me`

@@ -1,47 +1,70 @@
-# HU14 — Search resources by filters
+# US09 — Buscar y filtrar recursos
 
-**Epic**: EP-04 Library  
-**Endpoint**: `GET /api/v1/resources/search`  
-**Auth**: No requerida (endpoint público)  
-**Content-Type**: ninguno — parámetros por query string
+**Epic**: EP-02 Library
+**Bounded Context**: `library`
+**Estado**: Implementada — 2026-05-22 `develop`
 
 ---
 
-## Descripción
+## Endpoint
 
-Busca recursos académicos aplicando filtros opcionales combinables.  
-Los recursos PRIVATE nunca aparecen en resultados (solo PUBLIC y PREMIUM).  
-Devuelve lista vacía `[]` si no hay coincidencias (sin error).
+```
+GET /api/v1/resources
+Authorization: Bearer {{access_token}}
+```
 
-## Filtros disponibles
+Requiere autenticación. Todos los filtros son opcionales y combinables.
 
-| Parámetro | Tipo | Requerido | Descripción |
-|---|---|---|---|
-| `q` | String | No | Texto libre en el título |
-| `type` | String | No | `EXAM`, `SOLUTION`, `NOTES`, `PRACTICE`, `VIDEO`, `OTHER` |
-| `visibility` | String | No | `PUBLIC` o `PREMIUM` (PRIVATE no permitido) |
-| `institutionId` | UUID | No | ID de la institución |
-| `subjectId` | UUID | No | ID de la materia/curso |
-| `year` | Integer | No | Año del examen (1900–2099) |
+---
+
+## Parámetros de query string
+
+| Parámetro      | Tipo   | Descripción |
+|---|---|---|
+| `q`            | String | Texto libre en el título del recurso |
+| `type`         | String | Tipo de recurso (ver valores válidos abajo) |
+| `universityId` | UUID   | Filtrar por universidad |
+| `areaId`       | UUID   | Filtrar por área (dentro de la universidad) |
+| `careerId`     | UUID   | Filtrar por carrera |
+| `courseId`     | UUID   | Filtrar por curso |
+| `page`         | int    | Número de página (default: 0) |
+| `size`         | int    | Elementos por página (default: 20) |
+
+## Tipos de recurso válidos (`type`)
+
+`EXAMEN_COMPLETO`, `EXAMEN_SECCION`, `GUIA`, `APUNTES`, `PRACTICA`, `OTRO`
+
+> Recursos con visibilidad `PRIVATE` nunca aparecen en resultados (solo `PUBLIC` y `PREMIUM`).
+
+---
+
+## Respuesta exitosa — 200 OK
+
+Devuelve `PagedResponse<ResourceResponse>`:
+
+```json
+{
+  "content": [ { "id": "...", "title": "...", "resourceType": "EXAMEN_COMPLETO", ... } ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 5,
+  "totalPages": 1,
+  "last": true
+}
+```
+
+Lista vacía en `content` si no hay coincidencias — no es un error.
 
 ---
 
 ## Casos de prueba
 
-| Caso | Archivo | Descripción | HTTP |
+| # | Archivo | Escenario | HTTP esperado |
 |---|---|---|---|
-| 01 | `caso-01.json` | Exitoso — búsqueda sin filtros | 200 |
-| 02 | `caso-02.json` | Error — tipo de recurso inválido | 400 |
-| 03 | `caso-03.json` | Alternativo exitoso — filtros válidos sin coincidencias (lista vacía) | 200 |
-| 04 | `caso-04.json` | Alternativo error — filtros inconsistentes (year fuera de rango) | 400 |
-
----
-
-## Nombre de requests en Postman
-
-```
-MentorEduLibraryHU14-SearchResourcesGET
-```
+| 01 | `caso-01.json` | Búsqueda sin filtros (todos los recursos) | 200 OK |
+| 02 | `caso-02.json` | Filtro por `type` inválido | 400 Bad Request |
+| 03 | `caso-03.json` | Filtro válido sin coincidencias (lista vacía) | 200 OK |
+| 04 | `caso-04.json` | Filtro por `universityId` y `type` combinados | 200 OK |
 
 ---
 
@@ -49,6 +72,6 @@ MentorEduLibraryHU14-SearchResourcesGET
 
 | Variable | Descripción |
 |---|---|
-| `{{api_v1}}` | `http://localhost:8080/api/v1` |
-
-> No requiere `{{access_token}}` — el endpoint es público.
+| `{{access_token}}` | JWT obtenido en US02 login |
+| `{{university_id}}` | UUID de universidad del seed V9 |
+| `{{area_id}}` | UUID de área del seed V9 |

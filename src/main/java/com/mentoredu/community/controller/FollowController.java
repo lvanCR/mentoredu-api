@@ -2,6 +2,9 @@ package com.mentoredu.community.controller;
 
 import com.mentoredu.community.service.IFollowService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,10 @@ public class FollowController {
 
     @PostMapping("/{userId}/follow")
     @Operation(summary = "US21 - Seguir o dejar de seguir a un usuario (toggle)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Seguimiento creado", content = @Content),
+        @ApiResponse(responseCode = "204", description = "Seguimiento eliminado", content = @Content)
+    })
     public ResponseEntity<Void> toggleFollow(@PathVariable UUID userId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

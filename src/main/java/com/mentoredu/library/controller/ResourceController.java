@@ -42,8 +42,9 @@ public class ResourceController {
     // -------------------------------------------------------------------------
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(
-        summary = "Registrar recurso académico",
+        summary = "US08 - Registrar recurso académico",
         description = "Publica un recurso académico. El campo fileUrl debe provenir de POST /resources/files. "
             + "Tipos válidos: EXAMEN, GUIA, APUNTES, PRACTICA, OTRO. "
             + "aceptaResoluciones solo puede ser true para TEACHER, ACADEMY o ADMIN (RN-14)."
@@ -61,7 +62,7 @@ public class ResourceController {
 
     @GetMapping
     @Operation(
-        summary = "Buscar recursos académicos por filtros",
+        summary = "US09 - Buscar recursos académicos por filtros",
         description = "Todos los filtros son opcionales. careerId filtra por carrera específica dentro del área. "
             + "Recursos PRIVATE nunca aparecen en resultados. Soporta paginación con page (default 0) y size (default 20)."
     )
@@ -83,7 +84,7 @@ public class ResourceController {
     // -------------------------------------------------------------------------
 
     @GetMapping("/{id}")
-    @Operation(summary = "Obtener metadatos de un recurso por ID")
+    @Operation(summary = "US09 - Obtener metadatos de un recurso por ID")
     public ResponseEntity<ResourceResponse> getById(@PathVariable UUID id) {
         Authentication a = auth();
         if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -95,7 +96,7 @@ public class ResourceController {
     // -------------------------------------------------------------------------
 
     @GetMapping("/me")
-    @Operation(summary = "Ver mis recursos publicados (US11)")
+    @Operation(summary = "US11 - Ver mis recursos publicados")
     public ResponseEntity<PagedResponse<ResourceResponse>> getMyResources(
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -109,7 +110,7 @@ public class ResourceController {
     // -------------------------------------------------------------------------
 
     @PatchMapping("/{id}/settings")
-    @Operation(summary = "Actualizar configuración de un recurso (US16)",
+    @Operation(summary = "US16 - Activar o desactivar acepta_resoluciones en un recurso",
                description = "Permite al autor activar o desactivar acepta_resoluciones. Solo válido para PRACTICA (RN-08). STUDENT → 403 (RN-05).")
     public ResponseEntity<ResourceResponse> updateSettings(
             @PathVariable UUID id,
@@ -124,7 +125,7 @@ public class ResourceController {
     // -------------------------------------------------------------------------
 
     @GetMapping("/{id}/download")
-    @Operation(summary = "Descargar un recurso académico (US10)")
+    @Operation(summary = "US10 - Descargar un recurso académico")
     public ResponseEntity<DownloadResponse> download(@PathVariable UUID id) {
         Authentication a = auth();
         if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

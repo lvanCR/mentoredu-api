@@ -44,96 +44,6 @@ class ProfileControllerTest {
     private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
 
     // =========================================================================
-    // US04 — Select account type
-    // =========================================================================
-
-    @Test
-    @WithMockUser(username = "juan@example.com")
-    void selectAccountType_withStudent_returns201() throws Exception {
-        var response = buildProfileResponse(ProfileType.STUDENT);
-        when(profileService.selectAccountType(eq("juan@example.com"), any())).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/profiles/account-type")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestFor(ProfileType.STUDENT))))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.profileType").value("STUDENT"))
-                .andExpect(jsonPath("$.userId").exists())
-                .andExpect(jsonPath("$.displayName").value("Juan Pérez"));
-    }
-
-    @Test
-    @WithMockUser(username = "teacher@example.com")
-    void selectAccountType_withTeacher_returns201() throws Exception {
-        var response = buildProfileResponse(ProfileType.TEACHER);
-        when(profileService.selectAccountType(eq("teacher@example.com"), any())).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/profiles/account-type")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestFor(ProfileType.TEACHER))))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.profileType").value("TEACHER"));
-    }
-
-    @Test
-    @WithMockUser(username = "academy@example.com")
-    void selectAccountType_withAcademy_returns201() throws Exception {
-        var response = buildProfileResponse(ProfileType.ACADEMY);
-        when(profileService.selectAccountType(eq("academy@example.com"), any())).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/profiles/account-type")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestFor(ProfileType.ACADEMY))))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.profileType").value("ACADEMY"));
-    }
-
-    @Test
-    @WithMockUser(username = "juan@example.com")
-    void selectAccountType_whenProfileAlreadyExists_returns409() throws Exception {
-        when(profileService.selectAccountType(any(), any()))
-                .thenThrow(new ProfileAlreadyExistsException(
-                        "User already has a profile. Account type cannot be changed."));
-
-        mockMvc.perform(post("/api/v1/profiles/account-type")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestFor(ProfileType.STUDENT))))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"))
-                .andExpect(jsonPath("$.message").value("User already has a profile. Account type cannot be changed."));
-    }
-
-    @Test
-    @WithMockUser(username = "juan@example.com")
-    void selectAccountType_withInvalidType_returns400() throws Exception {
-        String invalidBody = "{\"profileType\": \"ADMIN\"}";
-
-        mockMvc.perform(post("/api/v1/profiles/account-type")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(invalidBody))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Bad Request"));
-    }
-
-    @Test
-    @WithMockUser(username = "juan@example.com")
-    void selectAccountType_withMissingProfileType_returns400() throws Exception {
-        mockMvc.perform(post("/api/v1/profiles/account-type")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.profileType").exists());
-    }
-
-    @Test
-    void selectAccountType_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(post("/api/v1/profiles/account-type")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestFor(ProfileType.STUDENT))))
-                .andExpect(status().isUnauthorized());
-    }
-
-    // =========================================================================
     // US05 — Update common profile data
     // =========================================================================
 
@@ -750,12 +660,6 @@ class ProfileControllerTest {
     // =========================================================================
     // Helpers
     // =========================================================================
-
-    private SelectAccountTypeRequest requestFor(ProfileType type) {
-        var r = new SelectAccountTypeRequest();
-        r.setProfileType(type);
-        return r;
-    }
 
     private ProfileResponse buildProfileResponse(ProfileType type) {
         Profile profile = Profile.builder()

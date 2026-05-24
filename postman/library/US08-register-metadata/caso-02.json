@@ -1,26 +1,20 @@
 {
-  "name": "MentorEduLibraryHU13-RegisterResourceMissingTitlePOST",
-  "description": "Caso 02 — Error: falta campo obligatorio 'title'. Respuesta esperada: 400 Bad Request con details.title.",
+  "name": "US08-RegisterResource-SinTitle",
+  "description": "Caso 02 — Error: falta campo obligatorio 'title'. Respuesta esperada: 400 Bad Request.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/resources",
     "header": [
-      { "key": "Authorization", "value": "Bearer {{access_token}}" },
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
       { "key": "Content-Type",  "value": "application/json" }
     ],
     "body": {
       "mode": "raw",
-      "raw": {
-        "fileId": "{{file_id}}",
-        "institutionId": "{{institution_id}}",
-        "subjectId": "{{subject_id}}",
-        "year": 2024,
-        "type": "EXAM"
-      }
+      "raw": "{\n  \"universityId\": \"{{university_id}}\",\n  \"areaId\": \"{{area_id}}\",\n  \"resourceType\": \"EXAMEN_COMPLETO\",\n  \"fileUrl\": \"{{file_url}}\",\n  \"fileName\": \"{{file_name}}\",\n  \"mimeType\": \"{{mime_type}}\",\n  \"sizeBytes\": \"{{size_bytes}}\"\n}"
     }
   },
   "expectedResponse": {
     "status": 400,
-    "fields": ["details.title"]
+    "fields": ["message"]
   }
 }

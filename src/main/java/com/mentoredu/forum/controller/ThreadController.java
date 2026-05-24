@@ -28,10 +28,11 @@ public class ThreadController {
     private final IThreadService threadService;
 
     // -------------------------------------------------------------------------
-    // US16 — Create forum thread
+    // US12 — Create forum thread
     // -------------------------------------------------------------------------
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(
         summary = "US12 - Crear hilo de foro",
         description = "Crea un hilo de discusión con clasificación multi-modal (RN-12). "
@@ -51,12 +52,12 @@ public class ThreadController {
     }
 
     // -------------------------------------------------------------------------
-    // US16 — List recent threads (read, paginated)
+    // US12 — List recent threads (read, paginated)
     // -------------------------------------------------------------------------
 
     @GetMapping
     @Operation(
-        summary = "US16 - Listar hilos recientes",
+        summary = "US12 - Listar hilos recientes",
         description = "Devuelve los hilos de discusión ordenados del más reciente al más antiguo. "
             + "Parámetros de paginación: page (default 0) y size (default 10). "
             + "Requiere autenticación JWT."
@@ -72,12 +73,12 @@ public class ThreadController {
     }
 
     // -------------------------------------------------------------------------
-    // US16 — Get thread by ID
+    // US12 — Get thread by ID
     // -------------------------------------------------------------------------
 
     @GetMapping("/{id}")
     @Operation(
-        summary = "US16 - Obtener hilo por ID",
+        summary = "US12 - Obtener hilo por ID",
         description = "Devuelve los datos de un hilo de discusión existente. "
             + "Devuelve 404 si el hilo no existe. Requiere autenticación JWT."
     )
@@ -90,12 +91,12 @@ public class ThreadController {
     }
 
     // -------------------------------------------------------------------------
-    // US18 — Close forum thread
+    // US12 — Close forum thread
     // -------------------------------------------------------------------------
 
     @PatchMapping("/{id}/close")
     @Operation(
-        summary = "US18 - Cerrar hilo de foro",
+        summary = "US12 - Cerrar hilo de foro",
         description = "Cambia el estado del hilo a CLOSED. Solo el autor puede cerrarlo (RN-18). "
             + "Una vez cerrado, el hilo no acepta nuevas respuestas (RN-17). "
             + "Devuelve 403 si el solicitante no es el autor, 404 si el hilo no existe. "

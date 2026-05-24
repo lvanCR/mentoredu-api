@@ -1,13 +1,15 @@
 {
-  "name": "MentorEduLibraryHU14-SearchResourcesInvalidYearGET",
-  "description": "Caso 04 — Alternativo error: filtros inconsistentes — año fuera del rango permitido (1900–2099). Respuesta esperada: 400 Bad Request con message.",
+  "name": "US09-SearchResources-FiltroUniversidadYTipo",
+  "description": "Caso 04 — Exitoso: filtro combinado universityId + type=EXAMEN_COMPLETO. Devuelve recursos que coincidan.",
   "request": {
     "method": "GET",
-    "url": "{{api_v1}}/resources/search?year=1800",
-    "header": []
+    "url": "{{api_v1}}/resources?universityId={{university_id}}&type=EXAMEN_COMPLETO&page=0&size=20",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+    ]
   },
   "expectedResponse": {
-    "status": 400,
-    "fields": ["error", "message"]
+    "status": 200,
+    "fields": ["content", "page", "size", "totalElements", "totalPages", "last"]
   }
 }

@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -18,6 +20,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/threads")
 @RequiredArgsConstructor
+@Tag(name = "Foro — Respuestas", description = "Publicar y listar respuestas en hilos del foro (US13).")
+@SecurityRequirement(name = "bearerAuth")
 public class AnswerController {
 
     private final IAnswerService answerService;
@@ -27,6 +31,8 @@ public class AnswerController {
     }
 
     @PostMapping("/{threadId}/answers")
+    @ResponseStatus(HttpStatus.CREATED)
+    @io.swagger.v3.oas.annotations.Operation(summary = "US13 - Responder a un hilo de foro")
     public ResponseEntity<AnswerResponse> create(
             @PathVariable UUID threadId,
             @Valid @RequestBody CreateAnswerRequest request) {
@@ -37,6 +43,7 @@ public class AnswerController {
     }
 
     @GetMapping("/{threadId}/answers")
+    @io.swagger.v3.oas.annotations.Operation(summary = "US13 - Listar respuestas de un hilo")
     public ResponseEntity<PagedResponse<AnswerResponse>> list(
             @PathVariable UUID threadId,
             @RequestParam(defaultValue = "0")  int page,

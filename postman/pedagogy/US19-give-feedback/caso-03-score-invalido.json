@@ -1,6 +1,6 @@
 {
-  "name": "MentorEduPedagogyUS19-GiveFeedbackInvalidScorePOST",
-  "description": "Caso 03 — Score inválido: valor fuera del rango 0.0-10.0. Espera 400 Bad Request (RN-22).",
+  "name": "US19-GiveFeedback-ScoreInvalido",
+  "description": "Caso 03 — Score fuera de rango (> 10.0). Espera 400 Bad Request (RN-22).",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/solutions/{{solution_id}}/feedback",
@@ -9,8 +9,8 @@
       { "key": "Content-Type", "value": "application/json" }
     ],
     "body": {
-      "score": 11.0,
-      "comment": "Score fuera de rango."
+      "mode": "raw",
+      "raw": "{\n  \"score\": 11.0,\n  \"body\": \"Score fuera de rango permitido.\"\n}"
     }
   },
   "expectedResponse": {

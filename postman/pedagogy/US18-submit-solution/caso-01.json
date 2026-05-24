@@ -1,24 +1,25 @@
 {
-  "description": "US39 — Escenario exitoso: resolución enviada correctamente",
-  "scenario": "Dado que el recurso tiene allows_solutions=true y no existe resolución previa, cuando el estudiante envía un fileId válido, entonces el sistema registra la solución con status SUBMITTED y otorga 3 XP.",
+  "description": "US18 — Caso 01: resolución enviada correctamente con fileUrl.",
+  "scenario": "Dado que el recurso acepta resoluciones y no existe resolución previa, cuando el estudiante envía fileUrl válido, entonces el sistema registra la solución con status SUBMITTED.",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/resources/{{resourceId}}/solutions",
+    "url": "{{api_v1}}/resources/{{resource_id}}/solutions",
     "headers": {
       "Authorization": "Bearer {{student_token}}",
       "Content-Type": "application/json"
     },
     "body": {
-      "fileId": "{{fileId}}"
+      "fileUrl": "{{file_url}}"
     }
   },
   "expected_response": {
     "status": 201,
     "body": {
-      "solutionId": "<uuid>",
-      "resourceId": "{{resourceId}}",
+      "id": "<uuid>",
+      "resourceId": "{{resource_id}}",
       "studentId": "<uuid>",
-      "fileId": "{{fileId}}",
+      "fileUrl": "{{file_url}}",
+      "content": null,
       "status": "SUBMITTED",
       "submittedAt": "<datetime>"
     }

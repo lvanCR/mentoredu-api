@@ -28,6 +28,7 @@ public class AssociationController {
     private final IAssociationService associationService;
 
     @PostMapping("/teacher-academy")
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "US24 - Docente solicita asociarse a una academia")
     public ResponseEntity<AssociationResponse> request(@Valid @RequestBody CreateAssociationRequest request) {
         Authentication auth = auth();

@@ -66,8 +66,8 @@ este endpoint (RN-46).
 
 ## Flujo previo requerido
 
-1. `POST /api/v1/resources/files` (HU12) → obtener `fileId`
-2. `POST /api/v1/resources` (HU13) con `allowsSolutions=true` → obtener `resourceId`
-3. `POST /api/v1/resources/{resourceId}/solutions` (HU39) → enviar resolución
-4. *(Opcional)* `POST /api/v1/feedback` (HU40) con `solutionId` → docente da feedback
-5. `GET /api/v1/resources/{resourceId}/solutions/mine` (HU41) → este endpoint
+1. `POST /api/v1/resources/files` (US07) → obtener `fileUrl`
+2. `POST /api/v1/resources` (US08) con `acepta_resoluciones=true` → obtener `resourceId`
+3. `POST /api/v1/resources/{resourceId}/solutions` (US18) → enviar resolución
+4. *(Opcional)* `POST /api/v1/solutions/{solutionId}/feedback` (US19) → docente da feedback
+5. `GET /api/v1/resources/{resourceId}/solutions/mine` (US20) → este endpoint

@@ -1,35 +1,73 @@
-# US25 — View pending notifications
+# US27 — Ver mis notificaciones
 
-**Endpoint**: `GET /api/v1/notifications/me/pending`  
-**Auth**: Bearer JWT requerido  
-**Descripción**: Devuelve las notificaciones no leídas del usuario autenticado, ordenadas por fecha descendente.
+**Epic**: EP-05 Community
+**Bounded Context**: `community`
+**Estado**: Implementada — 2026-05-22 `develop`
 
-## Casos
+---
 
-| Caso | Escenario Gherkin | HTTP esperado |
+## Endpoints
+
+| Método  | Path | Descripción |
 |---|---|---|
-| caso-01 | Exitoso — tiene notificaciones pendientes | 200 OK con lista |
-| caso-02 | Error — sin autenticación | 401 Unauthorized |
-| caso-03 | Alternativo exitoso — sin notificaciones pendientes | 200 OK lista vacía |
+| `GET`   | `/api/v1/notifications/me` | Todas las notificaciones (paginado) |
+| `GET`   | `/api/v1/notifications/me/pending` | Solo no leídas (paginado) |
+| `PATCH` | `/api/v1/notifications/{id}/read` | Marcar una notificación como leída |
 
-## Respuesta exitosa (200)
+**Auth requerida:** `Authorization: Bearer {{access_token}}`
+
+---
+
+## Tipos de notificación válidos (`type`)
+
+| Tipo | Disparado en |
+|---|---|
+| `new_follower` | Alguien te siguió (US21) |
+| `answer_received` | Respondieron tu hilo (US13) |
+| `comment_received` | Comentaron tu respuesta (US15) |
+| `reaction_received` | Reaccionaron a tu contenido (US14) |
+| `solution_submitted` | Enviaron resolución a tu ejercicio (US18) |
+| `feedback_received` | El docente revisó tu resolución (US19) |
+| `verification_processed` | Verificación resuelta (US23) |
+| `association_resolved` | Solicitud de asociación resuelta (US24) |
+
+---
+
+## Respuesta exitosa — 200 OK (GET)
+
+Devuelve `PagedResponse<NotificationResponse>`:
 
 ```json
-[
-  {
-    "id": "uuid",
-    "userId": "uuid",
-    "type": "FORUM_REPLY",
-    "title": "Alguien respondió tu hilo",
-    "message": "Tu hilo 'Cómo resolver integrales...' recibió una nueva respuesta.",
-    "read": false,
-    "createdAt": "2026-05-18T10:30:00"
-  }
-]
+{
+  "content": [
+    {
+      "id": "uuid",
+      "userId": "uuid",
+      "type": "answer_received",
+      "payload": { "threadId": "uuid", "threadTitle": "¿Cómo resolver integrales?" },
+      "readAt": null,
+      "createdAt": "2026-05-22T10:30:00"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 3,
+  "totalPages": 1,
+  "last": true
+}
 ```
 
-## Notas
+## Respuesta PATCH /read — 204 No Content
 
-- Una lista vacía (`[]`) no es un error; indica que no hay notificaciones pendientes.
-- `read: false` siempre en este endpoint (solo devuelve `read_at IS NULL`).
-- Las notificaciones son generadas por eventos del sistema (RN-29), no por operaciones directas del usuario.
+El body de respuesta está vacío. No devuelve objeto JSON.
+
+---
+
+## Casos de prueba
+
+| # | Archivo | Escenario | HTTP esperado |
+|---|---|---|---|
+| 01 | `caso-01-exitoso.json` | Tiene notificaciones pendientes | 200 OK |
+| 02 | `caso-02-sin-autenticacion.json` | Sin token | 401 Unauthorized |
+| 03 | `caso-03-lista-vacia.json` | Sin notificaciones pendientes | 200 OK (content vacío) |
+| 04 | `caso-04-marcar-leida.json` | Marcar notificación como leída | **204 No Content** |
