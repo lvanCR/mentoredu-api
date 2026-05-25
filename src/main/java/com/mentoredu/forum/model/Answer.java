@@ -23,7 +23,7 @@ public class Answer {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "thread_id", nullable = false)
-    private Thread thread;
+    private ForumThread thread;
 
     @Column(columnDefinition = "text", nullable = false)
     private String body;

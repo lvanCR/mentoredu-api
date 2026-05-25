@@ -1,8 +1,7 @@
 package com.mentoredu.forum.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.exception.UserNotFoundException;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.forum.dto.CreateReactionRequest;
 import com.mentoredu.forum.dto.ReactionResponse;
 import com.mentoredu.forum.event.ReactionCreatedEvent;
@@ -34,7 +33,7 @@ public class ReactionService implements IReactionService {
     private final ThreadRepository   threadRepository;
     private final AnswerRepository   answerRepository;
     private final CommentRepository  commentRepository;
-    private final UserRepository     userRepository;
+    private final UserService        userService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -107,8 +106,7 @@ public class ReactionService implements IReactionService {
     }
 
     private User loadUser(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + email));
+        return userService.findByEmailOrThrow(email);
     }
 
     private ReactionResponse toResponse(Reaction r) {

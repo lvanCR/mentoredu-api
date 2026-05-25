@@ -1,8 +1,7 @@
 package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.exception.UserNotFoundException;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.NotificationResponse;
 import com.mentoredu.community.event.AssociationResolvedEvent;
@@ -36,33 +35,30 @@ import java.util.UUID;
 public class NotificationService implements INotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final UserRepository         userRepository;
+    private final UserService            userService;
 
     @Override
     @Transactional(readOnly = true)
     public PagedResponse<NotificationResponse> getMyNotifications(String userEmail, int page, int size) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userEmail));
+        User user = userService.findByEmailOrThrow(userEmail);
         return PagedResponse.from(
-                notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size)),
+                notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), PagedResponse.toPageRequest(page, size)),
                 NotificationResponse::from);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PagedResponse<NotificationResponse> getPendingNotifications(String userEmail, int page, int size) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userEmail));
+        User user = userService.findByEmailOrThrow(userEmail);
         return PagedResponse.from(
-                notificationRepository.findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size)),
+                notificationRepository.findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(user.getId(), PagedResponse.toPageRequest(page, size)),
                 NotificationResponse::from);
     }
 
     @Override
     @Transactional
     public void markAsRead(UUID notificationId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userEmail));
+        User user = userService.findByEmailOrThrow(userEmail);
 
         Notification notification = notificationRepository.findById(notificationId)
                 .filter(n -> n.getUser().getId().equals(user.getId()))
@@ -77,7 +73,7 @@ public class NotificationService implements INotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAnswerCreated(AnswerCreatedEvent event) {
         try {
-            userRepository.findById(event.threadAuthorId()).ifPresent(recipient ->
+            userService.findById(event.threadAuthorId()).ifPresent(recipient ->
                 notificationRepository.save(Notification.builder()
                         .user(recipient).type("answer_received")
                         .payload(Map.of("answerId", event.answerId().toString(),
@@ -94,7 +90,7 @@ public class NotificationService implements INotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCommentCreated(CommentCreatedEvent event) {
         try {
-            userRepository.findById(event.answerAuthorId()).ifPresent(recipient ->
+            userService.findById(event.answerAuthorId()).ifPresent(recipient ->
                 notificationRepository.save(Notification.builder()
                         .user(recipient).type("comment_received")
                         .payload(Map.of("commentId", event.commentId().toString(),
@@ -115,7 +111,7 @@ public class NotificationService implements INotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onVerificationProcessed(VerificationProcessedEvent event) {
         try {
-            userRepository.findById(event.requesterId()).ifPresent(recipient -> {
+            userService.findById(event.requesterId()).ifPresent(recipient -> {
                 var payload = new java.util.HashMap<String, Object>();
                 payload.put("requestId",  event.requestId().toString());
                 payload.put("entityType", event.entityType());
@@ -138,7 +134,7 @@ public class NotificationService implements INotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAssociationResolved(AssociationResolvedEvent event) {
         try {
-            userRepository.findById(event.teacherUserId()).ifPresent(recipient ->
+            userService.findById(event.teacherUserId()).ifPresent(recipient ->
                 notificationRepository.save(Notification.builder()
                         .user(recipient).type("association_resolved")
                         .payload(Map.of("linkId", event.linkId().toString(),
@@ -160,7 +156,7 @@ public class NotificationService implements INotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onUserFollowed(UserFollowedEvent event) {
         try {
-            userRepository.findById(event.followedId()).ifPresent(recipient ->
+            userService.findById(event.followedId()).ifPresent(recipient ->
                 notificationRepository.save(Notification.builder()
                         .user(recipient).type("new_follower")
                         .payload(Map.of("followerId", event.followerId().toString()))
@@ -180,7 +176,7 @@ public class NotificationService implements INotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onReactionCreated(ReactionCreatedEvent event) {
         try {
-            userRepository.findById(event.contentAuthorId()).ifPresent(recipient ->
+            userService.findById(event.contentAuthorId()).ifPresent(recipient ->
                 notificationRepository.save(Notification.builder()
                         .user(recipient).type("reaction_received")
                         .payload(Map.of("reactorId", event.reactorId().toString(),
@@ -203,7 +199,7 @@ public class NotificationService implements INotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onSolutionSubmitted(SolutionSubmittedEvent event) {
         try {
-            userRepository.findById(event.exerciseAuthorId()).ifPresent(recipient ->
+            userService.findById(event.exerciseAuthorId()).ifPresent(recipient ->
                 notificationRepository.save(Notification.builder()
                         .user(recipient).type("solution_submitted")
                         .payload(Map.of("solutionId", event.solutionId().toString(),
@@ -225,7 +221,7 @@ public class NotificationService implements INotificationService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onFeedbackGiven(FeedbackGivenEvent event) {
         try {
-            userRepository.findById(event.studentId()).ifPresent(recipient ->
+            userService.findById(event.studentId()).ifPresent(recipient ->
                 notificationRepository.save(Notification.builder()
                         .user(recipient).type("feedback_received")
                         .payload(Map.of("feedbackId", event.feedbackId().toString(),

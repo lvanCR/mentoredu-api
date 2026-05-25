@@ -55,7 +55,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
 
     private Map<String, Object> body(HttpStatus status, String error, String message) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("timestamp", Instant.now().toString());
         body.put("status", status.value());
         body.put("error", error);
         body.put("message", message);
@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
             fieldErrors.put(field, error.getDefaultMessage());
         });
         Map<String, Object> b = new LinkedHashMap<>();
-        b.put("timestamp", LocalDateTime.now().toString());
+        b.put("timestamp", Instant.now().toString());
         b.put("status", HttpStatus.BAD_REQUEST.value());
         b.put("error", "Validation failed");
         b.put("details", fieldErrors);
@@ -113,6 +113,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        log.error("IllegalStateException: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(body(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage()));
     }
@@ -345,7 +346,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handle(ResponseStatusException ex) {
         HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
         if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
-        return ResponseEntity.status(status).body(body(status, status.getReasonPhrase(), ex.getReason()));
+        String message = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
+        return ResponseEntity.status(status).body(body(status, status.getReasonPhrase(), message));
     }
 
     // ── Fallback ──────────────────────────────────────────────────────────────

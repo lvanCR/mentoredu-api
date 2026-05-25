@@ -37,6 +37,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.PageRequest;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
@@ -61,6 +63,8 @@ public class AuthService {
 
     @Value("${app.session.max-active:5}")
     private int maxActiveSessions;
+
+    private final SecureRandom secureRandom = new SecureRandom();
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -176,11 +180,12 @@ public class AuthService {
         // Invalidate any previous active tokens for this user before issuing a new one
         passwordResetTokenRepository.invalidateAllByUserId(user.getId());
 
-        String rawToken = generateSecureToken();
+        String rawToken   = generateSecureToken();
+        String tokenHash  = hashToken(rawToken);
 
         passwordResetTokenRepository.save(PasswordResetToken.builder()
                 .user(user)
-                .token(rawToken)
+                .token(tokenHash)
                 .expiresAt(LocalDateTime.now().plusMinutes(passwordResetExpirationMinutes))
                 .used(false)
                 .build());
@@ -196,8 +201,9 @@ public class AuthService {
 
     @Transactional
     public ResetPasswordResponse resetPassword(ResetPasswordRequest request) {
+        String tokenHash = hashToken(request.getToken());
         PasswordResetToken resetToken = passwordResetTokenRepository
-                .findByToken(request.getToken())
+                .findByToken(tokenHash)
                 .orElseThrow(() -> new InvalidTokenException("Token no encontrado o inválido"));
 
         if (resetToken.isUsed()) {
@@ -276,7 +282,17 @@ public class AuthService {
 
     private String generateSecureToken() {
         byte[] bytes = new byte[32];
-        new SecureRandom().nextBytes(bytes);
+        secureRandom.nextBytes(bytes);
         return HexFormat.of().formatHex(bytes);
+    }
+
+    private String hashToken(String rawToken) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(HexFormat.of().parseHex(rawToken));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 no disponible", e);
+        }
     }
 }

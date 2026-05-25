@@ -18,15 +18,17 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Rate limiting para /api/v1/auth/** — protege contra fuerza bruta y abuso.
  * Límite: 20 peticiones por minuto por IP.
- * Implementado con bucket4j-core en memoria (suficiente para una instancia en Render).
+ * El mapa de buckets se limpia cada hora para evitar crecimiento indefinido de memoria.
  */
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final int CAPACITY    = 20;
     private static final int REFILL_RATE = 20;
-    private static final Duration REFILL_PERIOD = Duration.ofMinutes(1);
+    private static final Duration REFILL_PERIOD  = Duration.ofMinutes(1);
+    private static final long    CLEANUP_INTERVAL_MS = Duration.ofHours(1).toMillis();
 
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private volatile long lastCleanupAt = System.currentTimeMillis();
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -37,6 +39,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
+        evictIfNeeded();
         String ip = resolveClientIp(request);
         Bucket bucket = buckets.computeIfAbsent(ip, this::newBucket);
 
@@ -45,9 +48,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
         } else {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setHeader("Retry-After", "60");
             response.getWriter().write("""
                     {"status":429,"error":"Too Many Requests","message":"Demasiadas solicitudes. Intenta de nuevo en un minuto."}
                     """);
+        }
+    }
+
+    private void evictIfNeeded() {
+        long now = System.currentTimeMillis();
+        if (now - lastCleanupAt > CLEANUP_INTERVAL_MS) {
+            lastCleanupAt = now;
+            buckets.clear();
         }
     }
 

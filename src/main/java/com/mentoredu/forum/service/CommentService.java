@@ -1,7 +1,6 @@
 package com.mentoredu.forum.service;
 
-import com.mentoredu.auth.exception.UserNotFoundException;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.forum.dto.CommentResponse;
 import com.mentoredu.forum.dto.CreateCommentRequest;
 import com.mentoredu.forum.event.CommentCreatedEvent;
@@ -24,7 +23,7 @@ public class CommentService implements ICommentService {
 
     private final CommentRepository commentRepository;
     private final AnswerRepository answerRepository;
-    private final UserRepository userRepository;
+    private final UserService    userService;
     private final ApplicationEventPublisher eventPublisher;
 
     // -------------------------------------------------------------------------
@@ -37,8 +36,7 @@ public class CommentService implements ICommentService {
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new AnswerNotFoundException("Respuesta no encontrada: " + answerId));
 
-        var user = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + authorEmail));
+        var user = userService.findByEmailOrThrow(authorEmail);
 
         Comment comment = Comment.builder()
                 .answer(answer)

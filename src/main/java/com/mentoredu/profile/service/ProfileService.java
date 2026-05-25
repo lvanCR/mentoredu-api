@@ -1,13 +1,12 @@
 package com.mentoredu.profile.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.profile.dto.*;
 import com.mentoredu.profile.exception.*;
 import com.mentoredu.profile.model.*;
 import com.mentoredu.profile.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +21,7 @@ public class ProfileService implements IProfileService {
     private final StudentProfileRepository     studentProfileRepository;
     private final TeacherProfileRepository     teacherProfileRepository;
     private final AcademyProfileRepository     academyProfileRepository;
-    private final UserRepository               userRepository;
+    private final UserService                  userService;
 
     // -------------------------------------------------------------------------
     // US05 — Update common profile data
@@ -31,8 +30,7 @@ public class ProfileService implements IProfileService {
     @Override
     @Transactional
     public ProfileResponse updateProfile(String email, UpdateProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        User user = userService.findByEmailOrThrow(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
@@ -52,8 +50,7 @@ public class ProfileService implements IProfileService {
     @Override
     @Transactional(readOnly = true)
     public ProfileMeResponse getMyProfile(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        User user = userService.findByEmailOrThrow(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
@@ -75,8 +72,7 @@ public class ProfileService implements IProfileService {
     @Override
     @Transactional
     public StudentProfileResponse createStudentProfile(String email, CreateStudentProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        User user = userService.findByEmailOrThrow(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
@@ -124,8 +120,7 @@ public class ProfileService implements IProfileService {
     @Override
     @Transactional
     public StudentProfileResponse updateStudentProfile(String email, UpdateStudentProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        User user = userService.findByEmailOrThrow(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
@@ -150,8 +145,7 @@ public class ProfileService implements IProfileService {
     @Override
     @Transactional
     public TeacherProfileResponse createTeacherProfile(String email, CreateTeacherProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        User user = userService.findByEmailOrThrow(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
@@ -181,8 +175,7 @@ public class ProfileService implements IProfileService {
     @Override
     @Transactional
     public TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        User user = userService.findByEmailOrThrow(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
@@ -214,8 +207,7 @@ public class ProfileService implements IProfileService {
     @Override
     @Transactional
     public AcademyProfileResponse createAcademyProfile(String email, CreateAcademyProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        User user = userService.findByEmailOrThrow(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
@@ -258,8 +250,7 @@ public class ProfileService implements IProfileService {
     @Override
     @Transactional
     public AcademyProfileResponse updateAcademyProfile(String email, UpdateAcademyProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        User user = userService.findByEmailOrThrow(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));

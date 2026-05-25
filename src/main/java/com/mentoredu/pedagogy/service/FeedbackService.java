@@ -1,7 +1,7 @@
 package com.mentoredu.pedagogy.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.library.model.Resource;
 import com.mentoredu.library.repository.ResourceRepository;
 import com.mentoredu.library.exception.ResourceNotFoundException;
@@ -32,7 +32,7 @@ public class FeedbackService implements IFeedbackService {
     private final FeedbackEntryRepository feedbackEntryRepository;
     private final SolutionRepository solutionRepository;
     private final ResourceRepository resourceRepository;
-    private final UserRepository userRepository;
+    private final UserService    userService;
     private final ResourceAuthorizationService resourceAuthorizationService;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -45,8 +45,7 @@ public class FeedbackService implements IFeedbackService {
             throw new FeedbackAlreadyExistsException("Ya existe feedback para esta resolución");
         Resource resource = resourceRepository.findById(solution.getResourceId())
             .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
-        User author = userRepository.findByEmail(authorEmail)
-            .orElseThrow(() -> new SolutionAccessDeniedException("Usuario no encontrado"));
+        User author = userService.findByEmailOrThrow(authorEmail);
         // RN-10: autor directo, o TEACHER con link ACCEPTED a la academia autora
         if (!resourceAuthorizationService.isAuthorizedForResource(resource, author))
             throw new SolutionAccessDeniedException("Solo el autor del ejercicio puede dar feedback");

@@ -1,8 +1,7 @@
 package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.exception.UserNotFoundException;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.CreateVerificationRequest;
 import com.mentoredu.community.dto.ReviewVerificationRequest;
@@ -30,14 +29,13 @@ public class VerificationService implements IVerificationService {
 
     private final VerificationRequestRepository verificationRepository;
     private final VerificationDocRepository     docRepository;
-    private final UserRepository                userRepository;
+    private final UserService                   userService;
     private final ApplicationEventPublisher     eventPublisher;
 
     @Override
     @Transactional
     public VerificationResponse submit(CreateVerificationRequest request, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userEmail));
+        User user = userService.findByEmailOrThrow(userEmail);
 
         if (verificationRepository.existsByUserIdAndStatus(user.getId(), "PENDING")) {
             throw new DuplicateVerificationException("Ya tienes una solicitud de verificación pendiente");
@@ -70,8 +68,7 @@ public class VerificationService implements IVerificationService {
     @Override
     @Transactional(readOnly = true)
     public List<VerificationResponse> getMyRequests(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userEmail));
+        User user = userService.findByEmailOrThrow(userEmail);
 
         return verificationRepository.findByUserId(user.getId())
                 .stream().map(VerificationResponse::new).toList();
@@ -81,7 +78,7 @@ public class VerificationService implements IVerificationService {
     @Transactional(readOnly = true)
     public PagedResponse<VerificationResponse> getAllRequests(int page, int size) {
         return PagedResponse.from(
-                verificationRepository.findAll(PageRequest.of(page, size)),
+                verificationRepository.findAll(PagedResponse.toPageRequest(page, size)),
                 VerificationResponse::new);
     }
 
@@ -101,8 +98,7 @@ public class VerificationService implements IVerificationService {
             throw new IllegalArgumentException("El rechazo requiere una razón (notes) obligatoria (RN-17)");
         }
 
-        User reviewer = userRepository.findByEmail(reviewerEmail)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + reviewerEmail));
+        User reviewer = userService.findByEmailOrThrow(reviewerEmail);
 
         vr.setStatus(request.getAction());
         vr.setNotes(request.getNotes());

@@ -128,4 +128,34 @@ public class CatalogService implements ICatalogService {
         if (!career.getCourses().contains(course)) career.getCourses().add(course);
         careerRepository.save(career);
     }
+
+    @Override
+    public boolean universityExists(UUID id) {
+        return universityRepository.existsById(id);
+    }
+
+    @Override
+    public boolean courseExists(UUID id) {
+        return courseRepository.existsById(id);
+    }
+
+    @Override
+    public boolean careerExists(UUID id) {
+        return careerRepository.existsById(id);
+    }
+
+    @Override
+    public boolean areaExistsInUniversity(UUID areaId, UUID universityId) {
+        return areaRepository.existsByIdAndUniversityId(areaId, universityId);
+    }
+
+    @Override
+    public boolean careerExistsInUniversity(UUID careerId, UUID universityId) {
+        return careerRepository.existsByIdAndUniversityId(careerId, universityId);
+    }
+
+    @Override
+    public boolean careerExistsInArea(UUID careerId, UUID areaId) {
+        return careerRepository.existsByIdAndAreaId(careerId, areaId);
+    }
 }

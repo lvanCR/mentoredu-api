@@ -1,8 +1,7 @@
 package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.exception.UserNotFoundException;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.community.dto.AssociationResponse;
 import com.mentoredu.community.dto.CreateAssociationRequest;
 import com.mentoredu.community.event.AssociationResolvedEvent;
@@ -34,7 +33,7 @@ public class AssociationService implements IAssociationService {
     private final ProfileRepository profileRepository;
     private final TeacherProfileRepository teacherProfileRepository;
     private final AcademyProfileRepository academyProfileRepository;
-    private final UserRepository userRepository;
+    private final UserService    userService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -128,8 +127,7 @@ public class AssociationService implements IAssociationService {
     }
 
     private Profile resolveProfile(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
+        User user = userService.findByEmailOrThrow(email);
         return profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new IllegalStateException("Perfil no encontrado para: " + email));
     }
