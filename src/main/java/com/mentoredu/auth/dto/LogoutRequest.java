@@ -8,6 +8,6 @@ import lombok.Setter;
 @Setter
 public class LogoutRequest {
 
-    @NotBlank(message = "Refresh token is required")
+    @NotBlank(message = "El token de sesión es obligatorio")
     private String refreshToken;
 }

@@ -1,5 +1,6 @@
 package com.mentoredu.forum.service;
 
+import com.mentoredu.auth.exception.UserNotFoundException;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.forum.dto.AnswerResponse;
@@ -31,14 +32,14 @@ public class AnswerService implements IAnswerService {
     @Transactional
     public AnswerResponse create(UUID threadId, CreateAnswerRequest request, String authorEmail) {
         var thread = threadRepository.findById(threadId)
-                .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + threadId));
+                .orElseThrow(() -> new ThreadNotFoundException("Hilo no encontrado: " + threadId));
 
         if ("CLOSED".equals(thread.getStatus())) {
-            throw new ThreadClosedException("Thread is closed and does not accept new replies: " + threadId);
+            throw new ThreadClosedException("El hilo está cerrado y no acepta nuevas respuestas: " + threadId);
         }
 
         var user = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new RuntimeException("User not found: " + authorEmail));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + authorEmail));
 
         Answer answer = Answer.builder()
                 .thread(thread)

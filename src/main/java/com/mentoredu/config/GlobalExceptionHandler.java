@@ -4,6 +4,7 @@ import com.mentoredu.auth.exception.EmailAlreadyExistsException;
 import com.mentoredu.auth.exception.EmailNotFoundException;
 import com.mentoredu.auth.exception.InvalidCredentialsException;
 import com.mentoredu.auth.exception.InvalidTokenException;
+import com.mentoredu.auth.exception.UserNotFoundException;
 import com.mentoredu.catalog.exception.AreaNotFoundException;
 import com.mentoredu.catalog.exception.CareerNotFoundException;
 import com.mentoredu.catalog.exception.CourseNotFoundException;
@@ -25,7 +26,6 @@ import com.mentoredu.forum.exception.CommentNotFoundException;
 import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.exception.ThreadNotOwnedException;
-import com.mentoredu.forum.exception.UserNotFoundException;
 import com.mentoredu.library.exception.DuplicateResourceException;
 import com.mentoredu.library.exception.FileSizeLimitExceededException;
 import com.mentoredu.library.exception.InvalidFileTypeException;
@@ -43,6 +43,7 @@ import com.mentoredu.profile.exception.ProfileNotFoundException;
 import com.mentoredu.profile.exception.StudentProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.TeacherProfileAlreadyExistsException;
 import com.mentoredu.profile.exception.WrongProfileTypeException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -52,11 +53,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -199,7 +202,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(WrongProfileTypeException.class)
     public ResponseEntity<Map<String, Object>> handle(WrongProfileTypeException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
     }
 
     // ── Library ───────────────────────────────────────────────────────────────
@@ -236,7 +239,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ThreadClosedException.class)
     public ResponseEntity<Map<String, Object>> handle(ThreadClosedException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+            .body(body(HttpStatus.UNPROCESSABLE_ENTITY, "Unprocessable Entity", ex.getMessage()));
     }
 
     @ExceptionHandler(ThreadNotOwnedException.class)
@@ -334,5 +338,22 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateAssociationException.class)
     public ResponseEntity<Map<String, Object>> handle(DuplicateAssociationException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
+    }
+
+    // ── ResponseStatusException (lanzada explícitamente desde servicios/tests) ─
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handle(ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        return ResponseEntity.status(status).body(body(status, status.getReasonPhrase(), ex.getReason()));
+    }
+
+    // ── Fallback ──────────────────────────────────────────────────────────────
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
+        log.error("Unhandled exception: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(body(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
+                "Ha ocurrido un error inesperado. Por favor intenta de nuevo."));
     }
 }

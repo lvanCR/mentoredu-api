@@ -1,5 +1,6 @@
 package com.mentoredu.forum.service;
 
+import com.mentoredu.auth.exception.UserNotFoundException;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.catalog.repository.AreaRepository;
 import com.mentoredu.catalog.repository.CareerRepository;
@@ -39,7 +40,7 @@ public class ThreadService implements IThreadService {
     @Transactional
     public ThreadResponse create(CreateThreadRequest request, String authorEmail) {
         var user = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new RuntimeException("User not found: " + authorEmail));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + authorEmail));
 
         validateClassification(request);
 
@@ -70,7 +71,7 @@ public class ThreadService implements IThreadService {
     public ThreadResponse get(UUID id) {
         return threadRepository.findById(id)
                 .map(this::toResponse)
-                .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + id));
+                .orElseThrow(() -> new ThreadNotFoundException("Hilo no encontrado: " + id));
     }
 
     // -------------------------------------------------------------------------
@@ -81,14 +82,22 @@ public class ThreadService implements IThreadService {
     @Transactional
     public ThreadResponse close(UUID id, String requesterEmail) {
         Thread thread = threadRepository.findById(id)
-                .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + id));
-
-        if (!thread.getAuthor().getEmail().equals(requesterEmail)) {
-            throw new ThreadNotOwnedException("Only the author can close this thread: " + id);
-        }
+                .orElseThrow(() -> new ThreadNotFoundException("Hilo no encontrado: " + id));
 
         if ("CLOSED".equals(thread.getStatus())) {
-            throw new ThreadClosedException("Thread is already closed: " + id);
+            throw new ThreadClosedException("El hilo ya está cerrado: " + id);
+        }
+
+        var requester = userRepository.findByEmail(requesterEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + requesterEmail));
+
+        boolean isAuthor = thread.getAuthor().getEmail().equals(requesterEmail);
+        String role = requester.getRole().getName();
+        boolean isModerator = "MODERATOR".equals(role) || "ADMIN".equals(role);
+
+        // RN-14: solo el autor del hilo o un MODERATOR/ADMIN puede cerrarlo
+        if (!isAuthor && !isModerator) {
+            throw new ThreadNotOwnedException("Solo el autor, un moderador o administrador puede cerrar este hilo: " + id);
         }
 
         thread.setStatus("CLOSED");

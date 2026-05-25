@@ -1,5 +1,6 @@
 package com.mentoredu.forum.service;
 
+import com.mentoredu.auth.exception.UserNotFoundException;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.forum.dto.CommentResponse;
 import com.mentoredu.forum.dto.CreateCommentRequest;
@@ -34,10 +35,10 @@ public class CommentService implements ICommentService {
     @Transactional
     public CommentResponse create(UUID answerId, CreateCommentRequest request, String authorEmail) {
         Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new AnswerNotFoundException("Answer not found: " + answerId));
+                .orElseThrow(() -> new AnswerNotFoundException("Respuesta no encontrada: " + answerId));
 
         var user = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new RuntimeException("User not found: " + authorEmail));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + authorEmail));
 
         Comment comment = Comment.builder()
                 .answer(answer)

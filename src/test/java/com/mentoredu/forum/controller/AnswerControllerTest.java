@@ -111,7 +111,7 @@ class AnswerControllerTest {
 
     @Test
     @WithMockUser(username = "user@example.com")
-    void createAnswer_onClosedThread_returns409() throws Exception {
+    void createAnswer_onClosedThread_returns422() throws Exception {
         UUID threadId = UUID.randomUUID();
 
         when(answerService.create(eq(threadId), any(), any()))
@@ -120,8 +120,8 @@ class AnswerControllerTest {
         mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest())))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.error").value("Unprocessable Entity"))
                 .andExpect(jsonPath("$.message").value("Thread is closed and does not accept new replies: " + threadId));
     }
 

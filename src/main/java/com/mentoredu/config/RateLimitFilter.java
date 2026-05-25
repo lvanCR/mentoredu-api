@@ -59,7 +59,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private String resolveClientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+            // Usar la última IP de la cadena: es la que agrega el proxy de confianza (Render).
+            // La primera IP puede ser falsificada por el cliente; la última la agrega el balanceador.
+            String[] parts = forwarded.split(",");
+            return parts[parts.length - 1].trim();
         }
         return request.getRemoteAddr();
     }

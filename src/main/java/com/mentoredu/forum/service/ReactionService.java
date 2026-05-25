@@ -1,6 +1,7 @@
 package com.mentoredu.forum.service;
 
 import com.mentoredu.auth.entity.User;
+import com.mentoredu.auth.exception.UserNotFoundException;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.forum.dto.CreateReactionRequest;
 import com.mentoredu.forum.dto.ReactionResponse;
@@ -40,7 +41,7 @@ public class ReactionService implements IReactionService {
     @Transactional
     public Optional<ReactionResponse> reactToThread(UUID threadId, CreateReactionRequest request, String userEmail) {
         var thread = threadRepository.findById(threadId)
-                .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + threadId));
+                .orElseThrow(() -> new ThreadNotFoundException("Hilo no encontrado: " + threadId));
         var reactor = loadUser(userEmail);
         Optional<ReactionResponse> result = toggle(reactor, THREAD, threadId, request.reactionType());
         if (result.isPresent() && !reactor.getId().equals(thread.getAuthor().getId())) {
@@ -54,7 +55,7 @@ public class ReactionService implements IReactionService {
     @Transactional
     public Optional<ReactionResponse> reactToAnswer(UUID answerId, CreateReactionRequest request, String userEmail) {
         var answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new AnswerNotFoundException("Answer not found: " + answerId));
+                .orElseThrow(() -> new AnswerNotFoundException("Respuesta no encontrada: " + answerId));
         var reactor = loadUser(userEmail);
         Optional<ReactionResponse> result = toggle(reactor, ANSWER, answerId, request.reactionType());
         if (result.isPresent() && !reactor.getId().equals(answer.getAuthor().getId())) {
@@ -68,7 +69,7 @@ public class ReactionService implements IReactionService {
     @Transactional
     public Optional<ReactionResponse> reactToComment(UUID commentId, CreateReactionRequest request, String userEmail) {
         var comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new CommentNotFoundException("Comment not found: " + commentId));
+                .orElseThrow(() -> new CommentNotFoundException("Comentario no encontrado: " + commentId));
         var reactor = loadUser(userEmail);
         Optional<ReactionResponse> result = toggle(reactor, COMMENT, commentId, request.reactionType());
         if (result.isPresent() && !reactor.getId().equals(comment.getAuthor().getId())) {
@@ -107,7 +108,7 @@ public class ReactionService implements IReactionService {
 
     private User loadUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + email));
     }
 
     private ReactionResponse toResponse(Reaction r) {

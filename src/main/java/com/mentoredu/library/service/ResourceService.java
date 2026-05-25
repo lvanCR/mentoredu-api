@@ -40,7 +40,7 @@ public class ResourceService implements IResourceService {
     @Transactional
     public ResourceResponse publish(PublishResourceRequest request, String authorEmail) {
         User author = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authorEmail));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + authorEmail));
 
         ResourceType type = request.getResourceType();
 
@@ -140,7 +140,7 @@ public class ResourceService implements IResourceService {
     @Override
     public PagedResponse<ResourceResponse> getByAuthor(String authorEmail, int page, int size) {
         User author = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authorEmail));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + authorEmail));
         return PagedResponse.from(
                 resourceRepository.findByAuthorId(author.getId(), PageRequest.of(page, size)),
                 ResourceResponse::new);
@@ -157,7 +157,7 @@ public class ResourceService implements IResourceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
 
         User requester = userRepository.findByEmail(requesterEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + requesterEmail));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + requesterEmail));
 
         if (!resource.getAuthor().getId().equals(requester.getId())) {
             throw new ResourceAccessDeniedException("Solo el autor puede modificar la configuración del recurso");
@@ -195,7 +195,7 @@ public class ResourceService implements IResourceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userEmail));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + userEmail));
 
         downloadLogRepository.save(DownloadLog.builder()
                 .user(user)

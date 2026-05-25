@@ -1,6 +1,7 @@
 package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
+import com.mentoredu.auth.exception.UserNotFoundException;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.CreateVerificationRequest;
@@ -36,7 +37,7 @@ public class VerificationService implements IVerificationService {
     @Transactional
     public VerificationResponse submit(CreateVerificationRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + userEmail));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userEmail));
 
         if (verificationRepository.existsByUserIdAndStatus(user.getId(), "PENDING")) {
             throw new DuplicateVerificationException("Ya tienes una solicitud de verificación pendiente");
@@ -70,7 +71,7 @@ public class VerificationService implements IVerificationService {
     @Transactional(readOnly = true)
     public List<VerificationResponse> getMyRequests(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + userEmail));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userEmail));
 
         return verificationRepository.findByUserId(user.getId())
                 .stream().map(VerificationResponse::new).toList();
@@ -101,7 +102,7 @@ public class VerificationService implements IVerificationService {
         }
 
         User reviewer = userRepository.findByEmail(reviewerEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + reviewerEmail));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + reviewerEmail));
 
         vr.setStatus(request.getAction());
         vr.setNotes(request.getNotes());

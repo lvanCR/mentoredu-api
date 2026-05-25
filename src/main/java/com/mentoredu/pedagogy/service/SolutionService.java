@@ -15,10 +15,7 @@ import com.mentoredu.pedagogy.model.Solution;
 import com.mentoredu.pedagogy.model.SolutionStatus;
 import com.mentoredu.pedagogy.repository.FeedbackEntryRepository;
 import com.mentoredu.pedagogy.repository.SolutionRepository;
-import com.mentoredu.community.repository.TeacherAcademyLinkRepository;
 import com.mentoredu.library.exception.ResourceNotFoundException;
-import com.mentoredu.profile.repository.AcademyProfileRepository;
-import com.mentoredu.profile.repository.TeacherProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -35,9 +32,7 @@ public class SolutionService implements ISolutionService {
     private final FeedbackEntryRepository feedbackEntryRepository;
     private final ResourceRepository resourceRepository;
     private final UserRepository userRepository;
-    private final TeacherProfileRepository teacherProfileRepository;
-    private final AcademyProfileRepository academyProfileRepository;
-    private final TeacherAcademyLinkRepository teacherAcademyLinkRepository;
+    private final ResourceAuthorizationService resourceAuthorizationService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -82,23 +77,9 @@ public class SolutionService implements ISolutionService {
             .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
         User requester = userRepository.findByEmail(requesterEmail)
             .orElseThrow(() -> new SolutionAccessDeniedException("Usuario no encontrado"));
-        if (!isAuthorizedForResource(resource, requester))
+        if (!resourceAuthorizationService.isAuthorizedForResource(resource, requester))
             throw new SolutionAccessDeniedException("Solo el autor del ejercicio puede ver las resoluciones");
         return solutionRepository.findByResourceId(resourceId).stream()
             .map(SolutionResponse::from).toList();
-    }
-
-    // RN-10: (a) autor directo, o (b) TEACHER con link ACCEPTED a la academia autora
-    private boolean isAuthorizedForResource(Resource resource, User requester) {
-        if (resource.getAuthor().getId().equals(requester.getId())) return true;
-        var academyProfile = academyProfileRepository.findByProfile_UserId(resource.getAuthor().getId());
-        if (academyProfile.isEmpty()) return false;
-        var teacherProfile = teacherProfileRepository.findByProfile_UserId(requester.getId());
-        if (teacherProfile.isEmpty()) return false;
-        return teacherAcademyLinkRepository
-            .findByTeacherProfileIdAndAcademyProfileId(
-                teacherProfile.get().getProfileId(), academyProfile.get().getProfileId())
-            .map(link -> "ACCEPTED".equals(link.getStatus()))
-            .orElse(false);
     }
 }

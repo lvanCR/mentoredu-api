@@ -177,7 +177,7 @@ class ProfileControllerTest {
 
     @Test
     @WithMockUser(username = "teacher@example.com")
-    void createStudentProfile_whenWrongProfileType_returns409() throws Exception {
+    void createStudentProfile_whenWrongProfileType_returns400() throws Exception {
         when(profileService.createStudentProfile(eq("teacher@example.com"), any()))
                 .thenThrow(new WrongProfileTypeException(
                         "Account type is not STUDENT. Current type: TEACHER"));
@@ -188,8 +188,8 @@ class ProfileControllerTest {
         mockMvc.perform(post("/api/v1/profiles/student")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"));
     }
 
     @Test
@@ -297,7 +297,7 @@ class ProfileControllerTest {
 
     @Test
     @WithMockUser(username = "student@example.com")
-    void createTeacherProfile_whenWrongProfileType_returns409() throws Exception {
+    void createTeacherProfile_whenWrongProfileType_returns400() throws Exception {
         when(profileService.createTeacherProfile(eq("student@example.com"), any()))
                 .thenThrow(new WrongProfileTypeException(
                         "Account type is not TEACHER. Current type: STUDENT"));
@@ -305,8 +305,8 @@ class ProfileControllerTest {
         mockMvc.perform(post("/api/v1/profiles/teacher")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Account type is not TEACHER. Current type: STUDENT"));
     }
 
@@ -459,7 +459,7 @@ class ProfileControllerTest {
 
     @Test
     @WithMockUser(username = "student@example.com")
-    void createAcademyProfile_whenWrongProfileType_returns409() throws Exception {
+    void createAcademyProfile_whenWrongProfileType_returns400() throws Exception {
         when(profileService.createAcademyProfile(eq("student@example.com"), any()))
                 .thenThrow(new WrongProfileTypeException(
                         "Account type is not ACADEMY. Current type: STUDENT"));
@@ -469,8 +469,8 @@ class ProfileControllerTest {
         mockMvc.perform(post("/api/v1/profiles/academy")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Account type is not ACADEMY. Current type: STUDENT"));
     }
 

@@ -1,6 +1,7 @@
 package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
+import com.mentoredu.auth.exception.UserNotFoundException;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.ReportRequest;
@@ -9,7 +10,9 @@ import com.mentoredu.community.dto.ResolveReportRequest;
 import com.mentoredu.community.exception.DuplicateReportException;
 import com.mentoredu.community.exception.ReportAlreadyResolvedException;
 import com.mentoredu.community.exception.ReportNotFoundException;
+import com.mentoredu.community.model.ModerationAuditLog;
 import com.mentoredu.community.model.Report;
+import com.mentoredu.community.repository.ModerationAuditLogRepository;
 import com.mentoredu.community.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,14 +28,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReportService implements IReportService {
 
-    private final ReportRepository reportRepository;
-    private final UserRepository userRepository;
+    private final ReportRepository           reportRepository;
+    private final UserRepository             userRepository;
+    private final ModerationAuditLogRepository auditLogRepository;
 
     @Override
     @Transactional
     public ReportResponse create(ReportRequest request, String reporterEmail) {
         User reporter = userRepository.findByEmail(reporterEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + reporterEmail));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + reporterEmail));
 
         if (reportRepository.existsByReporterIdAndTargetTypeAndTargetId(
                 reporter.getId(), request.targetType(), request.targetId())) {
@@ -69,17 +73,22 @@ public class ReportService implements IReportService {
         }
 
         User resolver = userRepository.findByEmail(resolverEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + resolverEmail));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + resolverEmail));
 
         report.setStatus("RESOLVED");
         report.setResolvedBy(resolver);
         report.setResolutionNote(request.resolutionNote());
         report.setResolvedAt(LocalDateTime.now());
 
-        // Log simple de auditoría (RN-19)
-        log.info("Report {} resolved by {} as {}. Note: {}", 
-                reportId, resolverEmail, report.getStatus(), request.resolutionNote());
+        Report saved = reportRepository.save(report);
 
-        return ReportResponse.from(reportRepository.save(report));
+        auditLogRepository.save(ModerationAuditLog.builder()
+                .report(saved)
+                .actor(resolver)
+                .action("RESOLVED")
+                .note(request.resolutionNote())
+                .build());
+
+        return ReportResponse.from(saved);
     }
 }

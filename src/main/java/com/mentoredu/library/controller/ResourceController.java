@@ -17,7 +17,9 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -52,8 +54,10 @@ public class ResourceController {
     public ResponseEntity<ResourceResponse> publish(@Valid @RequestBody PublishResourceRequest request) {
         Authentication a = auth();
         if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(resourceService.publish(request, a.getName()));
+        ResourceResponse response = resourceService.publish(request, a.getName());
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(response.getId()).toUri();
+        return ResponseEntity.created(location).body(response);
     }
 
     // -------------------------------------------------------------------------

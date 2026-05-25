@@ -26,6 +26,8 @@ public class JwtUtil {
     public String generateAccessToken(User user) {
         Date now = new Date();
         return Jwts.builder()
+                .issuer("mentoredu-api")
+                .audience().add("mentoredu-frontend").and()
                 .subject(user.getId().toString())
                 .claim("email", user.getEmail())
                 .claim("role", user.getRole().getName())

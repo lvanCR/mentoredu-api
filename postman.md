@@ -1,138 +1,261 @@
-# Postman y Swagger para MentorEdu
+# Postman y Swagger — MentorEdu API v2.0
 
-Guía de referencia rápida para pruebas manuales.  
-La documentación detallada de cada Historia vive en la carpeta `postman/`.
-
----
-
-## Objetivo
-
-Cada Historia de Usuario implementada se convierte en un grupo de requests en Postman, uno por escenario de aceptación. El flujo parte de Swagger (OpenAPI) para evitar crear requests a mano.
-
-Ejemplo de organización en Postman para HU01:
-
-```
-auth/
-└── HU01-registro/
-    ├── MentorEduAuthHU01-RegistroPOST — Caso 1: Registro exitoso      → 201 Created
-    ├── MentorEduAuthHU01-RegistroPOST — Caso 2: Email duplicado       → 409 Conflict
-    ├── MentorEduAuthHU01-RegistroPOST — Caso 3: Contraseña débil      → 400 Bad Request
-    ├── MentorEduAuthHU01-RegistroPOST — Caso 4: Email inválido        → 400 Bad Request
-    └── MentorEduAuthHU01-RegistroPOST — Caso 5: Campo faltante        → 400 Bad Request
-```
+Guía de referencia rápida para pruebas manuales de los endpoints REST.  
+Los casos de aceptación detallados viven en `postman/` (un `README.md` y archivos `caso-NN.json` por Historia).
 
 ---
 
-## Prerrequisito: Springdoc OpenAPI
+## Prerrequisitos
 
-Para que Swagger esté disponible, la dependencia `springdoc-openapi-starter-webmvc-ui` debe estar en `pom.xml`.  
-Ver instrucciones completas en `CLAUDE.md` → sección "Pruebas con Postman y Swagger".
+| Herramienta | Propósito |
+|---|---|
+| Docker Desktop | Levanta PostgreSQL vía `compose.yml` |
+| Java 21 + Maven | Arranca el backend |
+| Postman (desktop) | Ejecuta los casos de prueba |
 
-Con el backend corriendo, accede a:
+```bash
+mvn spring-boot:run          # Docker Compose levanta PostgreSQL automáticamente
+```
+
+Con el backend corriendo, los recursos Swagger están en:
 
 | Recurso | URL |
 |---|---|
 | Swagger UI | `http://localhost:8080/swagger-ui.html` |
-| OpenAPI JSON (para importar a Postman) | `http://localhost:8080/v3/api-docs` |
+| OpenAPI JSON | `http://localhost:8080/v3/api-docs` |
 
 ---
 
-## Flujo recomendado
+## Importar la colección en Postman
 
-### 1. Levanta el proyecto
+1. **Import → Link** → `http://localhost:8080/v3/api-docs`  
+   Postman genera los requests automáticamente desde la definición OpenAPI.
 
-```
-mvn spring-boot:run
-```
+2. **Environments → Import** → `postman/environments/local.postman_environment.json`  
+   Activa el entorno **MentorEdu — Local**.
 
-Docker Compose inicia PostgreSQL automáticamente.
+### Variables de entorno disponibles
 
-### 2. Importa desde Swagger a Postman
-
-1. Abre Postman → **Import**.
-2. Selecciona **Link** e ingresa: `http://localhost:8080/v3/api-docs`
-3. Postman genera los requests automáticamente a partir de la definición OpenAPI.
-
-### 3. Configura el ambiente local
-
-1. En Postman → **Environments** → **Import**.
-2. Selecciona: `postman/environments/local.postman_environment.json`
-3. Activa el ambiente **MentorEdu — Local**.
-
-Las variables disponibles son: `{{base_url}}`, `{{api_v1}}`, `{{access_token}}`, `{{refresh_token}}`.
-
-### 4. Consulta la documentación de la Historia
-
-Antes de ejecutar un request, abre el `README.md` de la Historia:
-
-```
-postman/<bc>/HU<XX>-<nombre>/README.md
-```
-
-Allí encontrarás el endpoint, los headers, las validaciones del body, las reglas de negocio y los escenarios de aceptación mapeados a los archivos `caso-XX.json`.
-
-### 5. Ejecuta cada caso por separado
-
-Copia el contenido de `request.body` del archivo `caso-XX.json` en la pestaña **Body → raw → JSON** de Postman.  
-Verifica que el `status` de la respuesta coincida con `expected_response.status`.
-
-### 6. Nombra los requests en Postman
-
-Usa el patrón:
-
-```
-MentorEdu<BC>HU<XX>-<AccionMétodoHTTP>
-```
-
-Ejemplos:
-
-| Historia | Nombre del request |
+| Variable | Descripción |
 |---|---|
-| HU01 Registro | `MentorEduAuthHU01-RegistroPOST` |
-| HU02 Login | `MentorEduAuthHU02-LoginPOST` |
-| HU04 Tipo de cuenta | `MentorEduProfileHU04-SelectAccountTypePATCH` |
-| HU12 Subir recurso | `MentorEduLibraryHU12-UploadResourcePOST` |
-| HU16 Crear hilo | `MentorEduForumHU16-CreateThreadPOST` |
-| HU26 Reset contraseña | `MentorEduAuthHU26-ResetPasswordPOST` |
+| `{{base_url}}` | `http://localhost:8080` |
+| `{{api_v1}}` | `api/v1` |
+| `{{access_token}}` | JWT del usuario activo (STUDENT por defecto) |
+| `{{refresh_token}}` | Refresh token de la sesión activa |
+| `{{teacher_token}}` | JWT de usuario TEACHER |
+| `{{academy_token}}` | JWT de usuario ACADEMY |
+| `{{moderator_token}}` | JWT del moderator seed (`moderator@mentoredu.com`) |
+| `{{target_user_id}}` | UUID de otro usuario (para follow, etc.) |
+| `{{thread_id}}` | UUID de hilo de foro activo |
+| `{{resource_id}}` | UUID de recurso académico |
+| `{{report_id}}` | UUID de reporte abierto |
+
+> **Flujo de autenticación:** ejecuta primero `US01 — Registro` o `US02 — Login`. El `access_token` y `refresh_token` del response se copian a las variables de entorno y se reusan en las demás US.
 
 ---
 
-## Organización por bounded context
-
-No mezcles requests de distintos bounded contexts en la misma carpeta. La estructura en Postman debe reflejar la de `postman/`:
+## Estructura de carpetas
 
 ```
 postman/
-├── auth/          → /api/v1/auth/**
-├── profile/       → /api/v1/profiles/**
-├── academy/       → /api/v1/academies/**
-├── library/       → /api/v1/resources/**
-├── forum/         → /api/v1/threads/**
-├── moderation/    → /api/v1/moderation/**
-├── verification/  → /api/v1/verification/**
-├── billing/       → /api/v1/billing/**
-├── notifications/ → /api/v1/notifications/**
-└── gamification/  → /api/v1/gamification/**
+├── environments/
+│   └── local.postman_environment.json
+│
+├── auth/                     → /api/v1/auth/**
+│   ├── US01-registro/        → POST /auth/register            (8 casos)
+│   ├── US02-login/           → POST /auth/login · POST /auth/logout (7 casos)
+│   ├── US02-refresh/         → POST /auth/refresh             (4 casos)
+│   ├── US03-password-recovery/ → POST /auth/forgot-password   (4 casos)
+│   └── US03-reset-password/  → POST /auth/reset-password      (6 casos)
+│
+├── profile/                  → /api/v1/profiles/**
+│   ├── US04-student-profile/ → POST /profiles/student         (crear perfil estudiante)
+│   ├── US04-student-profile-update/ → PATCH /profiles/student/me
+│   ├── US05-teacher-profile/ → POST /profiles/teacher
+│   ├── US05-teacher-profile-update/ → PATCH /profiles/teacher/me
+│   ├── US06-academy-profile/ → POST /profiles/academy
+│   ├── profile-me/           → GET /profiles/me
+│   └── F04-get-my-profile/   → GET /profiles/me (flujo completo)
+│
+├── library/                  → /api/v1/resources/**
+│   ├── US07-upload-pdf/      → POST /resources/files          (4 casos)
+│   ├── US08-register-metadata/ → POST /resources              (metadatos)
+│   ├── US09-search-resources/ → GET /resources?query=...
+│   ├── US10-download-resource/ → GET /resources/{id}/download (4 casos)
+│   ├── US11-my-resources/    → GET /resources/mine
+│   └── US16-publish-exercise/ → POST /resources (acepta_resoluciones=true)
+│
+├── forum/                    → /api/v1/threads/**
+│   ├── US12-create-thread/   → POST /threads · GET /threads · GET /threads/{id}
+│   │                            PATCH /threads/{id}/close
+│   ├── US13-reply-to-thread/ → POST /threads/{id}/answers · GET /threads/{id}/answers
+│   ├── US14-react-to-content/ → POST /threads/{id}/reactions
+│   │                            POST /answers/{id}/reactions
+│   │                            POST /comments/{id}/reactions
+│   └── US15-comment-on-answer/ → POST /answers/{id}/comments · GET /answers/{id}/comments
+│
+├── pedagogy/                 → /api/v1/resources/{id}/solutions/** · /api/v1/solutions/{id}/feedback
+│   ├── US17-view-solutions/  → GET /resources/{id}/solutions
+│   ├── US18-submit-solution/ → POST /resources/{id}/solutions
+│   ├── US19-give-feedback/   → POST /solutions/{id}/feedback
+│   └── US20-view-my-solution/ → GET /resources/{id}/solutions/mine
+│
+├── community/                → /api/v1/users/** · /api/v1/verification/** · /api/v1/moderation/** · /api/v1/notifications/**
+│   ├── US21-follow-user/     → POST /users/{id}/follow        (4 casos, toggle)
+│   ├── US22-teacher-verification/ → POST /verification/requests (entityType=TEACHER)
+│   ├── US22-academy-verification/ → POST /verification/requests (entityType=ACADEMY)
+│   ├── US23-review-verification/ → GET /verification/requests · PATCH /verification/requests/{id}/review
+│   ├── US24-associate-teacher/ → POST /teachers/associations · PATCH /teachers/associations/{id}/resolve
+│   ├── US25-report-content/  → POST /moderation/reports       (4 casos)
+│   ├── US26-resolve-report/  → GET /moderation/reports · PATCH /moderation/reports/{id}/resolve
+│   └── US27-notifications/   → GET /notifications/me · PATCH /notifications/{id}/read
+│
+└── catalog/                  → /api/v1/catalog/**  (solo ADMIN)
+    └── US28-manage-catalog/  → GET /catalog/universities · POST /catalog/universities
 ```
 
 ---
 
-## Cómo agregar una Historia nueva
+## Convención de archivos de caso
 
-Cuando una US quede implementada:
+```
+caso-{NN}-{descripcion-corta}.json
+```
 
-1. Crea `postman/<bc>/HU<XX>-<nombre>/README.md` con endpoint, headers, campos, reglas de negocio y escenarios.
-2. Agrega un archivo `caso-XX.json` por cada escenario de aceptación.
-3. Actualiza `postman/<bc>/README.md`: mueve la HU de "Pendientes" a "Implementadas".
-4. Actualiza `postman/README.md`: incrementa el contador de HUs implementadas del BC.
+Cada archivo tiene la estructura:
+
+```json
+{
+  "description": "Descripción del escenario",
+  "method": "POST",
+  "path": "/api/v1/auth/register",
+  "headers": { "Content-Type": "application/json" },
+  "request": { "body": { ... } },
+  "expected_response": {
+    "status": 201,
+    "body_contains": ["accessToken", "refreshToken"]
+  }
+}
+```
+
+- Usar `{{variable}}` para UUIDs, tokens y valores dinámicos.
+- Los campos `<uuid-generado-por-el-sistema>` son placeholders — reemplazar con variables de entorno reales.
 
 ---
 
-## Resultado esperado
+## Convención de nombre de request en Postman
 
-Al terminar, en Postman deberías ver:
+```
+MentorEdu{BC}{US}-{Accion}{MétodoHTTP}
+```
 
-- carpetas separadas por bounded context,
-- subcarpetas por Historia de Usuario,
-- requests nombrados con el patrón establecido,
-- cada request probando un escenario concreto con body y status code documentados.
+| Historia | Nombre del request |
+|---|---|
+| US01 Registro | `MentorEduAuthUS01-RegistroPOST` |
+| US02 Login | `MentorEduAuthUS02-LoginPOST` |
+| US02 Logout | `MentorEduAuthUS02-LogoutPOST` |
+| US02 Refresh | `MentorEduAuthUS02-RefreshPOST` |
+| US03 Forgot password | `MentorEduAuthUS03-ForgotPasswordPOST` |
+| US03 Reset password | `MentorEduAuthUS03-ResetPasswordPOST` |
+| US04 Crear perfil estudiante | `MentorEduProfileUS04-StudentProfilePOST` |
+| US07 Subir PDF | `MentorEduLibraryUS07-UploadPdfPOST` |
+| US08 Registrar metadatos | `MentorEduLibraryUS08-RegisterMetadataPOST` |
+| US09 Buscar recursos | `MentorEduLibraryUS09-SearchGET` |
+| US12 Crear hilo | `MentorEduForumUS12-CreateThreadPOST` |
+| US18 Enviar resolución | `MentorEduPedagogyUS18-SubmitSolutionPOST` |
+| US19 Dar feedback | `MentorEduPedagogyUS19-GiveFeedbackPOST` |
+| US25 Reportar contenido | `MentorEduCommunityUS25-ReportContentPOST` |
+| US26 Resolver reporte | `MentorEduCommunityUS26-ResolveReportPATCH` |
+| US28 Administrar catálogo | `MentorEduCatalogUS28-CreateUniversityPOST` |
+
+---
+
+## Flujo de prueba recomendado
+
+### Setup inicial (una vez)
+
+1. `mvn spring-boot:run`
+2. Importar colección desde `http://localhost:8080/v3/api-docs`
+3. Importar entorno `postman/environments/local.postman_environment.json`
+4. Activar entorno **MentorEdu — Local**
+
+### Por cada Historia de Usuario
+
+1. Leer `postman/{bc}/{US}-{nombre}/README.md` — endpoint, reglas de negocio, escenarios.
+2. Ejecutar el `caso-01` (caso exitoso) primero; verificar status code y body.
+3. Ejecutar los casos de error (4xx): validación, auth, duplicados, not found.
+4. Copiar tokens/IDs del response a las variables de entorno para encadenar US dependientes.
+
+### Orden sugerido para validación integral
+
+```
+Auth        →  US01 → US02 → US03
+Profile     →  US04 → US05 → US06
+Library     →  US07 → US08 → US09 → US10 → US11
+Forum       →  US12 → US13 → US14 → US15
+Pedagogy    →  US16 → US18 → US17 → US19 → US20
+Community   →  US21 → US22 → US23 → US24 → US25 → US26 → US27
+Catalog     →  US28
+```
+
+---
+
+## Headers requeridos
+
+| Tipo de request | Headers obligatorios |
+|---|---|
+| Rutas públicas (`/auth/register`, `/auth/login`) | `Content-Type: application/json` |
+| Rutas protegidas | `Content-Type: application/json` + `Authorization: Bearer {{access_token}}` |
+| Upload de archivo (`US07`) | `Authorization: Bearer {{access_token}}` (sin `Content-Type` — Postman lo pone automático en `form-data`) |
+| Rutas de MODERATOR/ADMIN | `Authorization: Bearer {{moderator_token}}` |
+
+---
+
+## Comportamientos a verificar específicamente
+
+### Sesiones (US02)
+- Login crea una sesión nueva; el `refresh_token` no expira hasta 7 días o logout explícito.
+- Logout revoca la sesión — el `refresh_token` queda inutilizable.
+- `/auth/refresh` con token revocado → 401.
+- Si el mismo usuario abre más de 5 sesiones simultáneas, las más antiguas se revocan automáticamente.
+
+### Rate limiting en `/auth/**`
+- Más de 20 requests por minuto desde la misma IP → 429 Too Many Requests.
+- Solo activo en perfil `prod`; en local no aplica.
+
+### Tokens JWT
+- Access token válido 15 minutos. Expirado → 401 (no 403).
+- El token incluye claims `iss=mentoredu-api` y `aud=mentoredu-frontend`.
+
+### Reacciones (US14)
+- Misma reacción dos veces → toggle (elimina, 204 No Content).
+- Reacción diferente sobre el mismo target → actualiza, 201 Created.
+- `reactionType` es String abierto (LIKE, HELPFUL, DISLIKE, etc.).
+
+### Audit log de moderación (US26)
+- Al resolver un reporte (`PATCH /moderation/reports/{id}/resolve`), se crea automáticamente una fila en `moderation_audit_log`.
+- No hay endpoint público para consultarlo (solo acceso directo a BD en auditorías).
+
+### Validaciones de enum en requests
+- `Report.targetType` acepta solo: `THREAD`, `ANSWER`, `COMMENT`, `RESOURCE` → otro valor: 400.
+- `VerificationRequest.entityType` acepta solo: `TEACHER`, `ACADEMY` → otro valor: 400.
+- `ReviewVerificationRequest.action` acepta solo: `APPROVED`, `REJECTED` → otro valor: 400.
+
+---
+
+## Usuarios seed disponibles en local
+
+| Email | Contraseña | Rol |
+|---|---|---|
+| `admin@mentoredu.com` | Ver `.env` (BCrypt en V10) | ADMIN |
+| `moderator@mentoredu.com` | Ver `.env` (BCrypt en V10) | MODERATOR |
+
+Registrar usuarios STUDENT/TEACHER/ACADEMY via `POST /api/v1/auth/register` con el campo `role`.
+
+---
+
+## Agregar casos a una Historia existente
+
+1. Crea `caso-{NN}-{descripcion}.json` en la carpeta de la US correspondiente.
+2. Actualiza el `README.md` de la US con el nuevo escenario.
+3. Si cambió la respuesta de un endpoint existente, actualiza los `caso-XX.json` afectados.

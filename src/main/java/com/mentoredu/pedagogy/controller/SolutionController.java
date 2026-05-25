@@ -14,7 +14,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,8 +38,11 @@ public class SolutionController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(solutionService.submit(resourceId, request, auth.getName()));
+        SolutionResponse response = solutionService.submit(resourceId, request, auth.getName());
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .replacePath("/api/v1/resources/{resourceId}/solutions/mine")
+                .buildAndExpand(resourceId).toUri();
+        return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping("/{resourceId}/solutions/mine")

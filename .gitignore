@@ -42,6 +42,8 @@ application-local.properties
 .claude/
 historias-usuario-documentacion.md
 EVALUACION_TB3.md
+ejecucion.md
+
 
 # Uploaded files (dev local storage)
 uploads/
