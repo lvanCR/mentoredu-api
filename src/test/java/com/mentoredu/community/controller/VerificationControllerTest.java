@@ -7,6 +7,7 @@ import com.mentoredu.community.dto.ReviewVerificationRequest;
 import com.mentoredu.community.dto.VerificationResponse;
 import com.mentoredu.community.exception.DuplicateVerificationException;
 import com.mentoredu.community.exception.VerificationNotFoundException;
+import com.mentoredu.community.model.VerificationStatus;
 import com.mentoredu.community.service.IVerificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -126,12 +125,14 @@ class VerificationControllerTest {
                 .status("PENDING")
                 .build();
 
-        when(verificationService.getMyRequests("teacher@example.com")).thenReturn(List.of(response));
+        var pagedResponse = new com.mentoredu.config.PagedResponse<>(
+                List.of(response), 0, 20, 1, 1, true);
+        when(verificationService.getMyRequests(eq("teacher@example.com"), anyInt(), anyInt()))
+                .thenReturn(pagedResponse);
 
         mockMvc.perform(get("/api/v1/verification/requests/me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].entityType").value("TEACHER"));
+                .andExpect(jsonPath("$.content[0].entityType").value("TEACHER"));
     }
 
     @Test
@@ -154,7 +155,7 @@ class VerificationControllerTest {
                 .build();
 
         var request = new ReviewVerificationRequest();
-        request.setAction("APPROVED");
+        request.setAction(VerificationStatus.APPROVED);
 
         when(verificationService.review(eq(requestId), any(), eq("mod@example.com"))).thenReturn(response);
 
@@ -170,7 +171,7 @@ class VerificationControllerTest {
     void reviewVerification_rejectWithoutNotes_returns400() throws Exception {
         UUID id = UUID.randomUUID();
         var request = new ReviewVerificationRequest();
-        request.setAction("REJECTED");
+        request.setAction(VerificationStatus.REJECTED);
 
         when(verificationService.review(eq(id), any(), anyString()))
                 .thenThrow(new IllegalArgumentException("El rechazo requiere una razón (notes) obligatoria (RN-17)"));
@@ -189,7 +190,7 @@ class VerificationControllerTest {
                 .thenThrow(new VerificationNotFoundException("Solicitud no encontrada: " + id));
 
         var request = new ReviewVerificationRequest();
-        request.setAction("APPROVED");
+        request.setAction(VerificationStatus.APPROVED);
 
         mockMvc.perform(patch("/api/v1/verification/requests/{id}/review", id)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -202,7 +203,7 @@ class VerificationControllerTest {
     void reviewVerification_asRegularUser_returns403() throws Exception {
         UUID id = UUID.randomUUID();
         var request = new ReviewVerificationRequest();
-        request.setAction("APPROVED");
+        request.setAction(VerificationStatus.APPROVED);
 
         mockMvc.perform(patch("/api/v1/verification/requests/{id}/review", id)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -213,7 +214,7 @@ class VerificationControllerTest {
     @Test
     void reviewVerification_withoutAuth_returns401() throws Exception {
         var request = new ReviewVerificationRequest();
-        request.setAction("APPROVED");
+        request.setAction(VerificationStatus.APPROVED);
 
         mockMvc.perform(patch("/api/v1/verification/requests/{id}/review", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)

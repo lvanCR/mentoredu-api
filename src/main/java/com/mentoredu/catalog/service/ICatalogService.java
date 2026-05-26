@@ -20,4 +20,11 @@ public interface ICatalogService {
     List<CareerResponse> listCareersByUniversity(UUID universityId);
     CareerResponse createCareer(UUID universityId, CreateCareerRequest request);
     void linkCourseToCareer(UUID careerId, UUID courseId);
+
+    boolean universityExists(UUID id);
+    boolean courseExists(UUID id);
+    boolean careerExists(UUID id);
+    boolean areaExistsInUniversity(UUID areaId, UUID universityId);
+    boolean careerExistsInUniversity(UUID careerId, UUID universityId);
+    boolean careerExistsInArea(UUID careerId, UUID areaId);
 }

@@ -1,6 +1,7 @@
 package com.mentoredu.forum.controller;
 
 import com.mentoredu.config.PagedResponse;
+import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.forum.dto.CreateThreadRequest;
 import com.mentoredu.forum.dto.ThreadResponse;
 import com.mentoredu.forum.service.IThreadService;
@@ -11,11 +12,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -26,10 +26,6 @@ import java.util.UUID;
 public class ThreadController {
 
     private final IThreadService threadService;
-
-    // -------------------------------------------------------------------------
-    // US12 — Create forum thread
-    // -------------------------------------------------------------------------
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -43,17 +39,11 @@ public class ThreadController {
             + "Requiere autenticación JWT."
     )
     public ResponseEntity<ThreadResponse> create(@Valid @RequestBody CreateThreadRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(threadService.create(request, auth.getName()));
+        ThreadResponse response = threadService.create(request, SecurityUtils.currentEmail());
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(response.getId()).toUri();
+        return ResponseEntity.created(location).body(response);
     }
-
-    // -------------------------------------------------------------------------
-    // US12 — List recent threads (read, paginated)
-    // -------------------------------------------------------------------------
 
     @GetMapping
     @Operation(
@@ -65,16 +55,9 @@ public class ThreadController {
     public ResponseEntity<PagedResponse<ThreadResponse>> listRecent(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        SecurityUtils.requireAuth();
         return ResponseEntity.ok(threadService.listRecent(page, size));
     }
-
-    // -------------------------------------------------------------------------
-    // US12 — Get thread by ID
-    // -------------------------------------------------------------------------
 
     @GetMapping("/{id}")
     @Operation(
@@ -83,16 +66,9 @@ public class ThreadController {
             + "Devuelve 404 si el hilo no existe. Requiere autenticación JWT."
     )
     public ResponseEntity<ThreadResponse> getById(@PathVariable UUID id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        SecurityUtils.requireAuth();
         return ResponseEntity.ok(threadService.get(id));
     }
-
-    // -------------------------------------------------------------------------
-    // US12 — Close forum thread
-    // -------------------------------------------------------------------------
 
     @PatchMapping("/{id}/close")
     @Operation(
@@ -103,10 +79,6 @@ public class ThreadController {
             + "Requiere autenticación JWT."
     )
     public ResponseEntity<ThreadResponse> close(@PathVariable UUID id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        return ResponseEntity.ok(threadService.close(id, auth.getName()));
+        return ResponseEntity.ok(threadService.close(id, SecurityUtils.currentEmail()));
     }
 }

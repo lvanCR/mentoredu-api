@@ -32,7 +32,7 @@ public class ResourceResponse {
         this.id                 = resource.getId();
         this.title              = resource.getTitle();
         this.resourceType       = resource.getResourceType();
-        this.visibility         = resource.getVisibility();
+        this.visibility         = resource.getVisibility() != null ? resource.getVisibility().name() : null;
         this.description        = resource.getDescription();
         this.universityId       = resource.getUniversityId();
         this.areaId             = resource.getAreaId();

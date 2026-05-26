@@ -25,8 +25,9 @@ public class TeacherAcademyLink {
     @Column(name = "academy_profile_id", nullable = false, columnDefinition = "uuid")
     private UUID academyProfileId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status = "PENDING";
+    private AssociationStatus status = AssociationStatus.PENDING;
 
     @CreationTimestamp
     @Column(name = "requested_at", updatable = false)

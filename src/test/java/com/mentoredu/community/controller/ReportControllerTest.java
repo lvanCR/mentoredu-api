@@ -53,7 +53,11 @@ class ReportControllerTest {
     void createReport_withValidData_returns201() throws Exception {
         UUID targetId = UUID.randomUUID();
         var request = new ReportRequest("THREAD", targetId, "Contenido ofensivo");
-        var response = new ReportResponse(UUID.randomUUID(), UUID.randomUUID(), "THREAD", targetId, "Contenido ofensivo", "OPEN", LocalDateTime.now());
+        var response = ReportResponse.builder()
+                .id(UUID.randomUUID()).reporterId(UUID.randomUUID())
+                .targetType("THREAD").targetId(targetId)
+                .reason("Contenido ofensivo").status("OPEN").createdAt(LocalDateTime.now())
+                .build();
 
         when(reportService.create(eq(request), eq("reporter@example.com"))).thenReturn(response);
 
@@ -126,7 +130,11 @@ class ReportControllerTest {
     @Test
     @WithMockUser(username = "mod@example.com", roles = "MODERATOR")
     void listOpenReports_asModerator_returns200() throws Exception {
-        var response = new ReportResponse(UUID.randomUUID(), UUID.randomUUID(), "THREAD", UUID.randomUUID(), "Spam", "OPEN", LocalDateTime.now());
+        var response = ReportResponse.builder()
+                .id(UUID.randomUUID()).reporterId(UUID.randomUUID())
+                .targetType("THREAD").targetId(UUID.randomUUID())
+                .reason("Spam").status("OPEN").createdAt(LocalDateTime.now())
+                .build();
 
         when(reportService.listOpen(anyInt(), anyInt())).thenReturn(pageOf(List.of(response)));
 
@@ -168,7 +176,12 @@ class ReportControllerTest {
     void resolveReport_asModerator_returns200() throws Exception {
         UUID reportId = UUID.randomUUID();
         var request = new ResolveReportRequest("Contenido eliminado");
-        var response = new ReportResponse(reportId, UUID.randomUUID(), "THREAD", UUID.randomUUID(), "Spam", "RESOLVED", LocalDateTime.now());
+        var response = ReportResponse.builder()
+                .id(reportId).reporterId(UUID.randomUUID())
+                .targetType("THREAD").targetId(UUID.randomUUID())
+                .reason("Spam").status("RESOLVED").createdAt(LocalDateTime.now())
+                .resolutionNote("Contenido eliminado")
+                .build();
 
         when(reportService.resolve(eq(reportId), eq(request), eq("mod@example.com"))).thenReturn(response);
 

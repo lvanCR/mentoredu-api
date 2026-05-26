@@ -20,7 +20,7 @@ public class AssociationResponse {
         this.id               = link.getId();
         this.teacherProfileId = link.getTeacherProfileId();
         this.academyProfileId = link.getAcademyProfileId();
-        this.status           = link.getStatus();
+        this.status           = link.getStatus() != null ? link.getStatus().name() : null;
         this.requestedAt      = link.getRequestedAt();
         this.resolvedAt       = link.getResolvedAt();
     }

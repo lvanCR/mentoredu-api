@@ -17,7 +17,7 @@
     "body": {
       "status": 400,
       "error": "Bad Request",
-      "message": "Token has already been used"
+      "message": "El token ya fue utilizado"
     }
   }
 }

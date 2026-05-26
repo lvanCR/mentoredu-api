@@ -1,17 +1,14 @@
 package com.mentoredu.community.controller;
 
-import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.NotificationResponse;
 import com.mentoredu.community.service.INotificationService;
+import com.mentoredu.config.PagedResponse;
+import com.mentoredu.config.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -26,41 +23,27 @@ public class NotificationController {
     private final INotificationService notificationService;
 
     @GetMapping("/me")
-    @Operation(summary = "US27 - Ver todas mis notificaciones")
+    @Operation(summary = "US27 - Ver todas mis notificaciones. Filtro opcional: ?type=new_follower|answer_received|etc.")
     public ResponseEntity<PagedResponse<NotificationResponse>> getMyNotifications(
             @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size) {
-        Authentication auth = auth();
-        if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(notificationService.getMyNotifications(auth.getName(), page, size));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false)    String type) {
+        return ResponseEntity.ok(notificationService.getMyNotifications(SecurityUtils.currentEmail(), page, size, type));
     }
 
     @GetMapping("/me/pending")
-    @Operation(summary = "US27 - Ver mis notificaciones no leídas")
+    @Operation(summary = "US27 - Ver mis notificaciones no leídas. Filtro opcional: ?type=new_follower|answer_received|etc.")
     public ResponseEntity<PagedResponse<NotificationResponse>> getPendingNotifications(
             @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size) {
-        Authentication auth = auth();
-        if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(notificationService.getPendingNotifications(auth.getName(), page, size));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false)    String type) {
+        return ResponseEntity.ok(notificationService.getPendingNotifications(SecurityUtils.currentEmail(), page, size, type));
     }
 
     @PatchMapping("/{id}/read")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "US27 - Marcar una notificación como leída")
     public ResponseEntity<Void> markAsRead(@PathVariable UUID id) {
-        Authentication auth = auth();
-        if (isUnauthenticated(auth)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
-        notificationService.markAsRead(id, auth.getName());
+        notificationService.markAsRead(id, SecurityUtils.currentEmail());
         return ResponseEntity.noContent().build();
-    }
-
-    private Authentication auth() {
-        return SecurityContextHolder.getContext().getAuthentication();
-    }
-
-    private boolean isUnauthenticated(Authentication a) {
-        return a == null || !a.isAuthenticated() || a instanceof AnonymousAuthenticationToken;
     }
 }

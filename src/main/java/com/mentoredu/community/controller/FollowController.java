@@ -1,6 +1,7 @@
 package com.mentoredu.community.controller;
 
 import com.mentoredu.community.service.IFollowService;
+import com.mentoredu.config.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -10,8 +11,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -32,12 +31,8 @@ public class FollowController {
         @ApiResponse(responseCode = "204", description = "Seguimiento eliminado", content = @Content)
     })
     public ResponseEntity<Void> toggleFollow(@PathVariable UUID userId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
-        boolean followed = followService.toggleFollow(userId, auth.getName());
-        
-        return followed 
+        boolean followed = followService.toggleFollow(userId, SecurityUtils.currentEmail());
+        return followed
             ? ResponseEntity.status(HttpStatus.CREATED).build()
             : ResponseEntity.noContent().build();
     }

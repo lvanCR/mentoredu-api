@@ -32,8 +32,9 @@ public class Report {
     @Column(nullable = false, length = 200)
     private String reason;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status = "OPEN";
+    private ReportStatus status = ReportStatus.OPEN;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resolved_by")

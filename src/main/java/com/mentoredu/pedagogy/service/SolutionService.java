@@ -1,7 +1,7 @@
 package com.mentoredu.pedagogy.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.library.model.Resource;
 import com.mentoredu.library.repository.ResourceRepository;
 import com.mentoredu.pedagogy.dto.MySolutionWithFeedbackResponse;
@@ -15,10 +15,7 @@ import com.mentoredu.pedagogy.model.Solution;
 import com.mentoredu.pedagogy.model.SolutionStatus;
 import com.mentoredu.pedagogy.repository.FeedbackEntryRepository;
 import com.mentoredu.pedagogy.repository.SolutionRepository;
-import com.mentoredu.community.repository.TeacherAcademyLinkRepository;
 import com.mentoredu.library.exception.ResourceNotFoundException;
-import com.mentoredu.profile.repository.AcademyProfileRepository;
-import com.mentoredu.profile.repository.TeacherProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -34,10 +31,8 @@ public class SolutionService implements ISolutionService {
     private final SolutionRepository solutionRepository;
     private final FeedbackEntryRepository feedbackEntryRepository;
     private final ResourceRepository resourceRepository;
-    private final UserRepository userRepository;
-    private final TeacherProfileRepository teacherProfileRepository;
-    private final AcademyProfileRepository academyProfileRepository;
-    private final TeacherAcademyLinkRepository teacherAcademyLinkRepository;
+    private final UserService    userService;
+    private final ResourceAuthorizationService resourceAuthorizationService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -47,8 +42,7 @@ public class SolutionService implements ISolutionService {
             .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
         if (!resource.isAceptaResoluciones())
             throw new SolutionAccessDeniedException("Este recurso no acepta resoluciones");
-        User student = userRepository.findByEmail(studentEmail)
-            .orElseThrow(() -> new SolutionAccessDeniedException("Usuario no encontrado"));
+        User student = userService.findByEmailOrThrow(studentEmail);
         if (solutionRepository.existsByResourceIdAndStudentId(resourceId, student.getId()))
             throw new DuplicateSolutionException("Ya enviaste una resolución para este ejercicio");
         if (request.fileUrl() == null && request.content() == null)
@@ -68,8 +62,7 @@ public class SolutionService implements ISolutionService {
 
     @Override
     public MySolutionWithFeedbackResponse getMyWithFeedback(UUID resourceId, String studentEmail) {
-        User student = userRepository.findByEmail(studentEmail)
-            .orElseThrow(() -> new SolutionAccessDeniedException("Usuario no encontrado"));
+        User student = userService.findByEmailOrThrow(studentEmail);
         Solution solution = solutionRepository.findByResourceIdAndStudentId(resourceId, student.getId())
             .orElseThrow(() -> new SolutionNotFoundException("No has enviado resolución para este ejercicio"));
         var feedback = feedbackEntryRepository.findBySolutionId(solution.getId()).orElse(null);
@@ -80,25 +73,10 @@ public class SolutionService implements ISolutionService {
     public List<SolutionResponse> listByResource(UUID resourceId, String requesterEmail) {
         Resource resource = resourceRepository.findById(resourceId)
             .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
-        User requester = userRepository.findByEmail(requesterEmail)
-            .orElseThrow(() -> new SolutionAccessDeniedException("Usuario no encontrado"));
-        if (!isAuthorizedForResource(resource, requester))
+        User requester = userService.findByEmailOrThrow(requesterEmail);
+        if (!resourceAuthorizationService.isAuthorizedForResource(resource, requester))
             throw new SolutionAccessDeniedException("Solo el autor del ejercicio puede ver las resoluciones");
         return solutionRepository.findByResourceId(resourceId).stream()
             .map(SolutionResponse::from).toList();
-    }
-
-    // RN-10: (a) autor directo, o (b) TEACHER con link ACCEPTED a la academia autora
-    private boolean isAuthorizedForResource(Resource resource, User requester) {
-        if (resource.getAuthor().getId().equals(requester.getId())) return true;
-        var academyProfile = academyProfileRepository.findByProfile_UserId(resource.getAuthor().getId());
-        if (academyProfile.isEmpty()) return false;
-        var teacherProfile = teacherProfileRepository.findByProfile_UserId(requester.getId());
-        if (teacherProfile.isEmpty()) return false;
-        return teacherAcademyLinkRepository
-            .findByTeacherProfileIdAndAcademyProfileId(
-                teacherProfile.get().getProfileId(), academyProfile.get().getProfileId())
-            .map(link -> "ACCEPTED".equals(link.getStatus()))
-            .orElse(false);
     }
 }

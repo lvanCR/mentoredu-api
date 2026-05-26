@@ -3,13 +3,14 @@
   "description": "Caso 02 — Duplicado: ya existe solicitud con la misma academia. Espera 409 Conflict.",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/associations",
+    "url": "{{api_v1}}/associations/teacher-academy",
     "header": [
       { "key": "Authorization", "value": "Bearer {{teacher_token}}" },
       { "key": "Content-Type", "value": "application/json" }
     ],
     "body": {
-      "academyProfileId": "{{academy_profile_id}}"
+      "mode": "raw",
+      "raw": "{\n  \"academyProfileId\": \"{{academy_profile_id}}\"\n}"
     }
   },
   "expectedResponse": {

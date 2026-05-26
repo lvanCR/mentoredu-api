@@ -19,13 +19,14 @@
     },
     "body": {
       "mode": "raw",
-      "raw": "{\n  \"resolution\": \"RESOLVED\",\n  \"actionType\": \"WARN\",\n  \"notes\": \"Intento de resolución sin permisos\"\n}"
+      "raw": "{\n  \"resolutionNote\": \"Intento de resolución sin permisos\"\n}"
     }
   },
-  "description": "Caso 02 — Error: Usuario con rol STUDENT intenta resolver un reporte. Espera 403 Forbidden.",
+  "description": "Caso 02 — Error: Usuario con rol STUDENT intenta resolver un reporte. Espera 403 Forbidden (Spring Security @PreAuthorize).",
   "expectedStatus": 403,
   "expectedBody": {
+    "status": 403,
     "error": "Forbidden",
-    "message": "No tienes permisos para resolver reportes"
+    "message": "No tienes permiso para realizar esta acción"
   }
 }

@@ -1,0 +1,49 @@
+{
+  "name": "MentorEduCommunityUS22-GetMyVerificationRequestsGET",
+  "description": "Caso 05 — Exitoso: docente lista sus propias solicitudes de verificación (respuesta paginada). Espera 200 OK con PagedResponse.",
+  "request": {
+    "method": "GET",
+    "url": {
+      "raw": "{{api_v1}}/verification/requests/me?page=0&size=20",
+      "host": ["{{api_v1}}"],
+      "path": ["verification", "requests", "me"],
+      "query": [
+        { "key": "page", "value": "0" },
+        { "key": "size", "value": "20" }
+      ]
+    },
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" }
+    ]
+  },
+  "expectedResponse": {
+    "status": 200,
+    "body": {
+      "content": [
+        {
+          "id": "<uuid>",
+          "userId": "<uuid>",
+          "entityType": "TEACHER",
+          "status": "PENDING",
+          "notes": null,
+          "submittedAt": "<timestamp>",
+          "reviewedAt": null,
+          "documents": [
+            {
+              "id": "<uuid>",
+              "documentType": "DNI",
+              "fileUrl": "<url>",
+              "uploadedAt": "<timestamp>"
+            }
+          ]
+        }
+      ],
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "last": true
+    },
+    "note": "Respuesta es PagedResponse. Parámetros ?page= y ?size= son opcionales (defaults: 0 y 20). El campo 'documents' contiene los docs adjuntos (mínimo 1 requerido en creación — RN-16). 'notes' es null si no fue rechazado."
+  }
+}

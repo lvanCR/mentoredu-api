@@ -13,17 +13,30 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
 
     Page<Resource> findByAuthorId(UUID authorId, Pageable pageable);
 
-    @Query("""
-        SELECT r FROM Resource r
-        WHERE (:query IS NULL OR LOWER(r.title) LIKE LOWER(CONCAT('%', :query, '%')))
-          AND (:type IS NULL OR r.resourceType = :type)
-          AND (:universityId IS NULL OR r.universityId = :universityId)
-          AND (:areaId IS NULL OR r.areaId = :areaId)
-          AND (:careerId IS NULL OR r.careerId = :careerId)
-          AND (:courseId IS NULL OR r.courseId = :courseId)
+    @Query(value = """
+        SELECT * FROM resources r
+        WHERE (:query IS NULL OR r.title ILIKE CONCAT('%', :query, '%')
+                              OR r.description ILIKE CONCAT('%', :query, '%'))
+          AND (:type IS NULL OR r.resource_type = :type)
+          AND (:universityId IS NULL OR r.university_id = :universityId::uuid)
+          AND (:areaId IS NULL OR r.area_id = :areaId::uuid)
+          AND (:careerId IS NULL OR r.career_id = :careerId::uuid)
+          AND (:courseId IS NULL OR r.course_id = :courseId::uuid)
           AND r.visibility != 'PRIVATE'
-        ORDER BY r.createdAt DESC
-        """)
+        ORDER BY r.created_at DESC
+        """,
+        countQuery = """
+        SELECT COUNT(*) FROM resources r
+        WHERE (:query IS NULL OR r.title ILIKE CONCAT('%', :query, '%')
+                              OR r.description ILIKE CONCAT('%', :query, '%'))
+          AND (:type IS NULL OR r.resource_type = :type)
+          AND (:universityId IS NULL OR r.university_id = :universityId::uuid)
+          AND (:areaId IS NULL OR r.area_id = :areaId::uuid)
+          AND (:careerId IS NULL OR r.career_id = :careerId::uuid)
+          AND (:courseId IS NULL OR r.course_id = :courseId::uuid)
+          AND r.visibility != 'PRIVATE'
+        """,
+        nativeQuery = true)
     Page<Resource> search(
         @Param("query")        String query,
         @Param("type")         String type,

@@ -1,4 +1,4 @@
-package com.mentoredu.forum.exception;
+package com.mentoredu.auth.exception;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String message) {

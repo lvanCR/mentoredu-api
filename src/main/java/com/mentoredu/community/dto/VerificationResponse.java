@@ -28,7 +28,7 @@ public class VerificationResponse {
         this.id          = r.getId();
         this.userId      = r.getUser().getId();
         this.entityType  = r.getEntityType();
-        this.status      = r.getStatus();
+        this.status      = r.getStatus() != null ? r.getStatus().name() : null;
         this.notes       = r.getNotes();
         this.submittedAt = r.getSubmittedAt();
         this.reviewedAt  = r.getReviewedAt();

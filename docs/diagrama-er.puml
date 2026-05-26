@@ -171,6 +171,8 @@ package "library" {
     <<CHECK course_id IS NOT NULL OR resource_type IN ('EXAMEN_COMPLETO','GUIA','APUNTES')>>
     <<CHECK acepta_resoluciones = false OR resource_type = 'PRACTICA'>>
     <<INDEX idx_resources_student_feed (university_id, area_id, career_id, resource_type)>>
+    <<INDEX idx_resources_title_trgm GIN (title) pg_trgm>>
+    <<INDEX idx_resources_description_trgm GIN (description) pg_trgm>>
   }
 
   entity "download_logs" as download_logs {
@@ -328,6 +330,18 @@ package "community" {
     resolved_at : TIMESTAMP
   }
 
+  entity "moderation_audit_log" as moderation_audit_log {
+    *id : UUID <<PK>>
+    --
+    *report_id : UUID <<FK>>
+    *actor_id : UUID <<FK>>
+    *action : VARCHAR(30)
+    note : TEXT
+    *created_at : TIMESTAMP
+    <<INDEX idx_audit_report_id (report_id)>>
+    <<INDEX idx_audit_actor_id (actor_id)>>
+  }
+
   entity "notifications" as notifications {
     *id : UUID <<PK>>
     --
@@ -403,6 +417,8 @@ teacher_profiles ||--o{ teacher_academy_links : teacher_profile_id
 academy_profiles ||--o{ teacher_academy_links : academy_profile_id
 users ||--o{ reports : reporter_user_id
 users ||--o{ reports : resolved_by
+reports ||--o{ moderation_audit_log : report_id
+users ||--o{ moderation_audit_log : actor_id
 users ||--o{ notifications : user_id
 
 @enduml

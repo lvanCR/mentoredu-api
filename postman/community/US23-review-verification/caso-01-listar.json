@@ -1,24 +1,41 @@
 {
   "name": "MentorEduCommunityUS23-ListVerificationsGET",
-  "description": "Caso 01 — Exitoso: moderador lista todas las solicitudes de verificación. Espera 200 OK.",
+  "description": "Caso 01 — Exitoso: moderador lista todas las solicitudes de verificación. Espera 200 OK con PagedResponse. Solo MODERATOR/ADMIN (@PreAuthorize). Filtro opcional: ?status=PENDING|APPROVED|REJECTED.",
   "request": {
     "method": "GET",
-    "url": "{{api_v1}}/verification/requests",
+    "url": {
+      "raw": "{{api_v1}}/verification/requests?page=0&size=20",
+      "host": ["{{api_v1}}"],
+      "path": ["verification", "requests"],
+      "query": [
+        { "key": "page", "value": "0" },
+        { "key": "size", "value": "20" },
+        { "key": "status", "value": "PENDING", "disabled": true, "description": "Filtro opcional: PENDING | APPROVED | REJECTED" }
+      ]
+    },
     "header": [
       { "key": "Authorization", "value": "Bearer {{moderator_token}}" }
     ]
   },
   "expectedResponse": {
     "status": 200,
-    "body": [
-      {
-        "id": "<uuid>",
-        "userId": "<uuid>",
-        "entityType": "TEACHER",
-        "status": "PENDING",
-        "documentType": "DNI",
-        "submittedAt": "<timestamp>"
-      }
-    ]
+    "body": {
+      "content": [
+        {
+          "id": "<uuid>",
+          "userId": "<uuid>",
+          "entityType": "TEACHER",
+          "status": "PENDING",
+          "notes": null,
+          "submittedAt": "<timestamp>",
+          "reviewedAt": null
+        }
+      ],
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1
+    },
+    "note": "Respuesta paginada (PagedResponse). Sin ?status= devuelve todas. Con ?status=PENDING solo pendientes. STUDENT recibe 403 en este endpoint."
   }
 }

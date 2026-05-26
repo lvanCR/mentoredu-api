@@ -1,5 +1,6 @@
 package com.mentoredu.forum.controller;
 
+import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.forum.dto.CommentResponse;
 import com.mentoredu.forum.dto.CreateCommentRequest;
 import com.mentoredu.forum.service.ICommentService;
@@ -10,9 +11,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,10 +25,6 @@ public class CommentController {
 
     private final ICommentService commentService;
 
-    // -------------------------------------------------------------------------
-    // US15 — Comment on forum answer
-    // -------------------------------------------------------------------------
-
     @PostMapping("/{answerId}/comments")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
@@ -42,12 +36,8 @@ public class CommentController {
     public ResponseEntity<CommentResponse> create(
             @PathVariable UUID answerId,
             @Valid @RequestBody CreateCommentRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(commentService.create(answerId, request, auth.getName()));
+                .body(commentService.create(answerId, request, SecurityUtils.currentEmail()));
     }
 
     @GetMapping("/{answerId}/comments")
@@ -57,10 +47,7 @@ public class CommentController {
             + "Devuelve 404 si la respuesta no existe. Requiere autenticación JWT."
     )
     public ResponseEntity<List<CommentResponse>> listByAnswer(@PathVariable UUID answerId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        SecurityUtils.requireAuth();
         return ResponseEntity.ok(commentService.listByAnswer(answerId));
     }
 }

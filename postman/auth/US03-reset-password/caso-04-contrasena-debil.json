@@ -17,7 +17,7 @@
       "status": 400,
       "error": "Validation failed",
       "details": {
-        "newPassword": "Password must be between 8 and 72 characters"
+        "newPassword": "La contraseña debe tener entre 8 y 72 caracteres"
       }
     }
   }

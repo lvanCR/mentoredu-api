@@ -1,6 +1,6 @@
 package com.mentoredu.forum.service;
 
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.forum.dto.AnswerResponse;
 import com.mentoredu.forum.dto.CreateAnswerRequest;
@@ -8,11 +8,11 @@ import com.mentoredu.forum.event.AnswerCreatedEvent;
 import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.model.Answer;
+import com.mentoredu.forum.model.ThreadStatus;
 import com.mentoredu.forum.repository.AnswerRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,21 +24,20 @@ public class AnswerService implements IAnswerService {
 
     private final AnswerRepository     answerRepository;
     private final ThreadRepository     threadRepository;
-    private final UserRepository       userRepository;
+    private final UserService          userService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
     public AnswerResponse create(UUID threadId, CreateAnswerRequest request, String authorEmail) {
         var thread = threadRepository.findById(threadId)
-                .orElseThrow(() -> new ThreadNotFoundException("Thread not found: " + threadId));
+                .orElseThrow(() -> new ThreadNotFoundException("Hilo no encontrado: " + threadId));
 
-        if ("CLOSED".equals(thread.getStatus())) {
-            throw new ThreadClosedException("Thread is closed and does not accept new replies: " + threadId);
+        if (thread.getStatus() == ThreadStatus.CLOSED) {
+            throw new ThreadClosedException("El hilo está cerrado y no acepta nuevas respuestas: " + threadId);
         }
 
-        var user = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new RuntimeException("User not found: " + authorEmail));
+        var user = userService.findByEmailOrThrow(authorEmail);
 
         Answer answer = Answer.builder()
                 .thread(thread)
@@ -63,7 +62,7 @@ public class AnswerService implements IAnswerService {
             throw new ThreadNotFoundException("Thread not found: " + threadId);
         }
         return PagedResponse.from(
-                answerRepository.findAllByThread_IdOrderByCreatedAtAsc(threadId, PageRequest.of(page, size)),
+                answerRepository.findAllByThread_IdOrderByCreatedAtAsc(threadId, PagedResponse.toPageRequest(page, size)),
                 this::toResponse);
     }
 

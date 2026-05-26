@@ -1,16 +1,24 @@
 # US28 — Administrar catálogo del sistema
 
-Solo usuarios con rol ADMIN pueden crear, modificar y consultar universidades, áreas, cursos y carreras (RN-20).
+Solo usuarios con rol ADMIN pueden crear y modificar entradas del catálogo (RN-20). Consultas `GET` son públicas (requieren autenticación pero no rol específico).
 
-**Endpoints:**
-- `POST   /api/v1/catalog/universities` — crear universidad
-- `GET    /api/v1/catalog/universities` — listar universidades
-- `POST   /api/v1/catalog/areas` — crear área (pertenece a una universidad)
-- `GET    /api/v1/catalog/areas` — listar áreas
-- `POST   /api/v1/catalog/courses` — crear curso
-- `GET    /api/v1/catalog/courses` — listar cursos
-- `POST   /api/v1/catalog/careers` — crear carrera
-- `GET    /api/v1/catalog/careers` — listar carreras
+**Endpoints completos:**
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET`  | `/api/v1/catalog/universities` | cualquiera | Listar universidades |
+| `POST` | `/api/v1/catalog/universities` | ADMIN | Crear universidad |
+| `GET`  | `/api/v1/catalog/universities/{id}/areas` | cualquiera | Listar áreas de una universidad |
+| `POST` | `/api/v1/catalog/universities/{id}/areas` | ADMIN | Crear área en una universidad |
+| `GET`  | `/api/v1/catalog/courses` | cualquiera | Listar todos los cursos |
+| `GET`  | `/api/v1/catalog/areas/{areaId}/courses` | cualquiera | Listar cursos de un área |
+| `POST` | `/api/v1/catalog/courses` | ADMIN | Crear curso |
+| `PUT`  | `/api/v1/catalog/areas/{areaId}/courses/{courseId}` | ADMIN | Asociar curso a área (idempotente) |
+| `GET`  | `/api/v1/catalog/universities/{id}/careers` | cualquiera | Listar carreras de una universidad |
+| `POST` | `/api/v1/catalog/universities/{id}/careers` | ADMIN | Crear carrera en una universidad |
+| `PUT`  | `/api/v1/catalog/careers/{careerId}/courses/{courseId}` | ADMIN | Asociar curso a carrera (idempotente) |
+
+> **Nota crítica:** Los endpoints de asociación usan `PUT` (no `POST`) — semántica idempotente. Una segunda llamada con el mismo par no genera error.
 
 **Headers:** `Authorization: Bearer {{admin_token}}`, `Content-Type: application/json`
 
@@ -21,9 +29,9 @@ Solo usuarios con rol ADMIN pueden crear, modificar y consultar universidades, �
 | 01 | `caso-01-listar-universidades.json` | ADMIN lista universidades disponibles | 200 OK |
 | 02 | `caso-02-crear-universidad.json` | ADMIN crea nueva universidad | 201 Created |
 | 03 | `caso-03-forbidden.json` | No-ADMIN intenta crear universidad | 403 Forbidden |
-
-> **Faltan** casos para: crear área (POST /catalog/areas), crear carrera (POST /catalog/careers), nombre duplicado (409). Agregar `caso-04` a `caso-06` cuando se implementen.
+| 04 | `caso-04-link-course-to-area.json` | ADMIN asocia curso a área | 204 No Content |
+| 05 | `caso-05-link-course-to-career.json` | ADMIN asocia curso a carrera | 204 No Content |
 
 ## Nota
 
-Los datos de V9 (7 universidades Lima, 18 cursos, 15 áreas) ya están en BD. Usar `GET` para obtener los UUIDs antes de crear perfiles o recursos.
+Los datos de V9 (7 universidades Lima, 18 cursos, 15 áreas) ya están en BD. Usar `GET /catalog/universities` para obtener los UUIDs de universidades antes de crear perfiles o recursos. Los UUIDs de areas/cursos también se consultan por GET.

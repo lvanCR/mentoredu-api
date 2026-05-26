@@ -16,7 +16,7 @@
       "status": 400,
       "error": "Validation failed",
       "details": {
-        "token": "Token is required"
+        "token": "El token es obligatorio"
       }
     }
   }

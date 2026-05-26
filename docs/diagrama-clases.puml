@@ -199,10 +199,7 @@ package "forum" {
     CLOSED
   }
 
-  enum ReactionType {
-    LIKE
-    DISLIKE
-  }
+  note "reactionType es String abierto\n(LIKE, HELPFUL, etc. — no enum fijo)" as NReactionType
 
   class Thread {
     +id : UUID
@@ -367,6 +364,15 @@ package "community" {
     +isOpen() : Boolean
   }
 
+  class ModerationAuditLog {
+    +id : UUID
+    +report : Report
+    +actor : User
+    +action : String
+    +note : String
+    +createdAt : LocalDateTime
+  }
+
   class Notification {
     +id : UUID
     +user : User
@@ -440,6 +446,8 @@ VerificationRequest "1" *-- "1..*" VerificationDoc : attaches
 TeacherProfile "1" -- "0..*" TeacherAcademyLink : requests
 AcademyProfile "1" -- "0..*" TeacherAcademyLink : resolves
 User "1" -- "0..*" Report : files
+Report "1" *-- "0..*" ModerationAuditLog : audited by
+User "1" -- "0..*" ModerationAuditLog : acts as moderator
 User "1" -- "0..*" Notification : receives
 
 @enduml

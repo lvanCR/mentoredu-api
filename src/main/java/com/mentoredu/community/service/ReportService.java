@@ -1,7 +1,7 @@
 package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.ReportRequest;
 import com.mentoredu.community.dto.ReportResponse;
@@ -9,7 +9,11 @@ import com.mentoredu.community.dto.ResolveReportRequest;
 import com.mentoredu.community.exception.DuplicateReportException;
 import com.mentoredu.community.exception.ReportAlreadyResolvedException;
 import com.mentoredu.community.exception.ReportNotFoundException;
+import com.mentoredu.community.model.ModerationAuditLog;
+import com.mentoredu.community.model.ModerationAction;
 import com.mentoredu.community.model.Report;
+import com.mentoredu.community.model.ReportStatus;
+import com.mentoredu.community.repository.ModerationAuditLogRepository;
 import com.mentoredu.community.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,14 +29,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReportService implements IReportService {
 
-    private final ReportRepository reportRepository;
-    private final UserRepository userRepository;
+    private final ReportRepository           reportRepository;
+    private final UserService                userService;
+    private final ModerationAuditLogRepository auditLogRepository;
 
     @Override
     @Transactional
     public ReportResponse create(ReportRequest request, String reporterEmail) {
-        User reporter = userRepository.findByEmail(reporterEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + reporterEmail));
+        User reporter = userService.findByEmailOrThrow(reporterEmail);
 
         if (reportRepository.existsByReporterIdAndTargetTypeAndTargetId(
                 reporter.getId(), request.targetType(), request.targetId())) {
@@ -44,7 +48,7 @@ public class ReportService implements IReportService {
                 .targetType(request.targetType())
                 .targetId(request.targetId())
                 .reason(request.reason())
-                .status("OPEN")
+                .status(ReportStatus.OPEN)
                 .build();
 
         return ReportResponse.from(reportRepository.save(report));
@@ -54,7 +58,7 @@ public class ReportService implements IReportService {
     @Transactional(readOnly = true)
     public PagedResponse<ReportResponse> listOpen(int page, int size) {
         return PagedResponse.from(
-                reportRepository.findByStatus("OPEN", PageRequest.of(page, size)),
+                reportRepository.findByStatus(ReportStatus.OPEN, PagedResponse.toPageRequest(page, size)),
                 ReportResponse::from);
     }
 
@@ -64,22 +68,26 @@ public class ReportService implements IReportService {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException("Reporte no encontrado: " + reportId));
 
-        if ("RESOLVED".equals(report.getStatus())) {
+        if (ReportStatus.RESOLVED == report.getStatus()) {
             throw new ReportAlreadyResolvedException("El reporte ya fue resuelto");
         }
 
-        User resolver = userRepository.findByEmail(resolverEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + resolverEmail));
+        User resolver = userService.findByEmailOrThrow(resolverEmail);
 
-        report.setStatus("RESOLVED");
+        report.setStatus(ReportStatus.RESOLVED);
         report.setResolvedBy(resolver);
         report.setResolutionNote(request.resolutionNote());
         report.setResolvedAt(LocalDateTime.now());
 
-        // Log simple de auditoría (RN-19)
-        log.info("Report {} resolved by {} as {}. Note: {}", 
-                reportId, resolverEmail, report.getStatus(), request.resolutionNote());
+        Report saved = reportRepository.save(report);
 
-        return ReportResponse.from(reportRepository.save(report));
+        auditLogRepository.save(ModerationAuditLog.builder()
+                .report(saved)
+                .actor(resolver)
+                .action(ModerationAction.RESOLVED)
+                .note(request.resolutionNote())
+                .build());
+
+        return ReportResponse.from(saved);
     }
 }

@@ -6,6 +6,7 @@ import com.mentoredu.community.dto.AssociationResponse;
 import com.mentoredu.community.dto.CreateAssociationRequest;
 import com.mentoredu.community.exception.AssociationNotFoundException;
 import com.mentoredu.community.exception.DuplicateAssociationException;
+import com.mentoredu.community.model.AssociationStatus;
 import com.mentoredu.community.model.TeacherAcademyLink;
 import com.mentoredu.community.service.IAssociationService;
 import org.junit.jupiter.api.Test;
@@ -162,7 +163,7 @@ class AssociationControllerTest {
                 .id(id)
                 .teacherProfileId(UUID.randomUUID())
                 .academyProfileId(UUID.randomUUID())
-                .status("ACCEPTED")
+                .status(AssociationStatus.ACCEPTED)
                 .requestedAt(LocalDateTime.now())
                 .resolvedAt(LocalDateTime.now())
                 .build();
@@ -205,7 +206,7 @@ class AssociationControllerTest {
                 .id(id)
                 .teacherProfileId(UUID.randomUUID())
                 .academyProfileId(UUID.randomUUID())
-                .status("REJECTED")
+                .status(AssociationStatus.REJECTED)
                 .requestedAt(LocalDateTime.now())
                 .resolvedAt(LocalDateTime.now())
                 .build();
@@ -239,7 +240,7 @@ class AssociationControllerTest {
                 .id(UUID.randomUUID())
                 .teacherProfileId(teacherProfileId)
                 .academyProfileId(academyProfileId)
-                .status("PENDING")
+                .status(AssociationStatus.PENDING)
                 .requestedAt(LocalDateTime.now())
                 .build();
     }

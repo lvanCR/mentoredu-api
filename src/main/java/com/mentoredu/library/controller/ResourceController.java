@@ -1,6 +1,7 @@
 package com.mentoredu.library.controller;
 
 import com.mentoredu.config.PagedResponse;
+import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
@@ -11,13 +12,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -29,20 +28,7 @@ public class ResourceController {
 
     private final IResourceService resourceService;
 
-    private Authentication auth() {
-        return SecurityContextHolder.getContext().getAuthentication();
-    }
-
-    private boolean isUnauthenticated(Authentication a) {
-        return a == null || !a.isAuthenticated() || a instanceof AnonymousAuthenticationToken;
-    }
-
-    // -------------------------------------------------------------------------
-    // POST /resources — Publish resource (US07+US08)
-    // -------------------------------------------------------------------------
-
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     @Operation(
         summary = "US08 - Registrar recurso académico",
         description = "Publica un recurso académico. El campo fileUrl debe provenir de POST /resources/files. "
@@ -50,15 +36,11 @@ public class ResourceController {
             + "aceptaResoluciones solo puede ser true para TEACHER, ACADEMY o ADMIN (RN-14)."
     )
     public ResponseEntity<ResourceResponse> publish(@Valid @RequestBody PublishResourceRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(resourceService.publish(request, a.getName()));
+        ResourceResponse response = resourceService.publish(request, SecurityUtils.currentEmail());
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(response.getId()).toUri();
+        return ResponseEntity.created(location).body(response);
     }
-
-    // -------------------------------------------------------------------------
-    // GET /resources/search — Search resources (US09)
-    // -------------------------------------------------------------------------
 
     @GetMapping
     @Operation(
@@ -75,39 +57,22 @@ public class ResourceController {
             @RequestParam(required = false)              UUID courseId,
             @RequestParam(defaultValue = "0")            int page,
             @RequestParam(defaultValue = "20")           int size) {
-
         return ResponseEntity.ok(resourceService.search(query, type, universityId, areaId, careerId, courseId, page, size));
     }
-
-    // -------------------------------------------------------------------------
-    // GET /resources/{id} — Get resource by ID
-    // -------------------------------------------------------------------------
 
     @GetMapping("/{id}")
     @Operation(summary = "US09 - Obtener metadatos de un recurso por ID")
     public ResponseEntity<ResourceResponse> getById(@PathVariable UUID id) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(resourceService.getById(id));
+        return ResponseEntity.ok(resourceService.getById(id, SecurityUtils.currentEmail()));
     }
-
-    // -------------------------------------------------------------------------
-    // GET /resources/me — Get my published resources (US11)
-    // -------------------------------------------------------------------------
 
     @GetMapping("/me")
     @Operation(summary = "US11 - Ver mis recursos publicados")
     public ResponseEntity<PagedResponse<ResourceResponse>> getMyResources(
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(resourceService.getByAuthor(a.getName(), page, size));
+        return ResponseEntity.ok(resourceService.getByAuthor(SecurityUtils.currentEmail(), page, size));
     }
-
-    // -------------------------------------------------------------------------
-    // PATCH /resources/{id}/settings — Update resource settings (US16 Escenario 2)
-    // -------------------------------------------------------------------------
 
     @PatchMapping("/{id}/settings")
     @Operation(summary = "US16 - Activar o desactivar acepta_resoluciones en un recurso",
@@ -115,20 +80,12 @@ public class ResourceController {
     public ResponseEntity<ResourceResponse> updateSettings(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateResourceSettingsRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(resourceService.updateSettings(id, request, a.getName()));
+        return ResponseEntity.ok(resourceService.updateSettings(id, request, SecurityUtils.currentEmail()));
     }
-
-    // -------------------------------------------------------------------------
-    // GET /resources/{id}/download — Download resource (US10)
-    // -------------------------------------------------------------------------
 
     @GetMapping("/{id}/download")
     @Operation(summary = "US10 - Descargar un recurso académico")
     public ResponseEntity<DownloadResponse> download(@PathVariable UUID id) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(resourceService.download(id, a.getName()));
+        return ResponseEntity.ok(resourceService.download(id, SecurityUtils.currentEmail()));
     }
 }

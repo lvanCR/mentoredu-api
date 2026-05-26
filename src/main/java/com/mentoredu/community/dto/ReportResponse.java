@@ -8,8 +8,16 @@ import java.util.UUID;
 
 @Builder
 public record ReportResponse(
-    UUID id, UUID reporterId, String targetType, UUID targetId,
-    String reason, String status, LocalDateTime createdAt
+    UUID id,
+    UUID reporterId,
+    String targetType,
+    UUID targetId,
+    String reason,
+    String status,
+    LocalDateTime createdAt,
+    UUID resolvedById,
+    String resolutionNote,
+    LocalDateTime resolvedAt
 ) {
     public static ReportResponse from(Report r) {
         return ReportResponse.builder()
@@ -18,8 +26,11 @@ public record ReportResponse(
             .targetType(r.getTargetType())
             .targetId(r.getTargetId())
             .reason(r.getReason())
-            .status(r.getStatus())
+            .status(r.getStatus().name())
             .createdAt(r.getCreatedAt())
+            .resolvedById(r.getResolvedBy() != null ? r.getResolvedBy().getId() : null)
+            .resolutionNote(r.getResolutionNote())
+            .resolvedAt(r.getResolvedAt())
             .build();
     }
 }

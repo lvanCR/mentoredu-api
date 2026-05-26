@@ -1,9 +1,9 @@
 package com.mentoredu.library.dto;
 
 import com.mentoredu.library.model.ResourceType;
+import com.mentoredu.library.model.ResourceVisibility;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.util.UUID;
@@ -29,11 +29,7 @@ public class PublishResourceRequest {
     @NotNull(message = "resourceType is required")
     private ResourceType resourceType;
 
-    @Pattern(
-        regexp = "PUBLIC|PREMIUM|PRIVATE",
-        message = "visibility must be one of: PUBLIC, PREMIUM, PRIVATE"
-    )
-    private String visibility;
+    private ResourceVisibility visibility;
 
     private String description;
 

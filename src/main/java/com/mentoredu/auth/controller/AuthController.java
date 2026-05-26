@@ -34,7 +34,6 @@ public class AuthController {
 
     @PostMapping("/register")
     @Operation(summary = "US01 - Registrar cuenta con email y rol")
-    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
     }
@@ -47,7 +46,6 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "US02 - Cerrar sesión")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request) {
         authService.logout(request);
         return ResponseEntity.noContent().build();

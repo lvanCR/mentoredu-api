@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,7 +32,6 @@ public class CatalogController {
     }
 
     @PostMapping("/universities")
-    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "US28 - Crear universidad (solo ADMIN)")
     public ResponseEntity<UniversityResponse> createUniversity(@Valid @RequestBody CreateUniversityRequest request) {
@@ -48,7 +46,6 @@ public class CatalogController {
     }
 
     @PostMapping("/universities/{universityId}/areas")
-    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "US28 - Crear área en una universidad (solo ADMIN)")
     public ResponseEntity<AreaResponse> createArea(
@@ -71,15 +68,13 @@ public class CatalogController {
     }
 
     @PostMapping("/courses")
-    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "US28 - Crear curso (solo ADMIN)")
     public ResponseEntity<CourseResponse> createCourse(@Valid @RequestBody CreateCourseRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(catalogService.createCourse(request));
     }
 
-    @PostMapping("/areas/{areaId}/courses/{courseId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PutMapping("/areas/{areaId}/courses/{courseId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "US28 - Asociar curso a un área (solo ADMIN)")
     public ResponseEntity<Void> linkCourseToArea(@PathVariable UUID areaId, @PathVariable UUID courseId) {
@@ -95,7 +90,6 @@ public class CatalogController {
     }
 
     @PostMapping("/universities/{universityId}/careers")
-    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "US28 - Crear carrera en una universidad (solo ADMIN)")
     public ResponseEntity<CareerResponse> createCareer(
@@ -104,8 +98,7 @@ public class CatalogController {
         return ResponseEntity.status(HttpStatus.CREATED).body(catalogService.createCareer(universityId, request));
     }
 
-    @PostMapping("/careers/{careerId}/courses/{courseId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PutMapping("/careers/{careerId}/courses/{courseId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "US28 - Asociar curso a una carrera (solo ADMIN)")
     public ResponseEntity<Void> linkCourseToCareer(@PathVariable UUID careerId, @PathVariable UUID courseId) {

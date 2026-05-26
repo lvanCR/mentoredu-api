@@ -14,7 +14,7 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class Thread {
+public class ForumThread {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,8 +33,9 @@ public class Thread {
     @Column(name = "is_anonymous", nullable = false)
     private Boolean anonymous = false;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status = "OPEN";
+    private ThreadStatus status = ThreadStatus.OPEN;
 
     // Clasificación multi-modal (RN-12): mínimo uno requerido.
     // CHECK constraints en BD garantizan reglas de consistencia.

@@ -16,7 +16,7 @@
     "body": {
       "status": 400,
       "error": "Bad Request",
-      "message": "Token not found or invalid"
+      "message": "Token no encontrado o inválido"
     }
   }
 }

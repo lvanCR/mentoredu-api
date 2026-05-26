@@ -1,6 +1,6 @@
 {
-  "name": "MentorEduNotificationsHU25-PendingGET",
-  "description": "Caso 01 — Exitoso: usuario autenticado con notificaciones pendientes. Espera 200 OK con lista no vacía ordenada por fecha descendente.",
+  "name": "MentorEduNotificationsUS27-PendingGET",
+  "description": "Caso 01 — Exitoso: usuario autenticado con notificaciones pendientes. Espera 200 OK con PagedResponse no vacío. Filtro opcional: ?type=answer_received|new_follower|etc.",
   "request": {
     "method": "GET",
     "header": [
@@ -11,13 +11,34 @@
       }
     ],
     "url": {
-      "raw": "{{api_v1}}/notifications/me/pending",
+      "raw": "{{api_v1}}/notifications/me/pending?page=0&size=20",
       "host": ["{{api_v1}}"],
-      "path": ["notifications", "me", "pending"]
+      "path": ["notifications", "me", "pending"],
+      "query": [
+        { "key": "page", "value": "0" },
+        { "key": "size", "value": "20" },
+        { "key": "type", "value": "", "disabled": true, "description": "Filtro opcional: new_follower|answer_received|comment_received|reaction_received|solution_submitted|feedback_received|verification_processed|association_resolved" }
+      ]
     }
   },
-  "response": {
+  "expectedResponse": {
     "status": 200,
-    "body": "[{\"id\":\"...\",\"userId\":\"...\",\"type\":\"FORUM_REPLY\",\"title\":\"Alguien respondió tu hilo\",\"message\":\"...\",\"read\":false,\"createdAt\":\"...\"}]"
+    "body": {
+      "content": [
+        {
+          "id": "<uuid>",
+          "type": "answer_received",
+          "payload": { "threadId": "<uuid>", "threadTitle": "¿Cómo resolver integrales?" },
+          "readAt": null,
+          "createdAt": "<timestamp>"
+        }
+      ],
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "last": true
+    },
+    "note": "Los tipos válidos de 'type' son: new_follower, answer_received, comment_received, reaction_received, solution_submitted, feedback_received, verification_processed, association_resolved. El campo 'payload' es JSON libre (varía por tipo). 'readAt' es null si no leída. No hay campo 'userId' en la respuesta."
   }
 }

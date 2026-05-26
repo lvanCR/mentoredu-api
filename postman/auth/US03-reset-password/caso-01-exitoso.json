@@ -15,7 +15,7 @@
   "expected_response": {
     "status": 200,
     "body": {
-      "message": "Password reset successfully. All active sessions have been closed."
+      "message": "Contraseña restablecida correctamente. Todas las sesiones activas fueron cerradas."
     }
   }
 }

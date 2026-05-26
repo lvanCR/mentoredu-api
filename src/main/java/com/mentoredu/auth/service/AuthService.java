@@ -16,6 +16,7 @@ import com.mentoredu.auth.entity.PasswordResetToken;
 import com.mentoredu.auth.entity.Session;
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.entity.UserStatus;
+import com.mentoredu.auth.event.PasswordResetRequestedEvent;
 import com.mentoredu.auth.event.UserRegisteredEvent;
 import com.mentoredu.auth.exception.EmailAlreadyExistsException;
 import com.mentoredu.auth.exception.EmailNotFoundException;
@@ -27,17 +28,23 @@ import com.mentoredu.auth.repository.SessionRepository;
 import com.mentoredu.auth.repository.UserRepository;
 import com.mentoredu.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
-import java.util.UUID;
+import java.util.List;
 
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -48,22 +55,26 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder              passwordEncoder;
     private final JwtUtil                      jwtUtil;
-    private final IEmailService                emailService;
     private final ApplicationEventPublisher    eventPublisher;
 
     @Value("${app.password-reset.expiration-minutes:60}")
     private long passwordResetExpirationMinutes;
+
+    @Value("${app.session.max-active:5}")
+    private int maxActiveSessions;
+
+    private final SecureRandom secureRandom = new SecureRandom();
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
 
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new EmailAlreadyExistsException("Email already registered: " + normalizedEmail);
+            throw new EmailAlreadyExistsException("El email ya está registrado: " + normalizedEmail);
         }
 
         var role = roleRepository.findByName(request.getRole().toUpperCase())
-                .orElseThrow(() -> new IllegalStateException("Role not found: " + request.getRole() + ". Run DB migrations."));
+                .orElseThrow(() -> new IllegalStateException("Rol no encontrado: " + request.getRole() + ". Ejecutar migraciones BD."));
 
         var user = User.builder()
                 .firstName(request.getFirstName().trim())
@@ -81,13 +92,7 @@ public class AuthService {
                 new UserRegisteredEvent(saved.getId(), saved.getFirstName(), saved.getLastName(), saved.getRole().getName()));
 
         String accessToken  = jwtUtil.generateAccessToken(saved);
-        String refreshToken = UUID.randomUUID().toString();
-
-        sessionRepository.save(Session.builder()
-                .user(saved)
-                .refreshToken(refreshToken)
-                .expiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getRefreshExpirationMs() / 1000))
-                .build());
+        String refreshToken = createSession(saved);
 
         return RegisterResponse.builder()
                 .id(saved.getId())
@@ -108,24 +113,18 @@ public class AuthService {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
 
         User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+                .orElseThrow(() -> new InvalidCredentialsException("Email o contraseña inválidos"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new InvalidCredentialsException("Invalid email or password");
+            throw new InvalidCredentialsException("Email o contraseña inválidos");
         }
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new InvalidCredentialsException("Account is not active");
+            throw new InvalidCredentialsException("La cuenta no está activa");
         }
 
         String accessToken  = jwtUtil.generateAccessToken(user);
-        String refreshToken = UUID.randomUUID().toString();
-
-        sessionRepository.save(Session.builder()
-                .user(user)
-                .refreshToken(refreshToken)
-                .expiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getRefreshExpirationMs() / 1000))
-                .build());
+        String refreshToken = createSession(user);
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
@@ -148,11 +147,11 @@ public class AuthService {
 
     @Transactional
     public void logout(LogoutRequest request) {
-        Session session = sessionRepository.findByRefreshToken(request.getRefreshToken())
-                .orElseThrow(() -> new InvalidCredentialsException("Refresh token not found or invalid"));
+        Session session = sessionRepository.findByRefreshToken(hashToken(request.getRefreshToken()))
+                .orElseThrow(() -> new InvalidCredentialsException("Token de sesión no encontrado o inválido"));
 
         if (session.getRevokedAt() != null) {
-            throw new InvalidCredentialsException("Session is already revoked");
+            throw new InvalidCredentialsException("La sesión ya fue revocada");
         }
 
         session.setRevokedAt(LocalDateTime.now());
@@ -166,27 +165,33 @@ public class AuthService {
     @Transactional
     public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
+        String genericMessage = "Si existe una cuenta con ese correo, recibirás un enlace de recuperación en breve.";
 
-        User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new EmailNotFoundException("No account found for: " + normalizedEmail));
+        var maybeUser = userRepository.findByEmail(normalizedEmail);
+        if (maybeUser.isEmpty()) {
+            // No revelar si el email existe o no (previene user enumeration — OWASP A07)
+            log.debug("Password reset requested for non-existent email: {}", normalizedEmail);
+            return ForgotPasswordResponse.builder().message(genericMessage).build();
+        }
+
+        User user = maybeUser.get();
 
         // Invalidate any previous active tokens for this user before issuing a new one
         passwordResetTokenRepository.invalidateAllByUserId(user.getId());
 
-        String rawToken = generateSecureToken();
+        String rawToken   = generateSecureToken();
+        String tokenHash  = hashToken(rawToken);
 
         passwordResetTokenRepository.save(PasswordResetToken.builder()
                 .user(user)
-                .token(rawToken)
+                .token(tokenHash)
                 .expiresAt(LocalDateTime.now().plusMinutes(passwordResetExpirationMinutes))
                 .used(false)
                 .build());
 
-        emailService.sendPasswordResetEmail(user.getEmail(), rawToken);
+        eventPublisher.publishEvent(new PasswordResetRequestedEvent(user.getEmail(), rawToken));
 
-        return ForgotPasswordResponse.builder()
-                .message("Si existe una cuenta con ese correo, recibirás un enlace de recuperación en breve.")
-                .build();
+        return ForgotPasswordResponse.builder().message(genericMessage).build();
     }
 
     // -------------------------------------------------------------------------
@@ -195,16 +200,17 @@ public class AuthService {
 
     @Transactional
     public ResetPasswordResponse resetPassword(ResetPasswordRequest request) {
+        String tokenHash = hashToken(request.getToken());
         PasswordResetToken resetToken = passwordResetTokenRepository
-                .findByToken(request.getToken())
-                .orElseThrow(() -> new InvalidTokenException("Token not found or invalid"));
+                .findByToken(tokenHash)
+                .orElseThrow(() -> new InvalidTokenException("Token no encontrado o inválido"));
 
         if (resetToken.isUsed()) {
-            throw new InvalidTokenException("Token has already been used");
+            throw new InvalidTokenException("El token ya fue utilizado");
         }
 
         if (resetToken.isExpired()) {
-            throw new InvalidTokenException("Token has expired");
+            throw new InvalidTokenException("El token ha expirado");
         }
 
         User user = resetToken.getUser();
@@ -218,7 +224,7 @@ public class AuthService {
         sessionRepository.revokeAllActiveByUserId(user.getId(), LocalDateTime.now());
 
         return ResetPasswordResponse.builder()
-                .message("Password reset successfully. All active sessions have been closed.")
+                .message("Contraseña restablecida correctamente. Todas las sesiones activas fueron cerradas.")
                 .build();
     }
 
@@ -228,15 +234,15 @@ public class AuthService {
 
     @Transactional
     public RefreshTokenResponse refresh(RefreshTokenRequest request) {
-        Session session = sessionRepository.findByRefreshToken(request.getRefreshToken())
-                .orElseThrow(() -> new InvalidCredentialsException("Refresh token not found or invalid"));
+        Session session = sessionRepository.findByRefreshToken(hashToken(request.getRefreshToken()))
+                .orElseThrow(() -> new InvalidCredentialsException("Token de sesión no encontrado o inválido"));
 
         if (session.getRevokedAt() != null) {
-            throw new InvalidCredentialsException("Refresh token has been revoked");
+            throw new InvalidCredentialsException("El token de sesión fue revocado");
         }
 
         if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new InvalidCredentialsException("Refresh token has expired");
+            throw new InvalidCredentialsException("El token de sesión ha expirado");
         }
 
         String accessToken = jwtUtil.generateAccessToken(session.getUser());
@@ -251,9 +257,41 @@ public class AuthService {
     // Helpers
     // -------------------------------------------------------------------------
 
+    private String createSession(User user) {
+        revokeOldestSessionsIfOverLimit(user);
+        String rawToken = generateSecureToken();
+        sessionRepository.save(Session.builder()
+                .user(user)
+                .refreshToken(hashToken(rawToken))
+                .expiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getRefreshExpirationMs() / 1000))
+                .build());
+        return rawToken;
+    }
+
+    private void revokeOldestSessionsIfOverLimit(User user) {
+        List<Session> active = sessionRepository.findAllActiveByUserId(user.getId(), LocalDateTime.now());
+        if (active.size() >= maxActiveSessions) {
+            int excess = active.size() - maxActiveSessions + 1;
+            List<Session> toRevoke = active.subList(0, excess);
+            LocalDateTime now = LocalDateTime.now();
+            toRevoke.forEach(s -> s.setRevokedAt(now));
+            sessionRepository.saveAll(toRevoke);
+        }
+    }
+
     private String generateSecureToken() {
         byte[] bytes = new byte[32];
-        new SecureRandom().nextBytes(bytes);
+        secureRandom.nextBytes(bytes);
         return HexFormat.of().formatHex(bytes);
+    }
+
+    private String hashToken(String rawToken) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(HexFormat.of().parseHex(rawToken));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 no disponible", e);
+        }
     }
 }

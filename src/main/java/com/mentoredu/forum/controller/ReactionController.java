@@ -1,5 +1,6 @@
 package com.mentoredu.forum.controller;
 
+import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.forum.dto.CreateReactionRequest;
 import com.mentoredu.forum.dto.ReactionResponse;
 import com.mentoredu.forum.service.IReactionService;
@@ -14,9 +15,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -29,10 +27,6 @@ import java.util.UUID;
 public class ReactionController {
 
     private final IReactionService reactionService;
-
-    // -------------------------------------------------------------------------
-    // US14 — React to thread
-    // -------------------------------------------------------------------------
 
     @PostMapping("/api/v1/threads/{id}/reactions")
     @ApiResponses({
@@ -49,18 +43,10 @@ public class ReactionController {
     public ResponseEntity<ReactionResponse> reactToThread(
             @PathVariable UUID id,
             @Valid @RequestBody CreateReactionRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        Optional<ReactionResponse> result = reactionService.reactToThread(id, request, auth.getName());
+        Optional<ReactionResponse> result = reactionService.reactToThread(id, request, SecurityUtils.currentEmail());
         return result.map(r -> ResponseEntity.status(HttpStatus.CREATED).body(r))
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
-
-    // -------------------------------------------------------------------------
-    // US14 — React to answer
-    // -------------------------------------------------------------------------
 
     @PostMapping("/api/v1/answers/{id}/reactions")
     @ApiResponses({
@@ -76,18 +62,10 @@ public class ReactionController {
     public ResponseEntity<ReactionResponse> reactToAnswer(
             @PathVariable UUID id,
             @Valid @RequestBody CreateReactionRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        Optional<ReactionResponse> result = reactionService.reactToAnswer(id, request, auth.getName());
+        Optional<ReactionResponse> result = reactionService.reactToAnswer(id, request, SecurityUtils.currentEmail());
         return result.map(r -> ResponseEntity.status(HttpStatus.CREATED).body(r))
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
-
-    // -------------------------------------------------------------------------
-    // US14 — React to comment
-    // -------------------------------------------------------------------------
 
     @PostMapping("/api/v1/comments/{id}/reactions")
     @ApiResponses({
@@ -103,11 +81,7 @@ public class ReactionController {
     public ResponseEntity<ReactionResponse> reactToComment(
             @PathVariable UUID id,
             @Valid @RequestBody CreateReactionRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        Optional<ReactionResponse> result = reactionService.reactToComment(id, request, auth.getName());
+        Optional<ReactionResponse> result = reactionService.reactToComment(id, request, SecurityUtils.currentEmail());
         return result.map(r -> ResponseEntity.status(HttpStatus.CREATED).body(r))
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }

@@ -1,7 +1,7 @@
 package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.CreateVerificationRequest;
 import com.mentoredu.community.dto.ReviewVerificationRequest;
@@ -11,11 +11,12 @@ import com.mentoredu.community.exception.DuplicateVerificationException;
 import com.mentoredu.community.exception.VerificationNotFoundException;
 import com.mentoredu.community.model.VerificationDoc;
 import com.mentoredu.community.model.VerificationRequest;
+import com.mentoredu.community.model.VerificationStatus;
 import com.mentoredu.community.repository.VerificationDocRepository;
 import com.mentoredu.community.repository.VerificationRequestRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,32 +24,34 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VerificationService implements IVerificationService {
 
     private final VerificationRequestRepository verificationRepository;
     private final VerificationDocRepository     docRepository;
-    private final UserRepository                userRepository;
+    private final UserService                   userService;
     private final ApplicationEventPublisher     eventPublisher;
 
     @Override
     @Transactional
     public VerificationResponse submit(CreateVerificationRequest request, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + userEmail));
+        User user = userService.findByEmailOrThrow(userEmail);
 
-        if (verificationRepository.existsByUserIdAndStatus(user.getId(), "PENDING")) {
+        if (verificationRepository.existsByUserIdAndStatus(user.getId(), VerificationStatus.PENDING)) {
             throw new DuplicateVerificationException("Ya tienes una solicitud de verificación pendiente");
         }
 
         VerificationRequest vr = VerificationRequest.builder()
                 .user(user)
                 .entityType(request.getEntityType())
-                .status("PENDING")
+                .status(VerificationStatus.PENDING)
                 .build();
 
         VerificationRequest saved = verificationRepository.save(vr);
+        log.info("Verification request {} submitted by user {} (entityType={})",
+                saved.getId(), user.getId(), request.getEntityType());
 
         List<VerificationDoc> docs = request.getDocuments().stream()
                 .map(d -> VerificationDoc.builder()
@@ -58,30 +61,28 @@ public class VerificationService implements IVerificationService {
                         .build())
                 .toList();
         docRepository.saveAll(docs);
+        saved.setDocs(docs);
 
-        // Recargar para incluir documentos
-        VerificationRequest withDocs = verificationRepository.findById(saved.getId())
-                .orElseThrow();
-
-        return new VerificationResponse(withDocs);
+        return new VerificationResponse(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<VerificationResponse> getMyRequests(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + userEmail));
-
-        return verificationRepository.findByUserId(user.getId())
-                .stream().map(VerificationResponse::new).toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PagedResponse<VerificationResponse> getAllRequests(int page, int size) {
+    public PagedResponse<VerificationResponse> getMyRequests(String userEmail, int page, int size) {
+        User user = userService.findByEmailOrThrow(userEmail);
         return PagedResponse.from(
-                verificationRepository.findAll(PageRequest.of(page, size)),
+                verificationRepository.findByUserIdOrderBySubmittedAtDesc(user.getId(), PagedResponse.toPageRequest(page, size)),
                 VerificationResponse::new);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<VerificationResponse> getAllRequests(VerificationStatus status, int page, int size) {
+        var pageable = PagedResponse.toPageRequest(page, size);
+        var page_ = (status != null)
+                ? verificationRepository.findByStatusOrderBySubmittedAtDesc(status, pageable)
+                : verificationRepository.findAllByOrderBySubmittedAtDesc(pageable);
+        return PagedResponse.from(page_, VerificationResponse::new);
     }
 
     @Override
@@ -90,18 +91,17 @@ public class VerificationService implements IVerificationService {
         VerificationRequest vr = verificationRepository.findById(requestId)
                 .orElseThrow(() -> new VerificationNotFoundException("Solicitud no encontrada: " + requestId));
 
-        if (!"PENDING".equals(vr.getStatus())) {
-            throw new DuplicateVerificationException("La solicitud ya fue procesada con estado: " + vr.getStatus());
+        if (VerificationStatus.PENDING != vr.getStatus()) {
+            throw new DuplicateVerificationException("La solicitud ya fue procesada con estado: " + vr.getStatus().name());
         }
 
         // RN-17: el rechazo requiere notas obligatorias
-        if ("REJECTED".equals(request.getAction()) &&
+        if (VerificationStatus.REJECTED == request.getAction() &&
                 (request.getNotes() == null || request.getNotes().isBlank())) {
             throw new IllegalArgumentException("El rechazo requiere una razón (notes) obligatoria (RN-17)");
         }
 
-        User reviewer = userRepository.findByEmail(reviewerEmail)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + reviewerEmail));
+        User reviewer = userService.findByEmailOrThrow(reviewerEmail);
 
         vr.setStatus(request.getAction());
         vr.setNotes(request.getNotes());
@@ -109,6 +109,9 @@ public class VerificationService implements IVerificationService {
         vr.setReviewedAt(LocalDateTime.now());
 
         VerificationRequest saved = verificationRepository.save(vr);
+
+        log.info("Verification request {} {} for user {} (entityType={})",
+                saved.getId(), request.getAction(), saved.getUser().getId(), saved.getEntityType());
 
         eventPublisher.publishEvent(new VerificationProcessedEvent(
                 saved.getId(),

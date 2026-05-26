@@ -1,14 +1,11 @@
 package com.mentoredu.pedagogy.service;
 
 import com.mentoredu.auth.entity.User;
-import com.mentoredu.auth.repository.UserRepository;
+import com.mentoredu.auth.service.UserService;
 import com.mentoredu.library.model.Resource;
 import com.mentoredu.library.repository.ResourceRepository;
-import com.mentoredu.community.repository.TeacherAcademyLinkRepository;
 import com.mentoredu.library.exception.ResourceNotFoundException;
 import com.mentoredu.pedagogy.dto.CreateFeedbackRequest;
-import com.mentoredu.profile.repository.AcademyProfileRepository;
-import com.mentoredu.profile.repository.TeacherProfileRepository;
 import com.mentoredu.pedagogy.dto.FeedbackResponse;
 import com.mentoredu.pedagogy.event.FeedbackGivenEvent;
 import com.mentoredu.pedagogy.exception.FeedbackAlreadyExistsException;
@@ -20,6 +17,7 @@ import com.mentoredu.pedagogy.model.Solution;
 import com.mentoredu.pedagogy.model.SolutionStatus;
 import com.mentoredu.pedagogy.repository.FeedbackEntryRepository;
 import com.mentoredu.pedagogy.repository.SolutionRepository;
+import com.mentoredu.pedagogy.service.ResourceAuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -34,10 +32,8 @@ public class FeedbackService implements IFeedbackService {
     private final FeedbackEntryRepository feedbackEntryRepository;
     private final SolutionRepository solutionRepository;
     private final ResourceRepository resourceRepository;
-    private final UserRepository userRepository;
-    private final TeacherProfileRepository teacherProfileRepository;
-    private final AcademyProfileRepository academyProfileRepository;
-    private final TeacherAcademyLinkRepository teacherAcademyLinkRepository;
+    private final UserService    userService;
+    private final ResourceAuthorizationService resourceAuthorizationService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -49,10 +45,9 @@ public class FeedbackService implements IFeedbackService {
             throw new FeedbackAlreadyExistsException("Ya existe feedback para esta resolución");
         Resource resource = resourceRepository.findById(solution.getResourceId())
             .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
-        User author = userRepository.findByEmail(authorEmail)
-            .orElseThrow(() -> new SolutionAccessDeniedException("Usuario no encontrado"));
+        User author = userService.findByEmailOrThrow(authorEmail);
         // RN-10: autor directo, o TEACHER con link ACCEPTED a la academia autora
-        if (!isAuthorizedForResource(resource, author))
+        if (!resourceAuthorizationService.isAuthorizedForResource(resource, author))
             throw new SolutionAccessDeniedException("Solo el autor del ejercicio puede dar feedback");
         FeedbackEntry feedback = FeedbackEntry.builder()
             .solution(solution)
@@ -66,20 +61,6 @@ public class FeedbackService implements IFeedbackService {
         eventPublisher.publishEvent(new FeedbackGivenEvent(
                 saved.getId(), solutionId, solution.getStudent().getId(), solution.getResourceId()));
         return FeedbackResponse.from(saved);
-    }
-
-    // RN-10: (a) autor directo, o (b) TEACHER con link ACCEPTED a la academia autora
-    private boolean isAuthorizedForResource(Resource resource, User requester) {
-        if (resource.getAuthor().getId().equals(requester.getId())) return true;
-        var academyProfile = academyProfileRepository.findByProfile_UserId(resource.getAuthor().getId());
-        if (academyProfile.isEmpty()) return false;
-        var teacherProfile = teacherProfileRepository.findByProfile_UserId(requester.getId());
-        if (teacherProfile.isEmpty()) return false;
-        return teacherAcademyLinkRepository
-            .findByTeacherProfileIdAndAcademyProfileId(
-                teacherProfile.get().getProfileId(), academyProfile.get().getProfileId())
-            .map(link -> "ACCEPTED".equals(link.getStatus()))
-            .orElse(false);
     }
 
     @Override

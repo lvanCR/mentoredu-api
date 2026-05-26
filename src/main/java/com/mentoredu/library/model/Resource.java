@@ -60,8 +60,9 @@ public class Resource {
     @Column(name = "resource_type", nullable = false, length = 30)
     private ResourceType resourceType;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String visibility;
+    private ResourceVisibility visibility;
 
     @Column(name = "acepta_resoluciones", nullable = false)
     private boolean aceptaResoluciones;

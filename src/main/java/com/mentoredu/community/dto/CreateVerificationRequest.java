@@ -2,6 +2,7 @@ package com.mentoredu.community.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,8 @@ import java.util.List;
 public class CreateVerificationRequest {
 
     @NotBlank(message = "El tipo de entidad es obligatorio")
+    @Pattern(regexp = "TEACHER|ACADEMY",
+             message = "entityType debe ser TEACHER o ACADEMY")
     @Size(max = 20, message = "El tipo de entidad no puede superar 20 caracteres")
     private String entityType;
 

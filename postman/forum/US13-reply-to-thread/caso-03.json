@@ -1,26 +1,29 @@
 {
-  "name": "MentorEduForumHU17-ResponderHiloHiloCerradoPOST",
-  "description": "Escenario alternativo error: el hilo está cerrado (status=CLOSED). El sistema debe rechazar la operación con 409 Conflict.",
+  "name": "MentorEduForumUS13-ResponderHiloCerrado422POST",
+  "description": "Caso 03 — Error: el hilo está cerrado (status=CLOSED). El sistema rechaza la operación con 422 Unprocessable Entity (ThreadClosedException).",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/threads/{{closed_thread_id}}/answers",
+    "url": {
+      "raw": "{{api_v1}}/threads/{{closed_thread_id}}/answers",
+      "host": ["{{api_v1}}"],
+      "path": ["threads", "{{closed_thread_id}}", "answers"]
+    },
     "header": [
-      {
-        "key": "Content-Type",
-        "value": "application/json"
-      },
-      {
-        "key": "Authorization",
-        "value": "Bearer {{access_token}}"
-      }
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Authorization", "value": "Bearer {{access_token}}" }
     ],
     "body": {
       "mode": "raw",
       "raw": "{\n  \"body\": \"Intento responder un hilo cerrado.\"\n}"
     }
   },
-  "response": {
-    "status": 409,
-    "description": "Conflict. El hilo está cerrado y no acepta nuevas respuestas. Mensaje: 'Thread is closed and does not accept new replies: {id}'."
+  "expectedResponse": {
+    "status": 422,
+    "description": "Unprocessable Entity. El hilo está cerrado y no acepta nuevas respuestas (ThreadClosedException → HTTP 422).",
+    "body": {
+      "status": 422,
+      "error": "Unprocessable Entity",
+      "message": "<mensaje de error>"
+    }
   }
 }

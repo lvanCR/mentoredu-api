@@ -1,0 +1,53 @@
+{
+  "name": "MentorEduNotificationsUS27-AllGET",
+  "description": "Caso 05 — Exitoso: usuario autenticado obtiene todas sus notificaciones (leídas y no leídas). Filtro opcional: ?type=<tipo>. Espera 200 OK con PagedResponse.",
+  "request": {
+    "method": "GET",
+    "header": [
+      {
+        "key": "Authorization",
+        "value": "Bearer {{access_token}}",
+        "type": "text"
+      }
+    ],
+    "url": {
+      "raw": "{{api_v1}}/notifications/me?page=0&size=20",
+      "host": ["{{api_v1}}"],
+      "path": ["notifications", "me"],
+      "query": [
+        { "key": "page", "value": "0" },
+        { "key": "size", "value": "20" },
+        { "key": "type", "value": "", "disabled": true, "description": "Filtro opcional: new_follower|answer_received|comment_received|reaction_received|solution_submitted|feedback_received|verification_processed|association_resolved" }
+      ]
+    }
+  },
+  "expectedResponse": {
+    "status": 200,
+    "body": {
+      "content": [
+        {
+          "id": "<uuid>",
+          "userId": "<uuid>",
+          "type": "answer_received",
+          "payload": { "threadId": "<uuid>", "threadTitle": "¿Cómo resolver integrales?" },
+          "readAt": "2026-05-22T10:35:00",
+          "createdAt": "2026-05-22T10:30:00"
+        },
+        {
+          "id": "<uuid>",
+          "userId": "<uuid>",
+          "type": "new_follower",
+          "payload": { "followerId": "<uuid>", "followerName": "Pedro García" },
+          "readAt": null,
+          "createdAt": "2026-05-22T09:00:00"
+        }
+      ],
+      "page": 0,
+      "size": 20,
+      "totalElements": 2,
+      "totalPages": 1,
+      "last": true
+    },
+    "note": "A diferencia de /me/pending, este endpoint devuelve TODAS las notificaciones (readAt puede ser null o tener fecha). El campo 'payload' varía según el tipo de notificación."
+  }
+}
