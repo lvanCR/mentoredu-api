@@ -9,6 +9,8 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import io.jsonwebtoken.JwtException;
+
 import javax.crypto.SecretKey;
 import java.util.Date;
 
@@ -65,13 +67,17 @@ public class JwtUtil {
         try {
             extractClaims(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException e) {
             return false;
         }
     }
 
     public String extractEmail(String token) {
         return extractClaims(token).get("email", String.class);
+    }
+
+    public String extractRole(String token) {
+        return extractClaims(token).get("role", String.class);
     }
 
     public long getAccessExpirationMs()  { return accessExpirationMs; }

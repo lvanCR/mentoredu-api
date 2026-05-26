@@ -8,6 +8,9 @@ import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
+import com.mentoredu.library.exception.AceptaResolucionesPracticaOnlyException;
+import com.mentoredu.library.exception.CareerAreaMismatchException;
+import com.mentoredu.library.exception.CourseIdRequiredException;
 import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
 import com.mentoredu.library.model.ResourceVisibility;
@@ -44,14 +47,14 @@ public class ResourceService implements IResourceService {
 
         // RN-07: course_id obligatorio salvo para EXAMEN_COMPLETO, GUIA y APUNTES
         if (!type.courseIdOptional() && request.getCourseId() == null) {
-            throw new IllegalArgumentException(
+            throw new CourseIdRequiredException(
                     "courseId es obligatorio para el tipo " + type);
         }
 
         // RN-08: acepta_resoluciones solo válido para PRACTICA
         boolean aceptaResoluciones = Boolean.TRUE.equals(request.getAceptaResoluciones());
         if (aceptaResoluciones && type != ResourceType.PRACTICA) {
-            throw new IllegalArgumentException(
+            throw new AceptaResolucionesPracticaOnlyException(
                     "Solo los recursos de tipo PRACTICA aceptan resoluciones (RN-08)");
         }
 
@@ -67,7 +70,7 @@ public class ResourceService implements IResourceService {
         // RN-23: si career_id presente, la carrera debe pertenecer al area_id enviado
         if (request.getCareerId() != null &&
                 !catalogService.careerExistsInArea(request.getCareerId(), request.getAreaId())) {
-            throw new IllegalArgumentException(
+            throw new CareerAreaMismatchException(
                     "La carrera no pertenece al área seleccionada (RN-23)");
         }
 
@@ -99,6 +102,7 @@ public class ResourceService implements IResourceService {
     // -------------------------------------------------------------------------
 
     @Override
+    @Transactional(readOnly = true)
     public PagedResponse<ResourceResponse> search(String query, String type, UUID universityId,
                                                    UUID areaId, UUID careerId, UUID courseId,
                                                    int page, int size) {
@@ -125,10 +129,17 @@ public class ResourceService implements IResourceService {
     // -------------------------------------------------------------------------
 
     @Override
-    public ResourceResponse getById(UUID resourceId) {
-        return resourceRepository.findById(resourceId)
-                .map(ResourceResponse::new)
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
+    @Transactional(readOnly = true)
+    public ResourceResponse getById(UUID resourceId, String requesterEmail) {
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
+        if (resource.getVisibility() == ResourceVisibility.PRIVATE) {
+            User requester = userService.findByEmailOrThrow(requesterEmail);
+            if (!resource.getAuthor().getId().equals(requester.getId())) {
+                throw new ResourceAccessDeniedException("No tienes acceso a este recurso");
+            }
+        }
+        return new ResourceResponse(resource);
     }
 
     // -------------------------------------------------------------------------
@@ -136,6 +147,7 @@ public class ResourceService implements IResourceService {
     // -------------------------------------------------------------------------
 
     @Override
+    @Transactional(readOnly = true)
     public PagedResponse<ResourceResponse> getByAuthor(String authorEmail, int page, int size) {
         User author = userService.findByEmailOrThrow(authorEmail);
         return PagedResponse.from(
@@ -172,7 +184,7 @@ public class ResourceService implements IResourceService {
 
         // RN-08: acepta_resoluciones solo válido para PRACTICA
         if (activate && resource.getResourceType() != ResourceType.PRACTICA) {
-            throw new IllegalArgumentException(
+            throw new AceptaResolucionesPracticaOnlyException(
                     "Solo los recursos de tipo PRACTICA aceptan resoluciones (RN-08)");
         }
 
@@ -188,9 +200,14 @@ public class ResourceService implements IResourceService {
     @Transactional
     public DownloadResponse download(UUID resourceId, String userEmail) {
         Resource resource = resourceRepository.findById(resourceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
 
         User user = userService.findByEmailOrThrow(userEmail);
+
+        if (resource.getVisibility() == ResourceVisibility.PRIVATE
+                && !resource.getAuthor().getId().equals(user.getId())) {
+            throw new ResourceAccessDeniedException("No tienes acceso a este recurso");
+        }
 
         downloadLogRepository.save(DownloadLog.builder()
                 .user(user)

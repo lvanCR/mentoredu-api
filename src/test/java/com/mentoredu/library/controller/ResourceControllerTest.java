@@ -304,7 +304,7 @@ class ResourceControllerTest {
     void getResourceById_whenExists_returns200() throws Exception {
         UUID id = UUID.randomUUID();
 
-        when(resourceService.getById(eq(id)))
+        when(resourceService.getById(eq(id), anyString()))
                 .thenReturn(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, ResourceVisibility.PUBLIC));
 
         mockMvc.perform(get("/api/v1/resources/{id}", id))
@@ -318,7 +318,7 @@ class ResourceControllerTest {
     void getResourceById_whenNotFound_returns404() throws Exception {
         UUID id = UUID.randomUUID();
 
-        when(resourceService.getById(eq(id)))
+        when(resourceService.getById(eq(id), anyString()))
                 .thenThrow(new ResourceNotFoundException("Resource not found: " + id));
 
         mockMvc.perform(get("/api/v1/resources/{id}", id))

@@ -65,9 +65,10 @@ El body de respuesta está vacío. No devuelve objeto JSON.
 
 ## Casos de prueba
 
-| # | Archivo | Escenario | HTTP esperado |
-|---|---|---|---|
-| 01 | `caso-01-exitoso.json` | Tiene notificaciones pendientes | 200 OK |
-| 02 | `caso-02-sin-autenticacion.json` | Sin token | 401 Unauthorized |
-| 03 | `caso-03-lista-vacia.json` | Sin notificaciones pendientes | 200 OK (content vacío) |
-| 04 | `caso-04-marcar-leida.json` | Marcar notificación como leída | **204 No Content** |
+| # | Archivo | Endpoint | Escenario | HTTP esperado |
+|---|---|---|---|---|
+| 01 | `caso-01-exitoso.json` | `GET /me/pending` | Tiene notificaciones pendientes | 200 OK |
+| 02 | `caso-02-sin-autenticacion.json` | `GET /me/pending` | Sin token | 401 Unauthorized |
+| 03 | `caso-03-lista-vacia.json` | `GET /me/pending` | Sin notificaciones pendientes | 200 OK (content vacío) |
+| 04 | `caso-04-marcar-leida.json` | `PATCH /{id}/read` | Marcar notificación como leída | **204 No Content** |
+| 05 | `caso-05-todas-notificaciones.json` | `GET /me` | Todas las notificaciones (leídas + no leídas) | 200 OK |

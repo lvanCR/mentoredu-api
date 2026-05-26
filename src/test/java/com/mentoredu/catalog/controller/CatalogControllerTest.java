@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = CatalogController.class)
@@ -295,7 +296,7 @@ class CatalogControllerTest {
         UUID areaId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();
 
-        mockMvc.perform(post("/api/v1/catalog/areas/{areaId}/courses/{courseId}", areaId, courseId))
+        mockMvc.perform(put("/api/v1/catalog/areas/{areaId}/courses/{courseId}", areaId, courseId))
                 .andExpect(status().isNoContent());
     }
 
@@ -308,7 +309,7 @@ class CatalogControllerTest {
         doThrow(new AreaNotFoundException("Área no encontrada: " + areaId))
                 .when(catalogService).linkCourseToArea(eq(areaId), eq(courseId));
 
-        mockMvc.perform(post("/api/v1/catalog/areas/{areaId}/courses/{courseId}", areaId, courseId))
+        mockMvc.perform(put("/api/v1/catalog/areas/{areaId}/courses/{courseId}", areaId, courseId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Not Found"));
     }
@@ -403,7 +404,7 @@ class CatalogControllerTest {
         UUID careerId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();
 
-        mockMvc.perform(post("/api/v1/catalog/careers/{careerId}/courses/{courseId}", careerId, courseId))
+        mockMvc.perform(put("/api/v1/catalog/careers/{careerId}/courses/{courseId}", careerId, courseId))
                 .andExpect(status().isNoContent());
     }
 
@@ -416,7 +417,7 @@ class CatalogControllerTest {
         doThrow(new CareerNotFoundException("Carrera no encontrada: " + careerId))
                 .when(catalogService).linkCourseToCareer(eq(careerId), eq(courseId));
 
-        mockMvc.perform(post("/api/v1/catalog/careers/{careerId}/courses/{courseId}", careerId, courseId))
+        mockMvc.perform(put("/api/v1/catalog/careers/{careerId}/courses/{courseId}", careerId, courseId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Not Found"));
     }

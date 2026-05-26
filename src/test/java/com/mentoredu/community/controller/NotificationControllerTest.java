@@ -53,7 +53,7 @@ class NotificationControllerTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(notificationService.getMyNotifications(eq("user@example.com"), anyInt(), anyInt()))
+        when(notificationService.getMyNotifications(eq("user@example.com"), anyInt(), anyInt(), any()))
                 .thenReturn(pageOf(List.of(response)));
 
         mockMvc.perform(get("/api/v1/notifications/me"))
@@ -66,7 +66,7 @@ class NotificationControllerTest {
     @Test
     @WithMockUser(username = "user@example.com")
     void getMyNotifications_emptyList_returns200() throws Exception {
-        when(notificationService.getMyNotifications(eq("user@example.com"), anyInt(), anyInt()))
+        when(notificationService.getMyNotifications(eq("user@example.com"), anyInt(), anyInt(), any()))
                 .thenReturn(pageOf(List.of()));
 
         mockMvc.perform(get("/api/v1/notifications/me"))
@@ -91,7 +91,7 @@ class NotificationControllerTest {
         var n1 = NotificationResponse.builder().type("answer_received").build();
         var n2 = NotificationResponse.builder().type("reaction_received").build();
 
-        when(notificationService.getPendingNotifications(eq("user@example.com"), anyInt(), anyInt()))
+        when(notificationService.getPendingNotifications(eq("user@example.com"), anyInt(), anyInt(), any()))
                 .thenReturn(pageOf(List.of(n1, n2)));
 
         mockMvc.perform(get("/api/v1/notifications/me/pending"))
@@ -105,7 +105,7 @@ class NotificationControllerTest {
     @Test
     @WithMockUser(username = "user@example.com")
     void getPendingNotifications_noPending_returns200EmptyList() throws Exception {
-        when(notificationService.getPendingNotifications(eq("user@example.com"), anyInt(), anyInt()))
+        when(notificationService.getPendingNotifications(eq("user@example.com"), anyInt(), anyInt(), any()))
                 .thenReturn(pageOf(List.of()));
 
         mockMvc.perform(get("/api/v1/notifications/me/pending"))

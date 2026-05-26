@@ -10,7 +10,9 @@ import com.mentoredu.community.exception.DuplicateReportException;
 import com.mentoredu.community.exception.ReportAlreadyResolvedException;
 import com.mentoredu.community.exception.ReportNotFoundException;
 import com.mentoredu.community.model.ModerationAuditLog;
+import com.mentoredu.community.model.ModerationAction;
 import com.mentoredu.community.model.Report;
+import com.mentoredu.community.model.ReportStatus;
 import com.mentoredu.community.repository.ModerationAuditLogRepository;
 import com.mentoredu.community.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +48,7 @@ public class ReportService implements IReportService {
                 .targetType(request.targetType())
                 .targetId(request.targetId())
                 .reason(request.reason())
-                .status("OPEN")
+                .status(ReportStatus.OPEN)
                 .build();
 
         return ReportResponse.from(reportRepository.save(report));
@@ -56,7 +58,7 @@ public class ReportService implements IReportService {
     @Transactional(readOnly = true)
     public PagedResponse<ReportResponse> listOpen(int page, int size) {
         return PagedResponse.from(
-                reportRepository.findByStatus("OPEN", PagedResponse.toPageRequest(page, size)),
+                reportRepository.findByStatus(ReportStatus.OPEN, PagedResponse.toPageRequest(page, size)),
                 ReportResponse::from);
     }
 
@@ -66,13 +68,13 @@ public class ReportService implements IReportService {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException("Reporte no encontrado: " + reportId));
 
-        if ("RESOLVED".equals(report.getStatus())) {
+        if (ReportStatus.RESOLVED == report.getStatus()) {
             throw new ReportAlreadyResolvedException("El reporte ya fue resuelto");
         }
 
         User resolver = userService.findByEmailOrThrow(resolverEmail);
 
-        report.setStatus("RESOLVED");
+        report.setStatus(ReportStatus.RESOLVED);
         report.setResolvedBy(resolver);
         report.setResolutionNote(request.resolutionNote());
         report.setResolvedAt(LocalDateTime.now());
@@ -82,7 +84,7 @@ public class ReportService implements IReportService {
         auditLogRepository.save(ModerationAuditLog.builder()
                 .report(saved)
                 .actor(resolver)
-                .action("RESOLVED")
+                .action(ModerationAction.RESOLVED)
                 .note(request.resolutionNote())
                 .build());
 

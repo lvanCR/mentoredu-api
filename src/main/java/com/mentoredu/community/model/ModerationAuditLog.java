@@ -27,8 +27,9 @@ public class ModerationAuditLog {
     @JoinColumn(name = "actor_id", nullable = false)
     private User actor;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private String action;
+    private ModerationAction action;
 
     @Column(columnDefinition = "TEXT")
     private String note;

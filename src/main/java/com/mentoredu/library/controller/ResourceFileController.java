@@ -1,5 +1,6 @@
 package com.mentoredu.library.controller;
 
+import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.library.dto.ResourceFileResponse;
 import com.mentoredu.library.service.IResourceFileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,9 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,12 +38,8 @@ public class ResourceFileController {
                 content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
             )
             @RequestParam("file") MultipartFile file) {
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
+        // currentEmail() validates authentication — SecurityConfig also enforces anyRequest().authenticated()
+        SecurityUtils.currentEmail();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(resourceFileService.upload(file));
     }

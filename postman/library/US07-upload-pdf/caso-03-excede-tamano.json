@@ -1,5 +1,5 @@
 {
-  "name": "MentorEduLibraryHU12-SubirPdfPOST (excede tamaño)",
+  "name": "MentorEduLibraryUS07-SubirPdf413POST",
   "request": {
     "method": "POST",
     "header": [
@@ -24,14 +24,15 @@
       "host": ["{{api_v1}}"],
       "path": ["resources", "files"]
     },
-    "description": "Escenario error: PDF excede el límite de 20 MB → 400 Bad Request"
+    "description": "Caso 03 — Error: PDF excede el límite de 20 MB → 413 Payload Too Large (MaxUploadSizeExceededException)."
   },
-  "response": [
-    {
-      "name": "400 Bad Request — Archivo demasiado grande",
-      "status": "Bad Request",
-      "code": 400,
-      "body": "{\n  \"timestamp\": \"2026-05-16T21:00:00\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"File size exceeds the maximum allowed limit of 20 MB. Received: 25 MB.\"\n}"
+  "expectedResponse": {
+    "status": 413,
+    "body": {
+      "timestamp": "<ISO timestamp>",
+      "status": 413,
+      "error": "Payload Too Large",
+      "message": "El archivo supera el tamaño máximo permitido"
     }
-  ]
+  }
 }

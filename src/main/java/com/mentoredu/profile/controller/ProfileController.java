@@ -1,5 +1,6 @@
 package com.mentoredu.profile.controller;
 
+import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.profile.dto.*;
 import com.mentoredu.profile.service.IProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,9 +10,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -26,51 +24,25 @@ public class ProfileController {
 
     private final IProfileService profileService;
 
-    private Authentication auth() {
-        return SecurityContextHolder.getContext().getAuthentication();
-    }
-
-    private boolean isUnauthenticated(Authentication a) {
-        return a == null || !a.isAuthenticated() || a instanceof AnonymousAuthenticationToken;
-    }
-
-    // -------------------------------------------------------------------------
-    // GET /profiles/me
-    // -------------------------------------------------------------------------
-
     @GetMapping("/me")
     @Operation(summary = "Obtener mi perfil completo")
     public ResponseEntity<ProfileMeResponse> getMyProfile() {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(profileService.getMyProfile(a.getName()));
+        return ResponseEntity.ok(profileService.getMyProfile(SecurityUtils.currentEmail()));
     }
-
-    // -------------------------------------------------------------------------
-    // US05 — Update common profile data
-    // -------------------------------------------------------------------------
 
     @PatchMapping("/me")
     @Operation(summary = "Actualizar datos comunes del perfil")
     public ResponseEntity<ProfileResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(profileService.updateProfile(a.getName(), request));
+        return ResponseEntity.ok(profileService.updateProfile(SecurityUtils.currentEmail(), request));
     }
-
-    // -------------------------------------------------------------------------
-    // US06 — Create student profile
-    // -------------------------------------------------------------------------
 
     @PostMapping("/student")
     @Operation(summary = "US04 - Crear perfil de estudiante")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<StudentProfileResponse> createStudentProfile(
             @Valid @RequestBody CreateStudentProfileRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(profileService.createStudentProfile(a.getName(), request));
+                .body(profileService.createStudentProfile(SecurityUtils.currentEmail(), request));
     }
 
     @GetMapping("/student/{userId}")
@@ -83,68 +55,45 @@ public class ProfileController {
     @Operation(summary = "US04 - Actualizar perfil de estudiante")
     public ResponseEntity<StudentProfileResponse> updateStudentProfile(
             @Valid @RequestBody UpdateStudentProfileRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(profileService.updateStudentProfile(a.getName(), request));
+        return ResponseEntity.ok(profileService.updateStudentProfile(SecurityUtils.currentEmail(), request));
     }
-
-    // -------------------------------------------------------------------------
-    // Create / update teacher profile
-    // -------------------------------------------------------------------------
 
     @PostMapping("/teacher")
     @Operation(summary = "US05 - Crear perfil de docente")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<TeacherProfileResponse> createTeacherProfile(
             @Valid @RequestBody CreateTeacherProfileRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(profileService.createTeacherProfile(a.getName(), request));
+                .body(profileService.createTeacherProfile(SecurityUtils.currentEmail(), request));
     }
 
     @PatchMapping("/teacher/me")
     @Operation(summary = "US05 - Actualizar perfil de docente")
     public ResponseEntity<TeacherProfileResponse> updateTeacherProfile(
             @Valid @RequestBody UpdateTeacherProfileRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(profileService.updateTeacherProfile(a.getName(), request));
+        return ResponseEntity.ok(profileService.updateTeacherProfile(SecurityUtils.currentEmail(), request));
     }
-
-    // -------------------------------------------------------------------------
-    // Create / update academy profile (US06)
-    // -------------------------------------------------------------------------
 
     @PostMapping("/academy")
     @Operation(summary = "US06 - Crear perfil de academia")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<AcademyProfileResponse> createAcademyProfile(
             @Valid @RequestBody CreateAcademyProfileRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(profileService.createAcademyProfile(a.getName(), request));
+                .body(profileService.createAcademyProfile(SecurityUtils.currentEmail(), request));
     }
 
     @PatchMapping("/academy/me")
     @Operation(summary = "US06 - Actualizar perfil de academia")
     public ResponseEntity<AcademyProfileResponse> updateAcademyProfile(
             @Valid @RequestBody UpdateAcademyProfileRequest request) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(profileService.updateAcademyProfile(a.getName(), request));
+        return ResponseEntity.ok(profileService.updateAcademyProfile(SecurityUtils.currentEmail(), request));
     }
-
-    // -------------------------------------------------------------------------
-    // GET /profiles/{userId} — public profile (US06 E4)
-    // -------------------------------------------------------------------------
 
     @GetMapping("/{userId}")
     @Operation(summary = "Ver perfil público de cualquier usuario")
     public ResponseEntity<ProfileResponse> getPublicProfile(@PathVariable UUID userId) {
-        Authentication a = auth();
-        if (isUnauthenticated(a)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        SecurityUtils.requireAuth();
         return ResponseEntity.ok(profileService.getPublicProfile(userId));
     }
 }

@@ -39,16 +39,31 @@ Con el backend corriendo, los recursos Swagger están en:
 | Variable | Descripción |
 |---|---|
 | `{{base_url}}` | `http://localhost:8080` |
-| `{{api_v1}}` | `api/v1` |
-| `{{access_token}}` | JWT del usuario activo (STUDENT por defecto) |
-| `{{refresh_token}}` | Refresh token de la sesión activa |
-| `{{teacher_token}}` | JWT de usuario TEACHER |
-| `{{academy_token}}` | JWT de usuario ACADEMY |
-| `{{moderator_token}}` | JWT del moderator seed (`moderator@mentoredu.com`) |
-| `{{target_user_id}}` | UUID de otro usuario (para follow, etc.) |
-| `{{thread_id}}` | UUID de hilo de foro activo |
-| `{{resource_id}}` | UUID de recurso académico |
-| `{{report_id}}` | UUID de reporte abierto |
+| `{{api_v1}}` | `http://localhost:8080/api/v1` (URL completa del prefijo) |
+| `{{access_token}}` | JWT del usuario activo (STUDENT por defecto) — obtener de US01/US02 |
+| `{{refresh_token}}` | Refresh token de la sesión activa — vigencia 7 días |
+| `{{teacher_token}}` | JWT de usuario TEACHER — necesario para US07, US08, US16, US17, US19 |
+| `{{academy_token}}` | JWT de usuario ACADEMY — necesario para US06, US22 (academy), US24 (aceptar/rechazar) |
+| `{{moderator_token}}` | JWT del moderator seed (`moderator@mentoredu.com`) — para US23, US26 |
+| `{{admin_token}}` | JWT del admin seed (`admin@mentoredu.com`) — para US28, casos alternativos US26 |
+| `{{student_token}}` | JWT de un usuario STUDENT — usado en casos de error (esperan 403) |
+| `{{university_id}}` | UUID de UNMSM del seed V9: `b1000000-0000-0000-0000-000000000001` |
+| `{{area_id}}` | UUID de Área A (UNMSM) del seed V9: `b3000000-0000-0000-0000-000000000001` |
+| `{{course_id}}` | UUID de curso del seed V9: `b2000000-0000-0000-0000-000000000001` |
+| `{{career_id}}` | UUID de carrera del seed V9: `b4000000-0000-0000-0000-000000000001` |
+| `{{target_user_id}}` | UUID de otro usuario — para US21 (follow) |
+| `{{thread_id}}` | UUID de un hilo existente — obtener de POST /threads (US12) |
+| `{{closed_thread_id}}` | UUID de un hilo con status=CLOSED — para US13 caso-03 (espera 422) |
+| `{{answer_id}}` | UUID de una respuesta existente — obtener de POST /threads/{id}/answers (US13) |
+| `{{comment_id}}` | UUID de un comentario existente — obtener de POST /answers/{id}/comments (US15) |
+| `{{resource_id}}` | UUID de un recurso académico — obtener de POST /resources (US08) |
+| `{{solution_id}}` | UUID de una solución — obtener de POST /resources/{id}/solutions (US18) |
+| `{{report_id}}` | UUID de un reporte abierto — obtener de POST /moderation/reports (US25) |
+| `{{resolved_report_id}}` | UUID de un reporte ya resuelto — para US26 caso-04 (espera 409) |
+| `{{verification_id}}` | UUID de solicitud de verificación — obtener de POST /verification/requests (US22) |
+| `{{association_id}}` | UUID de asociación docente-academia — obtener de POST /associations/teacher-academy (US24) |
+| `{{academy_profile_id}}` | UUID del perfil de academia destino — obtener de POST /profiles/academy (US06) |
+| `{{notification_id}}` | UUID de una notificación — obtener de GET /notifications/me (US27) |
 
 > **Flujo de autenticación:** ejecuta primero `US01 — Registro` o `US02 — Login`. El `access_token` y `refresh_token` del response se copian a las variables de entorno y se reusan en las demás US.
 
@@ -82,7 +97,7 @@ postman/
 │   ├── US08-register-metadata/ → POST /resources              (metadatos)
 │   ├── US09-search-resources/ → GET /resources?query=...
 │   ├── US10-download-resource/ → GET /resources/{id}/download (4 casos)
-│   ├── US11-my-resources/    → GET /resources/mine
+│   ├── US11-my-resources/    → GET /resources/me
 │   └── US16-publish-exercise/ → POST /resources (acepta_resoluciones=true)
 │
 ├── forum/                    → /api/v1/threads/**
@@ -103,15 +118,22 @@ postman/
 ├── community/                → /api/v1/users/** · /api/v1/verification/** · /api/v1/moderation/** · /api/v1/notifications/**
 │   ├── US21-follow-user/     → POST /users/{id}/follow        (4 casos, toggle)
 │   ├── US22-teacher-verification/ → POST /verification/requests (entityType=TEACHER)
+│   │                               GET /verification/requests/me?page=0&size=20  (PagedResponse — paginado)
 │   ├── US22-academy-verification/ → POST /verification/requests (entityType=ACADEMY)
-│   ├── US23-review-verification/ → GET /verification/requests · PATCH /verification/requests/{id}/review
-│   ├── US24-associate-teacher/ → POST /teachers/associations · PATCH /teachers/associations/{id}/resolve
+│   ├── US23-review-verification/ → GET /verification/requests?page=0&size=20 (PagedResponse) · PATCH /verification/requests/{id}/review
+│   ├── US24-associate-teacher/ → POST /associations/teacher-academy · GET /associations/teacher-academy/me · GET /associations/teacher-academy/academy
+│   │                            PATCH /associations/teacher-academy/{id}/accept · PATCH /associations/teacher-academy/{id}/reject
 │   ├── US25-report-content/  → POST /moderation/reports       (4 casos)
 │   ├── US26-resolve-report/  → GET /moderation/reports · PATCH /moderation/reports/{id}/resolve
-│   └── US27-notifications/   → GET /notifications/me · PATCH /notifications/{id}/read
+│   └── US27-notifications/   → GET /notifications/me?type=<tipo> · GET /notifications/me/pending?type=<tipo> · PATCH /notifications/{id}/read
 │
 └── catalog/                  → /api/v1/catalog/**  (solo ADMIN)
     └── US28-manage-catalog/  → GET /catalog/universities · POST /catalog/universities
+                                 GET /catalog/universities/{id}/areas · POST /catalog/universities/{id}/areas
+                                 GET /catalog/courses · GET /catalog/areas/{id}/courses · POST /catalog/courses
+                                 PUT /catalog/areas/{areaId}/courses/{courseId}       ← PUT (no POST)
+                                 GET /catalog/universities/{id}/careers · POST /catalog/universities/{id}/careers
+                                 PUT /catalog/careers/{careerId}/courses/{courseId}   ← PUT (no POST)
 ```
 
 ---
@@ -218,14 +240,21 @@ Catalog     →  US28
 - Logout revoca la sesión — el `refresh_token` queda inutilizable.
 - `/auth/refresh` con token revocado → 401.
 - Si el mismo usuario abre más de 5 sesiones simultáneas, las más antiguas se revocan automáticamente.
+- Los refresh tokens se almacenan hasheados (SHA-256) en BD — el valor en la respuesta es el token en claro (no el hash).
 
 ### Rate limiting en `/auth/**`
 - Más de 20 requests por minuto desde la misma IP → 429 Too Many Requests.
+- La respuesta incluye el header `Retry-After: 60` (segundos).
 - Solo activo en perfil `prod`; en local no aplica.
 
 ### Tokens JWT
 - Access token válido 15 minutos. Expirado → 401 (no 403).
 - El token incluye claims `iss=mentoredu-api` y `aud=mentoredu-frontend`.
+- Token inválido/expirado → `JwtAuthFilter` retorna **401 con JSON body** (ya no es body vacío):
+  ```json
+  { "timestamp": "<ISO>", "status": 401, "error": "Unauthorized", "message": "Token inválido o expirado." }
+  ```
+- El rol del usuario se extrae del JWT (claim `role`) — ya no se consulta la BD en cada request.
 
 ### Reacciones (US14)
 - Misma reacción dos veces → toggle (elimina, 204 No Content).
@@ -235,11 +264,32 @@ Catalog     →  US28
 ### Audit log de moderación (US26)
 - Al resolver un reporte (`PATCH /moderation/reports/{id}/resolve`), se crea automáticamente una fila en `moderation_audit_log`.
 - No hay endpoint público para consultarlo (solo acceso directo a BD en auditorías).
+- **Body del request (campo único):** `{ "resolutionNote": "texto obligatorio" }` — los campos anteriores `resolution`, `actionType` y `notes` ya no existen.
+- Solo MODERATOR/ADMIN pueden resolver reportes (`@PreAuthorize`). Un STUDENT recibe 403 con mensaje estandarizado.
 
 ### Validaciones de enum en requests
 - `Report.targetType` acepta solo: `THREAD`, `ANSWER`, `COMMENT`, `RESOURCE` → otro valor: 400.
 - `VerificationRequest.entityType` acepta solo: `TEACHER`, `ACADEMY` → otro valor: 400.
 - `ReviewVerificationRequest.action` acepta solo: `APPROVED`, `REJECTED` → otro valor: 400.
+- `PublishResourceRequest.visibility` acepta solo: `PUBLIC`, `PREMIUM`, `PRIVATE` → otro valor: 400 (antes era validación por regex, ahora es deserialización del enum Jackson).
+
+### Códigos de error actualizados
+| Excepción | Código anterior | Código actual |
+|---|---|---|
+| `ThreadClosedException` (hilo cerrado) | 409 | **422 Unprocessable Entity** |
+| `MaxUploadSizeExceededException` (archivo > 20 MB) | 400 | **413 Payload Too Large** |
+| `WrongProfileTypeException` (tipo de perfil incorrecto) | 409 | **400 Bad Request** |
+| JWT inválido/expirado (filtro) | 401 sin body | **401 con JSON body** |
+| `AccessDeniedException` Spring Security | sin capturar | **403 Forbidden** con mensaje uniforme |
+
+### Endpoints del catálogo — método HTTP
+Los endpoints de asociación curso↔área y curso↔carrera cambiaron de `POST` a `PUT` (semántica de idempotencia):
+- `PUT /api/v1/catalog/areas/{areaId}/courses/{courseId}` (antes era POST)
+- `PUT /api/v1/catalog/careers/{careerId}/courses/{courseId}` (antes era POST)
+
+### Recuperación de contraseña — comportamiento para email no registrado
+- `POST /auth/forgot-password` **siempre retorna 200** con el mismo mensaje genérico, independientemente de si el email existe.
+- Esto previene enumeración de usuarios (OWASP A07). No existe el error 404 en este endpoint.
 
 ---
 

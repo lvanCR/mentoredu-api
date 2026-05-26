@@ -19,14 +19,17 @@
     },
     "body": {
       "mode": "raw",
-      "raw": "{\n  \"resolution\": \"REJECTED\",\n  \"actionType\": \"RESTORE\",\n  \"notes\": \"El reporte fue revisado y el contenido no viola las normas\"\n}"
+      "raw": "{\n  \"resolutionNote\": \"El reporte fue revisado y el contenido no viola las normas\"\n}"
     }
   },
-  "description": "Caso 03 — Alternativo exitoso: Admin rechaza un reporte (REJECTED) y restaura el contenido. Espera 200 OK con status REJECTED.",
+  "description": "Caso 03 — Alternativo exitoso: Admin resuelve un reporte. Espera 200 OK con status=RESOLVED. Nota: el único campo del body es 'resolutionNote' (@NotBlank).",
   "expectedStatus": 200,
   "expectedBody": {
-    "status": "REJECTED",
-    "actionType": "RESTORE",
-    "notes": "El reporte fue revisado y el contenido no viola las normas"
+    "id": "{{report_id}}",
+    "status": "RESOLVED",
+    "createdAt": "<timestamp>",
+    "resolutionNote": "El reporte fue revisado y el contenido no viola las normas",
+    "resolvedById": "<uuid-del-admin>",
+    "resolvedAt": "<timestamp>"
   }
 }

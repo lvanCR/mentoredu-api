@@ -35,7 +35,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.data.domain.PageRequest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -148,7 +147,7 @@ public class AuthService {
 
     @Transactional
     public void logout(LogoutRequest request) {
-        Session session = sessionRepository.findByRefreshToken(request.getRefreshToken())
+        Session session = sessionRepository.findByRefreshToken(hashToken(request.getRefreshToken()))
                 .orElseThrow(() -> new InvalidCredentialsException("Token de sesión no encontrado o inválido"));
 
         if (session.getRevokedAt() != null) {
@@ -235,7 +234,7 @@ public class AuthService {
 
     @Transactional
     public RefreshTokenResponse refresh(RefreshTokenRequest request) {
-        Session session = sessionRepository.findByRefreshToken(request.getRefreshToken())
+        Session session = sessionRepository.findByRefreshToken(hashToken(request.getRefreshToken()))
                 .orElseThrow(() -> new InvalidCredentialsException("Token de sesión no encontrado o inválido"));
 
         if (session.getRevokedAt() != null) {
@@ -260,23 +259,23 @@ public class AuthService {
 
     private String createSession(User user) {
         revokeOldestSessionsIfOverLimit(user);
-        String refreshToken = generateSecureToken();
+        String rawToken = generateSecureToken();
         sessionRepository.save(Session.builder()
                 .user(user)
-                .refreshToken(refreshToken)
+                .refreshToken(hashToken(rawToken))
                 .expiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getRefreshExpirationMs() / 1000))
                 .build());
-        return refreshToken;
+        return rawToken;
     }
 
     private void revokeOldestSessionsIfOverLimit(User user) {
-        var active = sessionRepository.findActiveByUserId(
-                user.getId(), LocalDateTime.now(), PageRequest.of(0, maxActiveSessions));
-        if (active.getTotalElements() >= maxActiveSessions) {
-            List<Session> toRevoke = active.getContent();
-            int excess = (int) (active.getTotalElements() - maxActiveSessions + 1);
-            toRevoke.stream().limit(excess).forEach(s -> s.setRevokedAt(LocalDateTime.now()));
-            sessionRepository.saveAll(toRevoke.stream().limit(excess).toList());
+        List<Session> active = sessionRepository.findAllActiveByUserId(user.getId(), LocalDateTime.now());
+        if (active.size() >= maxActiveSessions) {
+            int excess = active.size() - maxActiveSessions + 1;
+            List<Session> toRevoke = active.subList(0, excess);
+            LocalDateTime now = LocalDateTime.now();
+            toRevoke.forEach(s -> s.setRevokedAt(now));
+            sessionRepository.saveAll(toRevoke);
         }
     }
 

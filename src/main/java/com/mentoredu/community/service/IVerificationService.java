@@ -4,13 +4,13 @@ import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.CreateVerificationRequest;
 import com.mentoredu.community.dto.ReviewVerificationRequest;
 import com.mentoredu.community.dto.VerificationResponse;
+import com.mentoredu.community.model.VerificationStatus;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface IVerificationService {
     VerificationResponse submit(CreateVerificationRequest request, String userEmail);
-    List<VerificationResponse> getMyRequests(String userEmail);
-    PagedResponse<VerificationResponse> getAllRequests(int page, int size);
+    PagedResponse<VerificationResponse> getMyRequests(String userEmail, int page, int size);
+    PagedResponse<VerificationResponse> getAllRequests(VerificationStatus status, int page, int size);
     VerificationResponse review(UUID requestId, ReviewVerificationRequest request, String reviewerEmail);
 }

@@ -1,0 +1,20 @@
+{
+  "name": "MentorEduCatalogUS28-LinkCourseToCareerPUT",
+  "description": "Caso 05 — Exitoso: ADMIN asocia un curso existente a una carrera. Espera 204 No Content. El método es PUT (idempotente — una segunda llamada devuelve también 204 sin error).",
+  "request": {
+    "method": "PUT",
+    "url": {
+      "raw": "{{api_v1}}/catalog/careers/{{career_id}}/courses/{{course_id}}",
+      "host": ["{{api_v1}}"],
+      "path": ["catalog", "careers", "{{career_id}}", "courses", "{{course_id}}"]
+    },
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+    ]
+  },
+  "expectedResponse": {
+    "status": 204,
+    "body": null,
+    "note": "Sin body de respuesta. Usar variables de entorno {{career_id}} y {{course_id}} con UUIDs del seed V9 o de carreras/cursos creados previamente. Endpoint idempotente: repetir la llamada devuelve 204 sin crear duplicados."
+  }
+}

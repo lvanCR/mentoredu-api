@@ -24,6 +24,9 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
     @Query("SELECT s FROM Session s WHERE s.user.id = :userId AND s.revokedAt IS NULL AND s.expiresAt > :now ORDER BY s.createdAt ASC")
     Page<Session> findActiveByUserId(@Param("userId") UUID userId, @Param("now") LocalDateTime now, Pageable pageable);
 
+    @Query("SELECT s FROM Session s WHERE s.user.id = :userId AND s.revokedAt IS NULL AND s.expiresAt > :now ORDER BY s.createdAt ASC")
+    List<Session> findAllActiveByUserId(@Param("userId") UUID userId, @Param("now") LocalDateTime now);
+
     @Modifying
     @Query("DELETE FROM Session s WHERE s.expiresAt < :expiredBefore OR (s.revokedAt IS NOT NULL AND s.revokedAt < :revokedBefore)")
     int deleteExpiredAndRevoked(@Param("expiredBefore") LocalDateTime expiredBefore,

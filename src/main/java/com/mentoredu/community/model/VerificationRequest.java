@@ -27,8 +27,9 @@ public class VerificationRequest {
     @Column(name = "entity_type", nullable = false, length = 20)
     private String entityType;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status = "PENDING";
+    private VerificationStatus status = VerificationStatus.PENDING;
 
     @CreationTimestamp
     @Column(name = "submitted_at", updatable = false)

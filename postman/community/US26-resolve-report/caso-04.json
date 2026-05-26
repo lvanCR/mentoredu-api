@@ -19,13 +19,14 @@
     },
     "body": {
       "mode": "raw",
-      "raw": "{\n  \"resolution\": \"RESOLVED\",\n  \"actionType\": \"DELETE\"\n}"
+      "raw": "{\n  \"resolutionNote\": \"Intento de re-resolución\"\n}"
     }
   },
-  "description": "Caso 04 — Alternativo error: Intento de resolver un reporte que ya fue resuelto. Espera 409 Conflict.",
+  "description": "Caso 04 — Error: Intento de resolver un reporte que ya fue resuelto. Espera 409 Conflict (ReportAlreadyResolvedException).",
   "expectedStatus": 409,
   "expectedBody": {
+    "status": 409,
     "error": "Conflict",
-    "message": "El reporte ya fue resuelto con estado: RESOLVED"
+    "message": "El reporte ya fue resuelto"
   }
 }

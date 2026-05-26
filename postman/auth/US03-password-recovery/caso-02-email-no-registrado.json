@@ -1,5 +1,5 @@
 {
-  "description": "Caso 2: Correo no registrado en el sistema",
+  "description": "Caso 02: Correo no registrado en el sistema. La API retorna 200 OK con el mismo mensaje genérico (previene enumeración de usuarios — OWASP A07).",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/auth/forgot-password",
@@ -11,11 +11,10 @@
     }
   },
   "expected_response": {
-    "status": 404,
+    "status": 200,
     "body": {
-      "status": 404,
-      "error": "Not Found",
-      "message": "No account found for: nobody@example.com"
-    }
+      "message": "Si existe una cuenta con ese correo, recibirás un enlace de recuperación en breve."
+    },
+    "note": "INTENCIONADO: la API siempre responde 200 independientemente de si el email existe o no, para prevenir user enumeration."
   }
 }
