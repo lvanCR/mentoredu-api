@@ -70,6 +70,20 @@ public class SolutionService implements ISolutionService {
     }
 
     @Override
+    public SolutionResponse getById(UUID resourceId, UUID solutionId, String requesterEmail) {
+        Resource resource = resourceRepository.findById(resourceId)
+            .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
+        User requester = userService.findByEmailOrThrow(requesterEmail);
+        if (!resourceAuthorizationService.isAuthorizedForResource(resource, requester))
+            throw new SolutionAccessDeniedException("Solo el autor del ejercicio puede ver las resoluciones");
+        Solution solution = solutionRepository.findById(solutionId)
+            .orElseThrow(() -> new SolutionNotFoundException("Resolución no encontrada: " + solutionId));
+        if (!solution.getResourceId().equals(resourceId))
+            throw new SolutionNotFoundException("La resolución no pertenece a este ejercicio");
+        return SolutionResponse.from(solution);
+    }
+
+    @Override
     public List<SolutionResponse> listByResource(UUID resourceId, String requesterEmail) {
         Resource resource = resourceRepository.findById(resourceId)
             .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));

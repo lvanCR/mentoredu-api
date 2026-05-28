@@ -1,14 +1,14 @@
 {
   "scenario": "Sin autenticación — Token ausente o inválido",
-  "gherkin": "Dado que no estoy autenticado, cuando intento crear el perfil de organización, entonces el sistema rechaza el acceso.",
+  "gherkin": "Dado que no estoy autenticado, cuando intento crear el perfil de academia, entonces el sistema rechaza el acceso con 401.",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/profiles/organization",
+    "url": "{{api_v1}}/profiles/academy",
     "headers": {
       "Content-Type": "application/json"
     },
     "body": {
-      "organizationName": "Academia Lima"
+      "academyName": "Academia Lima"
     }
   },
   "expected_response": {

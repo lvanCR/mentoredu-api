@@ -2,6 +2,9 @@ package com.mentoredu.profile.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.service.UserService;
+import com.mentoredu.catalog.repository.AreaRepository;
+import com.mentoredu.catalog.repository.CareerRepository;
+import com.mentoredu.catalog.repository.UniversityRepository;
 import com.mentoredu.profile.dto.*;
 import com.mentoredu.profile.exception.*;
 import com.mentoredu.profile.model.*;
@@ -22,6 +25,9 @@ public class ProfileService implements IProfileService {
     private final TeacherProfileRepository     teacherProfileRepository;
     private final AcademyProfileRepository     academyProfileRepository;
     private final UserService                  userService;
+    private final UniversityRepository         universityRepository;
+    private final AreaRepository               areaRepository;
+    private final CareerRepository             careerRepository;
 
     // -------------------------------------------------------------------------
     // US05 — Update common profile data
@@ -87,8 +93,10 @@ public class ProfileService implements IProfileService {
                     "Student profile already exists for this account.");
         }
 
+        validateCatalogIds(request.getTargetUniversityId(), request.getTargetAreaId(), request.getTargetCareerId());
+
         StudentProfile studentProfile = StudentProfile.builder()
-                .profileId(profile.getId())
+                .profile(profile)
                 .gradeLevel(request.getGradeLevel())
                 .schoolName(request.getSchoolName())
                 .studyShift(request.getStudyShift())
@@ -128,6 +136,8 @@ public class ProfileService implements IProfileService {
         StudentProfile studentProfile = studentProfileRepository.findById(profile.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Student profile not found for user: " + email));
 
+        validateCatalogIds(request.getTargetUniversityId(), request.getTargetAreaId(), request.getTargetCareerId());
+
         if (request.getSchoolName()         != null) studentProfile.setSchoolName(request.getSchoolName());
         if (request.getGradeLevel()         != null) studentProfile.setGradeLevel(request.getGradeLevel());
         if (request.getStudyShift()         != null) studentProfile.setStudyShift(request.getStudyShift());
@@ -161,7 +171,7 @@ public class ProfileService implements IProfileService {
         }
 
         TeacherProfile teacherProfile = TeacherProfile.builder()
-                .profileId(profile.getId())
+                .profile(profile)
                 .bioProfessional(request.getBioProfessional())
                 .build();
 
@@ -233,7 +243,7 @@ public class ProfileService implements IProfileService {
         }
 
         AcademyProfile academyProfile = AcademyProfile.builder()
-                .profileId(profile.getId())
+                .profile(profile)
                 .academyName(request.academyName())
                 .ruc(request.ruc())
                 .website(request.website())
@@ -246,6 +256,22 @@ public class ProfileService implements IProfileService {
     // -------------------------------------------------------------------------
     // Update academy profile (US06)
     // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private void validateCatalogIds(UUID universityId, UUID areaId, UUID careerId) {
+        if (universityId != null && !universityRepository.existsById(universityId)) {
+            throw new IllegalArgumentException("Valor no encontrado en catálogo: universityId=" + universityId);
+        }
+        if (areaId != null && !areaRepository.existsById(areaId)) {
+            throw new IllegalArgumentException("Valor no encontrado en catálogo: areaId=" + areaId);
+        }
+        if (careerId != null && !careerRepository.existsById(careerId)) {
+            throw new IllegalArgumentException("Valor no encontrado en catálogo: careerId=" + careerId);
+        }
+    }
 
     @Override
     @Transactional

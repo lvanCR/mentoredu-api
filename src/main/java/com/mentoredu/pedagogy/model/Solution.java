@@ -3,7 +3,6 @@ package com.mentoredu.pedagogy.model;
 import com.mentoredu.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -37,7 +36,11 @@ public class Solution {
     @Column(nullable = false, length = 20)
     private SolutionStatus status = SolutionStatus.SUBMITTED;
 
-    @CreationTimestamp
     @Column(name = "submitted_at", updatable = false)
     private LocalDateTime submittedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        submittedAt = LocalDateTime.now();
+    }
 }

@@ -1,15 +1,15 @@
 {
-  "scenario": "Error — Perfil de organización ya creado para esta cuenta (RN-10)",
-  "gherkin": "Dado que mi cuenta fue clasificada como organización, cuando intento crear un segundo perfil, entonces el sistema lo rechaza.",
+  "scenario": "Error — Perfil de academia ya creado para esta cuenta",
+  "gherkin": "Dado que ya tengo un perfil de academia, cuando intento crear otro, entonces el sistema lo rechaza con 409.",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/profiles/organization",
+    "url": "{{api_v1}}/profiles/academy",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{academy_token}}"
     },
     "body": {
-      "organizationName": "Academia Lima Norte"
+      "academyName": "Academia Lima Norte"
     }
   },
   "expected_response": {
@@ -17,8 +17,8 @@
     "body": {
       "status": 409,
       "error": "Conflict",
-      "message": "Organization profile already exists for this account."
+      "message": "Academy profile already exists for this account."
     }
   },
-  "note": "Usar un token de una cuenta ORGANIZATION que ya ejecutó US10 previamente."
+  "note": "Usar un token de una cuenta ACADEMY que ya ejecutó POST /api/v1/profiles/academy previamente."
 }

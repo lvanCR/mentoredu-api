@@ -9,11 +9,11 @@
     "url": { "raw": "{{api_v1}}/profiles/student" },
     "body": {
       "mode": "raw",
-      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversity\": \"UNMSM\"\n}"
+      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversityId\": \"{{university_id}}\"\n}"
     }
   },
   "response": {
     "status": 404,
-    "description": "El usuario autenticado no ejecutó HU04. El perfil base (profiles) no existe. Mensaje: 'Profile not found for user: ...'."
+    "description": "El usuario autenticado no tiene perfil base (profiles). Mensaje: 'Profile not found for user: ...'."
   }
 }

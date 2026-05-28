@@ -9,8 +9,8 @@
       { "key": "Content-Type", "value": "application/json" }
     ],
     "body": {
-      "decision": "REJECTED",
-      "notes": "El documento adjunto no es legible. Por favor reenviar con mayor resolución."
+      "mode": "raw",
+      "raw": "{\n  \"action\": \"REJECTED\",\n  \"notes\": \"El documento adjunto no es legible. Por favor reenviar con mayor resolución.\"\n}"
     }
   },
   "expectedResponse": {
@@ -21,5 +21,6 @@
       "notes": "El documento adjunto no es legible. Por favor reenviar con mayor resolución.",
       "reviewedAt": "<timestamp>"
     }
-  }
+  },
+  "note": "Para REJECTED, el campo 'notes' es obligatorio (RN-17). Usar 'action' (no 'decision')."
 }

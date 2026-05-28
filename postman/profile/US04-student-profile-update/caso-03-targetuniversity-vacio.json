@@ -1,6 +1,6 @@
 {
-  "scenario": "Error — targetUniversity vacío",
-  "gherkin": "Dado que el campo targetUniversity queda vacío, cuando intento guardar, entonces el sistema rechaza el cambio.",
+  "scenario": "Exitoso — body vacío (todos los campos son opcionales en PATCH)",
+  "gherkin": "Dado que en PATCH todos los campos del perfil estudiante son opcionales, cuando envío body vacío, entonces el sistema responde 200 sin modificar nada.",
   "request": {
     "method": "PATCH",
     "url": "{{api_v1}}/profiles/student/me",
@@ -8,18 +8,19 @@
       "Content-Type": "application/json",
       "Authorization": "Bearer {{access_token}}"
     },
-    "body": {
-      "targetUniversity": ""
-    }
+    "body": {}
   },
   "expected_response": {
-    "status": 400,
+    "status": 200,
     "body": {
-      "status": 400,
-      "error": "Validation failed",
-      "details": {
-        "targetUniversity": "targetUniversity is required"
-      }
+      "profileId": "<uuid>",
+      "gradeLevel": "<valor previo sin cambios>",
+      "schoolName": "<valor previo sin cambios>",
+      "studyShift": "<valor previo sin cambios>",
+      "targetUniversityId": "<valor previo sin cambios>",
+      "targetAreaId": "<valor previo sin cambios>",
+      "targetCareerId": "<valor previo sin cambios>"
     }
-  }
+  },
+  "note": "Todos los campos de UpdateStudentProfileRequest son opcionales. No existe un campo targetUniversity (String) — se usa targetUniversityId (UUID)."
 }

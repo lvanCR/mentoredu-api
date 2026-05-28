@@ -1,26 +1,22 @@
 {
-  "scenario": "Exitoso — Perfil de docente existe, specialty válida enviada junto con otros campos",
-  "gherkin": "Dado que mi perfil docente existe, cuando selecciono una especialidad válida, entonces el sistema guarda el cambio.",
+  "scenario": "Exitoso — Actualizar bioProfessional del perfil docente",
+  "gherkin": "Dado que mi perfil docente existe, cuando actualizo bioProfessional con texto válido, entonces el sistema guarda el cambio.",
   "request": {
     "method": "PATCH",
     "url": "{{api_v1}}/profiles/teacher/me",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{teacher_token}}"
     },
     "body": {
-      "specialty": "Química",
-      "institutionName": "Instituto Preuniversitario El Triunfo",
-      "bioProfessional": "Docente con 10 años de experiencia en preuniversitarios."
+      "bioProfessional": "Docente con 10 años de experiencia en preparación universitaria. Especialista en Matemáticas y Física para ingeniería."
     }
   },
   "expected_response": {
     "status": 200,
     "body": {
       "profileId": "<uuid>",
-      "specialty": "Química",
-      "institutionName": "Instituto Preuniversitario El Triunfo",
-      "bioProfessional": "Docente con 10 años de experiencia en preuniversitarios."
+      "bioProfessional": "Docente con 10 años de experiencia en preparación universitaria. Especialista en Matemáticas y Física para ingeniería."
     }
   }
 }

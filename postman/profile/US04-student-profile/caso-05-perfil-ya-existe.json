@@ -9,11 +9,12 @@
     "url": { "raw": "{{api_v1}}/profiles/student" },
     "body": {
       "mode": "raw",
-      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversity\": \"UNMSM\"\n}"
+      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversityId\": \"{{university_id}}\"\n}"
     }
   },
   "response": {
     "status": 409,
-    "description": "RN-08: El usuario ya tiene un perfil de estudiante. No se puede crear un segundo. Mensaje: 'Student profile already exists for this account.'"
-  }
+    "description": "El usuario ya tiene un perfil de estudiante. No se puede crear un segundo. Mensaje: 'Student profile already exists for this account.'"
+  },
+  "note": "Usar targetUniversityId (UUID) en lugar de targetUniversity (String)."
 }

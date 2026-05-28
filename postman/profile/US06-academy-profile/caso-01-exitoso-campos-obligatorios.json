@@ -1,22 +1,22 @@
 {
-  "scenario": "Exitoso — Cuenta ORGANIZATION, solo organizationName enviado",
-  "gherkin": "Dado que mi cuenta fue clasificada como organización, cuando ingreso nombre, sedes y descripción institucional, entonces el sistema crea el perfil.",
+  "scenario": "Exitoso — Cuenta ACADEMY, solo academyName enviado (campo obligatorio)",
+  "gherkin": "Dado que mi cuenta fue clasificada como academia, cuando ingreso el nombre, entonces el sistema crea el perfil.",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/profiles/organization",
+    "url": "{{api_v1}}/profiles/academy",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{academy_token}}"
     },
     "body": {
-      "organizationName": "Academia Preuniversitaria Lima"
+      "academyName": "Academia Preuniversitaria Lima"
     }
   },
   "expected_response": {
     "status": 201,
     "body": {
       "profileId": "<uuid>",
-      "organizationName": "Academia Preuniversitaria Lima",
+      "academyName": "Academia Preuniversitaria Lima",
       "ruc": null,
       "website": null,
       "contactEmail": null

@@ -41,14 +41,14 @@ public class FeedbackService implements IFeedbackService {
     public FeedbackResponse create(UUID solutionId, CreateFeedbackRequest request, String authorEmail) {
         Solution solution = solutionRepository.findById(solutionId)
             .orElseThrow(() -> new SolutionNotFoundException("Resolución no encontrada: " + solutionId));
-        if (feedbackEntryRepository.existsBySolutionId(solutionId))
-            throw new FeedbackAlreadyExistsException("Ya existe feedback para esta resolución");
         Resource resource = resourceRepository.findById(solution.getResourceId())
             .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
         User author = userService.findByEmailOrThrow(authorEmail);
-        // RN-10: autor directo, o TEACHER con link ACCEPTED a la academia autora
+        // RN-10: autorización antes de verificar existencia de feedback (evita exponer 409 a no autorizados)
         if (!resourceAuthorizationService.isAuthorizedForResource(resource, author))
             throw new SolutionAccessDeniedException("Solo el autor del ejercicio puede dar feedback");
+        if (feedbackEntryRepository.existsBySolutionId(solutionId))
+            throw new FeedbackAlreadyExistsException("Ya existe feedback para esta resolución");
         FeedbackEntry feedback = FeedbackEntry.builder()
             .solution(solution)
             .author(author)

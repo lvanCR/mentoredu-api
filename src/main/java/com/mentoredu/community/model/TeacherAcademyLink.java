@@ -2,8 +2,6 @@ package com.mentoredu.community.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -29,9 +27,13 @@ public class TeacherAcademyLink {
     @Column(nullable = false, length = 20)
     private AssociationStatus status = AssociationStatus.PENDING;
 
-    @CreationTimestamp
     @Column(name = "requested_at", updatable = false)
     private LocalDateTime requestedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (requestedAt == null) requestedAt = LocalDateTime.now();
+    }
 
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;

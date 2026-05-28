@@ -1,25 +1,24 @@
 {
-  "scenario": "Error — Tipo de cuenta no es TEACHER",
-  "gherkin": "Dado que mi cuenta no fue clasificada como docente, cuando intento crear el perfil, entonces el sistema lo rechaza.",
+  "scenario": "Error — Tipo de cuenta no es TEACHER (STUDENT intenta crear perfil docente)",
+  "gherkin": "Dado que mi cuenta fue clasificada como STUDENT, cuando intento crear el perfil docente, entonces el sistema lo rechaza con 403.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/profiles/teacher",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{student_token}}"
     },
     "body": {
-      "specialty": "Matemáticas",
-      "institutionName": "Academia Lumbre"
+      "bioProfessional": "Texto de prueba"
     }
   },
   "expected_response": {
-    "status": 409,
+    "status": 403,
     "body": {
-      "status": 409,
-      "error": "Conflict",
+      "status": 403,
+      "error": "Forbidden",
       "message": "Account type is not TEACHER. Current type: STUDENT"
     }
   },
-  "note": "Usar un token de un usuario con tipo de cuenta STUDENT u ORGANIZATION."
+  "note": "Usar {{student_token}} para simular un usuario con rol STUDENT."
 }

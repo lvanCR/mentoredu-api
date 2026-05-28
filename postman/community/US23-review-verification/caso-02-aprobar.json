@@ -9,8 +9,8 @@
       { "key": "Content-Type", "value": "application/json" }
     ],
     "body": {
-      "decision": "APPROVED",
-      "notes": "Documentación válida verificada."
+      "mode": "raw",
+      "raw": "{\n  \"action\": \"APPROVED\",\n  \"notes\": \"Documentación válida verificada.\"\n}"
     }
   },
   "expectedResponse": {
@@ -20,5 +20,6 @@
       "status": "APPROVED",
       "reviewedAt": "<timestamp>"
     }
-  }
+  },
+  "note": "El campo del body es 'action' (no 'decision'). Valores válidos: APPROVED, REJECTED. 'notes' es opcional para APPROVED, obligatorio para REJECTED (RN-17)."
 }

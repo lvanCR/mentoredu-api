@@ -9,8 +9,8 @@
       { "key": "Content-Type", "value": "application/json" }
     ],
     "body": {
-      "name": "Universidad Nacional de Ingeniería",
-      "country": "Peru"
+      "mode": "raw",
+      "raw": "{\n  \"name\": \"Universidad Nacional de Ingeniería\",\n  \"city\": \"Lima\"\n}"
     }
   },
   "expectedResponse": {
@@ -18,7 +18,8 @@
     "body": {
       "id": "<uuid>",
       "name": "Universidad Nacional de Ingeniería",
-      "country": "Peru"
+      "city": "Lima"
     }
-  }
+  },
+  "note": "Los campos válidos son 'name' (obligatorio, max 120) y 'city' (opcional, max 80). No existe el campo 'country' en el DTO."
 }

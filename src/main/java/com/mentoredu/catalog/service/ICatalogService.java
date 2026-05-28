@@ -22,6 +22,7 @@ public interface ICatalogService {
     void linkCourseToCareer(UUID careerId, UUID courseId);
 
     boolean universityExists(UUID id);
+    boolean areaExists(UUID id);
     boolean courseExists(UUID id);
     boolean careerExists(UUID id);
     boolean areaExistsInUniversity(UUID areaId, UUID universityId);

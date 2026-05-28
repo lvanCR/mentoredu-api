@@ -1,25 +1,19 @@
 {
-  "scenario": "Alt error — specialty no incluida (campo no enviado)",
-  "gherkin": "Dado que la especialidad ingresada no está permitida (omitida), cuando envío el formulario, entonces el sistema devuelve error de validación.",
+  "scenario": "Error — Sin autenticación",
+  "gherkin": "Dado que no estoy autenticado, cuando intento crear el perfil docente, entonces el sistema rechaza el acceso con 401.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/profiles/teacher",
     "headers": {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Content-Type": "application/json"
     },
     "body": {
-      "institutionName": "Academia Lumbre"
+      "bioProfessional": "Texto de prueba"
     }
   },
   "expected_response": {
-    "status": 400,
-    "body": {
-      "status": 400,
-      "error": "Validation failed",
-      "details": {
-        "specialty": "specialty is required"
-      }
-    }
-  }
+    "status": 401,
+    "body": {}
+  },
+  "note": "No incluir el header Authorization o enviar un token expirado/inválido."
 }

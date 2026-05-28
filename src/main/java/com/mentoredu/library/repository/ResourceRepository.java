@@ -18,10 +18,10 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
         WHERE (:query IS NULL OR r.title ILIKE CONCAT('%', :query, '%')
                               OR r.description ILIKE CONCAT('%', :query, '%'))
           AND (:type IS NULL OR r.resource_type = :type)
-          AND (:universityId IS NULL OR r.university_id = :universityId::uuid)
-          AND (:areaId IS NULL OR r.area_id = :areaId::uuid)
-          AND (:careerId IS NULL OR r.career_id = :careerId::uuid)
-          AND (:courseId IS NULL OR r.course_id = :courseId::uuid)
+          AND (:universityId IS NULL OR r.university_id = :universityId)
+          AND (:areaId IS NULL OR r.area_id = :areaId)
+          AND (:careerId IS NULL OR r.career_id = :careerId)
+          AND (:courseId IS NULL OR r.course_id = :courseId)
           AND r.visibility != 'PRIVATE'
         ORDER BY r.created_at DESC
         """,
@@ -30,10 +30,10 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
         WHERE (:query IS NULL OR r.title ILIKE CONCAT('%', :query, '%')
                               OR r.description ILIKE CONCAT('%', :query, '%'))
           AND (:type IS NULL OR r.resource_type = :type)
-          AND (:universityId IS NULL OR r.university_id = :universityId::uuid)
-          AND (:areaId IS NULL OR r.area_id = :areaId::uuid)
-          AND (:careerId IS NULL OR r.career_id = :careerId::uuid)
-          AND (:courseId IS NULL OR r.course_id = :courseId::uuid)
+          AND (:universityId IS NULL OR r.university_id = :universityId)
+          AND (:areaId IS NULL OR r.area_id = :areaId)
+          AND (:careerId IS NULL OR r.career_id = :careerId)
+          AND (:courseId IS NULL OR r.course_id = :courseId)
           AND r.visibility != 'PRIVATE'
         """,
         nativeQuery = true)

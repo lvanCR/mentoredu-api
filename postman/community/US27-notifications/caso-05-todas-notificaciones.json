@@ -27,7 +27,6 @@
       "content": [
         {
           "id": "<uuid>",
-          "userId": "<uuid>",
           "type": "answer_received",
           "payload": { "threadId": "<uuid>", "threadTitle": "¿Cómo resolver integrales?" },
           "readAt": "2026-05-22T10:35:00",
@@ -35,7 +34,6 @@
         },
         {
           "id": "<uuid>",
-          "userId": "<uuid>",
           "type": "new_follower",
           "payload": { "followerId": "<uuid>", "followerName": "Pedro García" },
           "readAt": null,
@@ -48,6 +46,6 @@
       "totalPages": 1,
       "last": true
     },
-    "note": "A diferencia de /me/pending, este endpoint devuelve TODAS las notificaciones (readAt puede ser null o tener fecha). El campo 'payload' varía según el tipo de notificación."
+    "note": "A diferencia de /me/pending, este endpoint devuelve TODAS las notificaciones (readAt puede ser null o tener fecha). El campo 'payload' varía según el tipo de notificación. El DTO NO incluye 'userId'."
   }
 }

@@ -3,8 +3,6 @@ package com.mentoredu.community.model;
 import com.mentoredu.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -31,9 +29,13 @@ public class VerificationRequest {
     @Column(nullable = false, length = 20)
     private VerificationStatus status = VerificationStatus.PENDING;
 
-    @CreationTimestamp
     @Column(name = "submitted_at", updatable = false)
     private LocalDateTime submittedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (submittedAt == null) submittedAt = LocalDateTime.now();
+    }
 
     @Column(columnDefinition = "TEXT")
     private String notes;

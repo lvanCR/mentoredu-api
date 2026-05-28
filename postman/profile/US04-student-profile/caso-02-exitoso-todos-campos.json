@@ -9,11 +9,12 @@
     "url": { "raw": "{{api_v1}}/profiles/student" },
     "body": {
       "mode": "raw",
-      "raw": "{\n  \"gradeLevel\": \"4TO_SECUNDARIA\",\n  \"targetUniversity\": \"Pontificia Universidad Católica del Perú\",\n  \"schoolName\": \"Colegio Nacional Nuestra Señora de Guadalupe\",\n  \"targetCareer\": \"Ingeniería de Sistemas e Informática\",\n  \"studyShift\": \"MAÑANA\"\n}"
+      "raw": "{\n  \"gradeLevel\": \"4TO_SECUNDARIA\",\n  \"schoolName\": \"Colegio Nacional Nuestra Señora de Guadalupe\",\n  \"studyShift\": \"MAÑANA\",\n  \"targetUniversityId\": \"{{university_id}}\",\n  \"targetAreaId\": \"{{area_id}}\",\n  \"targetCareerId\": \"{{career_id}}\"\n}"
     }
   },
   "response": {
     "status": 201,
     "description": "Todos los campos registrados correctamente. profileType permanece STUDENT en el perfil base."
-  }
+  },
+  "note": "Todos los IDs (targetUniversityId, targetAreaId, targetCareerId) deben ser UUIDs válidos del catálogo (seed V9). Usar las variables de entorno del archivo environments/local.postman_environment.json."
 }

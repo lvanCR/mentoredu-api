@@ -1,15 +1,15 @@
 {
-  "scenario": "Error — organizationName vacío (cadena en blanco)",
-  "gherkin": "Dado que falta un dato obligatorio, cuando intento crear el perfil, entonces el sistema rechaza la creación.",
+  "scenario": "Error — academyName vacío (cadena en blanco)",
+  "gherkin": "Dado que falta un dato obligatorio (academyName vacío), cuando intento crear el perfil, entonces el sistema rechaza la creación.",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/profiles/organization",
+    "url": "{{api_v1}}/profiles/academy",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{academy_token}}"
     },
     "body": {
-      "organizationName": ""
+      "academyName": ""
     }
   },
   "expected_response": {
@@ -18,7 +18,7 @@
       "status": 400,
       "error": "Validation failed",
       "details": {
-        "organizationName": "organizationName is required"
+        "academyName": "academyName is required"
       }
     }
   }

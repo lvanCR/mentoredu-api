@@ -1,6 +1,6 @@
 {
-  "scenario": "Alt exitoso — Solo targetUniversity enviado; demás campos conservan su valor",
-  "gherkin": "Dado que ingreso una universidad válida, cuando confirmo la edición, entonces el sistema actualiza el dato sin modificar los demás campos.",
+  "scenario": "Alt exitoso — Solo targetUniversityId enviado; demás campos conservan su valor",
+  "gherkin": "Dado que ingreso una universidad válida por UUID, cuando confirmo la edición, entonces el sistema actualiza el dato sin modificar los demás campos.",
   "request": {
     "method": "PATCH",
     "url": "{{api_v1}}/profiles/student/me",
@@ -9,18 +9,15 @@
       "Authorization": "Bearer {{access_token}}"
     },
     "body": {
-      "targetUniversity": "Pontificia Universidad Católica del Perú"
+      "targetUniversityId": "{{university_id}}"
     }
   },
   "expected_response": {
     "status": 200,
     "body": {
       "profileId": "<uuid>",
-      "targetUniversity": "Pontificia Universidad Católica del Perú",
-      "gradeLevel": "<valor previo sin cambios>",
-      "schoolName": "<valor previo sin cambios>",
-      "targetCareer": "<valor previo sin cambios>",
-      "studyShift": "<valor previo sin cambios>"
+      "targetUniversityId": "{{university_id}}"
     }
-  }
+  },
+  "note": "Todos los campos de actualización son opcionales en PATCH. Solo se modifican los enviados."
 }

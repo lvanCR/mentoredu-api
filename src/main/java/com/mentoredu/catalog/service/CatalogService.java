@@ -64,6 +64,7 @@ public class CatalogService implements ICatalogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CourseResponse> listCoursesByArea(UUID areaId) {
         Area area = areaRepository.findById(areaId)
             .orElseThrow(() -> new AreaNotFoundException("Área no encontrada: " + areaId));
@@ -132,6 +133,11 @@ public class CatalogService implements ICatalogService {
     @Override
     public boolean universityExists(UUID id) {
         return universityRepository.existsById(id);
+    }
+
+    @Override
+    public boolean areaExists(UUID id) {
+        return areaRepository.existsById(id);
     }
 
     @Override

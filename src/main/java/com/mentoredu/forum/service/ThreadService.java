@@ -41,6 +41,7 @@ public class ThreadService implements IThreadService {
                 .title(request.getTitle())
                 .body(request.getBody())
                 .anonymous(request.isAnonymous())
+                .status(ThreadStatus.OPEN)
                 .author(user)
                 .universityId(request.getUniversityId())
                 .areaId(request.getAreaId())
@@ -107,16 +108,16 @@ public class ThreadService implements IThreadService {
         UUID courseId = req.getCourseId();
         UUID careerId = req.getCareerId();
 
-        // (1) Al menos una clasificación es obligatoria
-        if (uniId == null && courseId == null && careerId == null) {
-            throw new IllegalArgumentException(
-                    "El hilo requiere al menos una categoría (universityId, courseId o careerId)");
-        }
-
-        // (2) Área sin universidad está prohibida
+        // (1) Área sin universidad está prohibida (más específico que falta de categoría)
         if (areaId != null && uniId == null) {
             throw new IllegalArgumentException(
                     "El área requiere una universidad seleccionada");
+        }
+
+        // (2) Al menos una clasificación es obligatoria
+        if (uniId == null && courseId == null && careerId == null) {
+            throw new IllegalArgumentException(
+                    "El hilo requiere al menos una categoría (universityId, courseId o careerId)");
         }
 
         // (3) Carrera y curso no pueden coexistir

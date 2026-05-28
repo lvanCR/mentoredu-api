@@ -3,7 +3,6 @@ package com.mentoredu.pedagogy.model;
 import com.mentoredu.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,7 +33,11 @@ public class FeedbackEntry {
     @Column(nullable = false, columnDefinition = "text")
     private String body;
 
-    @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }
