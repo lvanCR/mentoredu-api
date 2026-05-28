@@ -1,6 +1,6 @@
 {
-  "name": "MentorEduForumUS13-ResponderHiloCerrado422POST",
-  "description": "Caso 03 — Error: el hilo está cerrado (status=CLOSED). El sistema rechaza la operación con 422 Unprocessable Entity (ThreadClosedException).",
+  "name": "MentorEduForumUS13-ResponderHiloCerrado409POST",
+  "description": "Caso 03 — Error: el hilo está cerrado (status=CLOSED). El sistema rechaza la operación con 409 Conflict (ThreadClosedException). Verificado en CONFIRMACION_TESTS.md esc. 13.2.",
   "request": {
     "method": "POST",
     "url": {
@@ -18,11 +18,11 @@
     }
   },
   "expectedResponse": {
-    "status": 422,
-    "description": "Unprocessable Entity. El hilo está cerrado y no acepta nuevas respuestas (ThreadClosedException → HTTP 422).",
+    "status": 409,
+    "description": "Conflict. El hilo está cerrado y no acepta nuevas respuestas (ThreadClosedException → HTTP 409). Variable {{closed_thread_id}} = f772283d-20fa-43dd-aa67-efa2a9dfd3a6.",
     "body": {
-      "status": 422,
-      "error": "Unprocessable Entity",
+      "status": 409,
+      "error": "Conflict",
       "message": "<mensaje de error>"
     }
   }

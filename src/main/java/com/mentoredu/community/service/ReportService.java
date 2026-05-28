@@ -62,7 +62,7 @@ public class ReportService implements IReportService {
                 .status(ReportStatus.OPEN)
                 .build();
 
-        return ReportResponse.from(reportRepository.save(report));
+        return ReportResponse.from(reportRepository.saveAndFlush(report));
     }
 
     @Override

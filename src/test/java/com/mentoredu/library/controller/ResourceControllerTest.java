@@ -11,7 +11,6 @@ import com.mentoredu.library.exception.DuplicateResourceException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
 import com.mentoredu.library.model.Resource;
 import com.mentoredu.library.model.ResourceType;
-import com.mentoredu.library.model.ResourceVisibility;
 import com.mentoredu.library.service.IResourceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +57,7 @@ class ResourceControllerTest {
     void publishResource_withAllRequiredFields_returns201() throws Exception {
         var request = validRequest();
         when(resourceService.publish(any(), eq("user@example.com")))
-                .thenReturn(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, ResourceVisibility.PUBLIC));
+                .thenReturn(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION));
 
         mockMvc.perform(post("/api/v1/resources")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -67,25 +66,23 @@ class ResourceControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.title").value("Examen UNI 2024"))
                 .andExpect(jsonPath("$.resourceType").value("EXAMEN_SECCION"))
-                .andExpect(jsonPath("$.visibility").value("PUBLIC"))
                 .andExpect(jsonPath("$.createdAt").exists());
     }
 
     @Test
     @WithMockUser(username = "teacher@example.com")
-    void publishResource_withOptionalFields_returns201() throws Exception {
+    void publishResource_withOptionalDescription_returns201() throws Exception {
         var request = validRequest();
         request.setDescription("Examen oficial de admisión UNI ciclo 2024-I");
-        request.setVisibility(ResourceVisibility.PREMIUM);
 
         when(resourceService.publish(any(), eq("teacher@example.com")))
-                .thenReturn(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, ResourceVisibility.PREMIUM));
+                .thenReturn(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION));
 
         mockMvc.perform(post("/api/v1/resources")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.visibility").value("PREMIUM"));
+                .andExpect(jsonPath("$.id").exists());
     }
 
     @Test
@@ -179,22 +176,6 @@ class ResourceControllerTest {
 
     @Test
     @WithMockUser(username = "user@example.com")
-    void publishResource_withInvalidVisibility_returns400() throws Exception {
-        // Enviar JSON raw con valor de enum inválido → HttpMessageNotReadableException → 400
-        String jsonWithBadVisibility = """
-            {"title":"Examen","universityId":"%s","areaId":"%s","courseId":"%s",
-             "resourceType":"EXAMEN_SECCION","visibility":"GRATIS","fileUrl":"x","fileName":"x","mimeType":"application/pdf","sizeBytes":1}
-            """.formatted(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
-
-        mockMvc.perform(post("/api/v1/resources")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonWithBadVisibility))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").exists());
-    }
-
-    @Test
-    @WithMockUser(username = "user@example.com")
     void publishResource_whenDuplicate_returns409() throws Exception {
         var request = validRequest();
 
@@ -225,14 +206,13 @@ class ResourceControllerTest {
     @Test
     void searchResources_withNoFilters_returns200WithResults() throws Exception {
         when(resourceService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyInt(), anyInt()))
-                .thenReturn(pageOf(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, ResourceVisibility.PUBLIC))));
+                .thenReturn(pageOf(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION))));
 
         mockMvc.perform(get("/api/v1/resources"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].title").value("Examen UNI 2024"))
                 .andExpect(jsonPath("$.content[0].resourceType").value("EXAMEN_SECCION"))
-                .andExpect(jsonPath("$.content[0].visibility").value("PUBLIC"))
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
 
@@ -243,7 +223,7 @@ class ResourceControllerTest {
         UUID courseId     = UUID.randomUUID();
 
         when(resourceService.search(eq("UNI"), eq("EXAMEN_SECCION"), eq(universityId), eq(areaId), isNull(), eq(courseId), anyInt(), anyInt()))
-                .thenReturn(pageOf(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, ResourceVisibility.PUBLIC))));
+                .thenReturn(pageOf(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION))));
 
         mockMvc.perform(get("/api/v1/resources")
                         .param("q", "UNI")
@@ -304,8 +284,8 @@ class ResourceControllerTest {
     void getResourceById_whenExists_returns200() throws Exception {
         UUID id = UUID.randomUUID();
 
-        when(resourceService.getById(eq(id), anyString()))
-                .thenReturn(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, ResourceVisibility.PUBLIC));
+        when(resourceService.getById(eq(id)))
+                .thenReturn(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION));
 
         mockMvc.perform(get("/api/v1/resources/{id}", id))
                 .andExpect(status().isOk())
@@ -318,7 +298,7 @@ class ResourceControllerTest {
     void getResourceById_whenNotFound_returns404() throws Exception {
         UUID id = UUID.randomUUID();
 
-        when(resourceService.getById(eq(id), anyString()))
+        when(resourceService.getById(eq(id)))
                 .thenThrow(new ResourceNotFoundException("Resource not found: " + id));
 
         mockMvc.perform(get("/api/v1/resources/{id}", id))
@@ -344,7 +324,7 @@ class ResourceControllerTest {
         String body = "{\"aceptaResoluciones\": true}";
 
         when(resourceService.updateSettings(eq(id), any(), eq("user@example.com")))
-                .thenReturn(buildResponse("Práctica UNI", ResourceType.PRACTICA, ResourceVisibility.PUBLIC));
+                .thenReturn(buildResponse("Práctica UNI", ResourceType.PRACTICA));
 
         mockMvc.perform(patch("/api/v1/resources/{id}/settings", id)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -430,7 +410,7 @@ class ResourceControllerTest {
     @WithMockUser(username = "user@example.com")
     void getMyResources_whenAuthenticated_returns200() throws Exception {
         when(resourceService.getByAuthor(eq("user@example.com"), anyInt(), anyInt()))
-                .thenReturn(pageOf(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION, ResourceVisibility.PUBLIC))));
+                .thenReturn(pageOf(List.of(buildResponse("Examen UNI 2024", ResourceType.EXAMEN_SECCION))));
 
         mockMvc.perform(get("/api/v1/resources/me"))
                 .andExpect(status().isOk())
@@ -505,7 +485,7 @@ class ResourceControllerTest {
         return r;
     }
 
-    private ResourceResponse buildResponse(String title, ResourceType resourceType, ResourceVisibility visibility) {
+    private ResourceResponse buildResponse(String title, ResourceType resourceType) {
         User author = User.builder()
                 .id(UUID.randomUUID())
                 .firstName("Juan")
@@ -517,7 +497,6 @@ class ResourceControllerTest {
                 .id(UUID.randomUUID())
                 .title(title)
                 .resourceType(resourceType)
-                .visibility(visibility)
                 .universityId(UUID.randomUUID())
                 .areaId(UUID.randomUUID())
                 .courseId(UUID.randomUUID())

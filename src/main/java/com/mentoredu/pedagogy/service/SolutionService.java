@@ -43,6 +43,8 @@ public class SolutionService implements ISolutionService {
         if (!resource.isAceptaResoluciones())
             throw new SolutionAccessDeniedException("Este recurso no acepta resoluciones");
         User student = userService.findByEmailOrThrow(studentEmail);
+        if (!"STUDENT".equals(student.getRole().getName()))
+            throw new SolutionAccessDeniedException("Solo los estudiantes pueden enviar resoluciones");
         if (solutionRepository.existsByResourceIdAndStudentId(resourceId, student.getId()))
             throw new DuplicateSolutionException("Ya enviaste una resolución para este ejercicio");
         if (request.fileUrl() == null && request.content() == null)

@@ -1,0 +1,24 @@
+{
+  "name": "MentorEduCommunityUS24-RequestAssociationNoAuthPOST",
+  "description": "Caso 06 — Error: sin token JWT. Espera 401 Unauthorized.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/associations/teacher-academy",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"academyProfileId\": \"{{academy_profile_id}}\"\n}"
+    }
+  },
+  "expectedResponse": {
+    "status": 401,
+    "description": "Unauthorized. Se requiere autenticación JWT para solicitar una asociación.",
+    "body": {
+      "status": 401,
+      "error": "Unauthorized",
+      "message": "Autenticación requerida."
+    }
+  }
+}

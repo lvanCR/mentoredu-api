@@ -1,0 +1,26 @@
+{
+  "name": "MentorEduCommunityUS23-AlreadyProcessedPATCH",
+  "description": "Caso 05 — Error: intentar aprobar/rechazar una solicitud que ya fue procesada. Espera 409 Conflict. Verificado en CONFIRMACION_TESTS.md esc. 23.4.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/verification/requests/{{verification_id}}/review",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{moderator_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"action\": \"APPROVED\",\n  \"notes\": \"Intento de re-procesar solicitud ya resuelta.\"\n}"
+    }
+  },
+  "expectedResponse": {
+    "status": 409,
+    "description": "Conflict. La solicitud ya fue procesada (APPROVED o REJECTED). Variable {{verification_id}} debe apuntar a una solicitud ya resuelta.",
+    "body": {
+      "status": 409,
+      "error": "Conflict",
+      "message": "La solicitud ya fue procesada con estado: APPROVED"
+    }
+  },
+  "note": "Usar como {{verification_id}} el UUID de una solicitud ya aprobada: a664de24-ba3f-4138-ba98-157b04f18027."
+}
