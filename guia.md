@@ -107,15 +107,15 @@ Guarda el resultado — lo usarás como `JWT_SECRET`.
 3. Clic en **Create Database**.
 4. Render tardará ~1 minuto en aprovisionar la base de datos.
 5. Una vez lista, ve a la página de la BD y anota:
-   - **Internal Database URL** → este será tu `DB_URL` (formato: `postgres://user:password@host/db`)
+   - **Internal Database URL** → este será tu `DB_URL` (formato: `postgres://user:password@host.render.com/db`)
    - **Username** → `DB_USERNAME`
    - **Password** → `DB_PASSWORD`
 
 > **Importante:** Usa la **Internal Database URL** (no la External) para que la comunicación sea dentro de la red de Render y sea gratuita en ancho de banda.
 
 > La URL interna de Render usa el prefijo `postgres://` pero Spring Boot necesita `jdbc:postgresql://`. Convierte así:
-> - Render te da: `postgres://mentoredu:abc123@dpg-xxx/mentoredu`
-> - Tú escribes: `jdbc:postgresql://dpg-xxx/mentoredu`
+> - Render te da: `postgres://mentoredu:abc123@dpg-xxx.render.com/mentoredu`
+> - Tú escribes: `jdbc:postgresql://dpg-xxx.render.com/mentoredu`
 > Y pones `DB_USERNAME=mentoredu` y `DB_PASSWORD=abc123` por separado.
 
 ### 3.3 Crear el Web Service
@@ -161,11 +161,11 @@ En la sección **Environment Variables** del formulario de creación (o en **Set
    ==> Starting service...
    ```
 3. El primer build tarda entre **5 y 10 minutos** (descarga dependencias Maven).
-4. Cuando la app arranca, Spring Boot ejecuta las **migraciones Flyway** (V1–V9). Verás en los logs:
+4. Cuando la app arranca, Spring Boot ejecuta las **migraciones Flyway** (V1–V11). Verás en los logs:
    ```
    Flyway: Migrating schema to version 1
    ...
-   Flyway: Successfully applied 9 migrations
+   Flyway: Successfully applied 11 migrations
    ```
 5. La app está lista cuando los logs muestren:
    ```
@@ -342,8 +342,8 @@ http://localhost:8082
 Email: admin@mentoredu.com
 Password: admin
 ```
-Servidor a conectar: host `mentoredu_db`, puerto `5432`, BD `mentoredu`, usuario `mentoredu`, contraseña `mentoredu`.
-- Nota si el puerto `5432` no funciona, usa el `5433`
+Servidor a conectar: host `postgres`, puerto `5432`, BD `mentoredu`, usuario `mentoredu`, contraseña `mentoredu`.
+*(Nota: Dentro de la red de Docker el puerto es 5432, pero desde afuera usas el 5433).*
 ---
 
 ## 7. Solución de problemas frecuentes
