@@ -1,0 +1,30 @@
+@startuml MentorEdu_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title MentorEdu System — Level 1: Context
+
+' === PERSONAS (USUARIOS) ===
+Person(estudiante, "Estudiante", "Busca recursos académicos, participa en el foro y envía resoluciones a ejercicios.")
+Person(docente, "Docente", "Sube material educativo, responde dudas y califica resoluciones de estudiantes.")
+Person(academia, "Academia", "Gestiona su oferta académica, vincula docentes y monitorea su reputación.")
+Person(admin, "Moderador / Admin", "Gestiona el catálogo maestro, atiende reportes y verifica perfiles institucionales.")
+
+' === SISTEMA CENTRAL ===
+System(mentoredu, "Plataforma MentorEdu", "Permite la conexión entre estudiantes, docentes y academias para el acompañamiento académico y monitoreo de rendimiento.")
+
+' === SISTEMAS EXTERNOS ===
+System_Ext(cloudinary, "Cloudinary (Storage)", "Servicio en la nube para el almacenamiento persistente y optimizado de archivos PDF.")
+System_Ext(sendgrid, "SendGrid (Email)", "Plataforma para el envío de correos transaccionales (recuperación de cuenta, alertas).")
+
+' === RELACIONES ===
+Rel(estudiante, mentoredu, "Consulta recursos y envía tareas", "HTTPS/JSON")
+Rel(docente, mentoredu, "Publica contenido y califica", "HTTPS/JSON")
+Rel(academia, mentoredu, "Gestiona institución y docentes", "HTTPS/JSON")
+Rel(admin, mentoredu, "Modera contenido y valida perfiles", "HTTPS/JSON")
+
+Rel_R(mentoredu, cloudinary, "Sube y recupera documentos PDF", "HTTPS/API")
+Rel_L(mentoredu, sendgrid, "Envía notificaciones por email", "HTTPS/API")
+
+@enduml
