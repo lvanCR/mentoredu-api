@@ -1,23 +1,22 @@
 {
-  "scenario": "Alt exitoso — Solo specialty enviada; institutionName y bioProfessional conservan su valor previo",
-  "gherkin": "Dado que elijo una nueva especialidad válida, cuando confirmo la edición, entonces el sistema actualiza el perfil.",
+  "scenario": "Alt exitoso — Solo bioProfessional actualizado (campo parcial)",
+  "gherkin": "Dado que mi perfil docente existe, cuando actualizo solo bioProfessional, entonces el sistema actualiza únicamente ese campo.",
   "request": {
     "method": "PATCH",
     "url": "{{api_v1}}/profiles/teacher/me",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{teacher_token}}"
     },
     "body": {
-      "specialty": "Física"
+      "bioProfessional": "Texto actualizado de mi bio profesional."
     }
   },
   "expected_response": {
     "status": 200,
     "body": {
       "profileId": "<uuid>",
-      "specialty": "Física"
+      "bioProfessional": "Texto actualizado de mi bio profesional."
     }
-  },
-  "note": "institutionName y bioProfessional no se modifican al no estar presentes en el body."
+  }
 }

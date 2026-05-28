@@ -63,7 +63,8 @@ public class ResourceController {
     @GetMapping("/{id}")
     @Operation(summary = "US09 - Obtener metadatos de un recurso por ID")
     public ResponseEntity<ResourceResponse> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(resourceService.getById(id, SecurityUtils.currentEmail()));
+        SecurityUtils.requireAuth();
+        return ResponseEntity.ok(resourceService.getById(id));
     }
 
     @GetMapping("/me")

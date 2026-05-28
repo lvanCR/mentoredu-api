@@ -1,5 +1,6 @@
 package com.mentoredu.forum.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class CreateThreadRequest {
     @NotBlank(message = "body is required")
     private String body;
 
+    @JsonProperty("isAnonymous")
     private boolean anonymous = false;
 
     // Clasificación multi-modal — al menos uno de los tres es obligatorio (RN-12).

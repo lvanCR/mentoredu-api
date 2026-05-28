@@ -11,4 +11,5 @@ public interface ISolutionService {
     SolutionResponse submit(UUID resourceId, SubmitSolutionRequest request, String studentEmail);
     MySolutionWithFeedbackResponse getMyWithFeedback(UUID resourceId, String studentEmail);
     List<SolutionResponse> listByResource(UUID resourceId, String requesterEmail);
+    SolutionResponse getById(UUID resourceId, UUID solutionId, String requesterEmail);
 }

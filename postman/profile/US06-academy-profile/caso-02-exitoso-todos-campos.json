@@ -1,15 +1,15 @@
 {
   "scenario": "Alt exitoso — Todos los campos institucionales válidos enviados",
-  "gherkin": "Dado que completo los datos institucionales válidos, cuando confirmo el formulario, entonces el sistema registra mi perfil de organización.",
+  "gherkin": "Dado que completo los datos institucionales válidos, cuando confirmo el formulario, entonces el sistema registra mi perfil de academia.",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/profiles/organization",
+    "url": "{{api_v1}}/profiles/academy",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{academy_token}}"
     },
     "body": {
-      "organizationName": "Academia Preuniversitaria Lima",
+      "academyName": "Academia Preuniversitaria Lima",
       "ruc": "20123456789",
       "website": "https://academia-lima.pe",
       "contactEmail": "contacto@academia-lima.pe"
@@ -19,7 +19,7 @@
     "status": 201,
     "body": {
       "profileId": "<uuid>",
-      "organizationName": "Academia Preuniversitaria Lima",
+      "academyName": "Academia Preuniversitaria Lima",
       "ruc": "20123456789",
       "website": "https://academia-lima.pe",
       "contactEmail": "contacto@academia-lima.pe"

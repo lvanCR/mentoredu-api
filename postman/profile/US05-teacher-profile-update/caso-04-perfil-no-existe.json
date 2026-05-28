@@ -1,15 +1,15 @@
 {
-  "scenario": "Alt error — Perfil de docente no existe (US08 no ejecutada)",
-  "gherkin": "Dado que mi perfil docente no existe, cuando intento modificarlo, entonces el sistema responde que el recurso no fue encontrado.",
+  "scenario": "Error — Perfil de docente no existe (nunca ejecutó POST /profiles/teacher)",
+  "gherkin": "Dado que mi perfil docente no existe, cuando intento modificarlo, entonces el sistema responde 404.",
   "request": {
     "method": "PATCH",
     "url": "{{api_v1}}/profiles/teacher/me",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{teacher_token}}"
     },
     "body": {
-      "specialty": "Matemáticas"
+      "bioProfessional": "Texto de prueba"
     }
   },
   "expected_response": {
@@ -20,5 +20,5 @@
       "message": "Teacher profile not found for user: <email>"
     }
   },
-  "note": "Usar un token de un usuario que completó US04 con TEACHER pero NO ejecutó US08."
+  "note": "Usar un token de un usuario TEACHER que nunca ejecutó POST /api/v1/profiles/teacher."
 }

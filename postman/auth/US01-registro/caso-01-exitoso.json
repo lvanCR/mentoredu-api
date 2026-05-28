@@ -3,7 +3,7 @@
   "gherkin": "Dado que soy un visitante con datos válidos y rol STUDENT, cuando envío POST /api/v1/auth/register, entonces recibo 201 con access token, refresh token y perfil base creado.",
   "request": {
     "method": "POST",
-    "url": "{{base_url}}/{{api_v1}}/auth/register",
+    "url": "{{api_v1}}/auth/register",
     "headers": {
       "Content-Type": "application/json"
     },
@@ -34,6 +34,7 @@
     "US01 Escenario 1: recibe 201 con access token JWT y refresh token (el usuario queda autenticado automáticamente).",
     "Se crea un registro base en la tabla profiles con profile_type=STUDENT (verificar con GET /api/v1/profiles/me usando el accessToken).",
     "La contraseña no aparece en la respuesta; se almacena cifrada con BCrypt (RN-02).",
-    "Guarda el accessToken como Bearer en la colección para las siguientes peticiones."
+    "Guarda el accessToken como Bearer en la colección para las siguientes peticiones.",
+    "URL: usar {{api_v1}}/auth/register (api_v1 ya incluye la URL base completa http://localhost:8080/api/v1)."
   ]
 }

@@ -96,7 +96,7 @@ public class ReactionService implements IReactionService {
             return Optional.of(toResponse(reactionRepository.save(r)));
         }
 
-        Reaction created = reactionRepository.save(Reaction.builder()
+        Reaction created = reactionRepository.saveAndFlush(Reaction.builder()
                 .user(user)
                 .targetType(targetType)
                 .targetId(targetId)

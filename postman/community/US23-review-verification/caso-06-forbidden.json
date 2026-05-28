@@ -1,0 +1,25 @@
+{
+  "name": "MentorEduCommunityUS23-ReviewVerificationForbiddenPATCH",
+  "description": "Caso 06 — Error: usuario con rol STUDENT intenta aprobar/rechazar una verificación. Espera 403 Forbidden (@PreAuthorize MODERATOR/ADMIN).",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/verification/requests/{{verification_id}}/review",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{student_token}}" },
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"action\": \"APPROVED\"\n}"
+    }
+  },
+  "expectedResponse": {
+    "status": 403,
+    "description": "Forbidden. Solo MODERATOR o ADMIN pueden revisar solicitudes de verificación.",
+    "body": {
+      "status": 403,
+      "error": "Forbidden",
+      "message": "No tienes permiso para realizar esta acción"
+    }
+  }
+}

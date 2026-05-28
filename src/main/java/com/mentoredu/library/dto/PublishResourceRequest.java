@@ -1,7 +1,6 @@
 package com.mentoredu.library.dto;
 
 import com.mentoredu.library.model.ResourceType;
-import com.mentoredu.library.model.ResourceVisibility;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -28,8 +27,6 @@ public class PublishResourceRequest {
 
     @NotNull(message = "resourceType is required")
     private ResourceType resourceType;
-
-    private ResourceVisibility visibility;
 
     private String description;
 

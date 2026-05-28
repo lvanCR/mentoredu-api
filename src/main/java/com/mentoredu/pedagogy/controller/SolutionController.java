@@ -51,4 +51,12 @@ public class SolutionController {
     public ResponseEntity<List<SolutionResponse>> list(@PathVariable UUID resourceId) {
         return ResponseEntity.ok(solutionService.listByResource(resourceId, SecurityUtils.currentEmail()));
     }
+
+    @GetMapping("/{resourceId}/solutions/{solutionId}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "US17 - Ver detalle de una resolución específica")
+    public ResponseEntity<SolutionResponse> getById(
+            @PathVariable UUID resourceId,
+            @PathVariable UUID solutionId) {
+        return ResponseEntity.ok(solutionService.getById(resourceId, solutionId, SecurityUtils.currentEmail()));
+    }
 }

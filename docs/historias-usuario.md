@@ -280,12 +280,14 @@ Cuando envío POST /api/v1/resources/files
 Entonces recibo 415 Unsupported Media Type
 ```
 
-**Escenario 3 — Rol incorrecto o sin autenticación**
+**Escenario 3 — Sin autenticación**
 ```gherkin
-Dado que soy STUDENT o no estoy autenticado
+Dado que no estoy autenticado
 Cuando intento POST /api/v1/resources/files
-Entonces recibo 403 Forbidden o 401 Unauthorized
+Entonces recibo 401 Unauthorized
 ```
+
+> **Nota de diseño:** STUDENT puede subir archivos a este endpoint porque lo necesita para enviar su resolución en US18 (POST /resources/{id}/solutions con fileId). La restricción de rol (RN-05) aplica en US08 al registrar metadatos públicos, no en la subida del archivo.
 
 **Reglas:** RN-05
 **Notificación:** ninguna
@@ -951,7 +953,7 @@ Entonces recibo 200 OK con mi historial de solicitudes
 **Escenario 1 — Aprobar verificación**
 ```gherkin
 Dado que hay una solicitud en status=PENDING
-Cuando envío PATCH /api/v1/verification/requests/{id}/process con {status: "APPROVED"}
+Cuando envío PATCH /api/v1/verification/requests/{id}/review con {action: "APPROVED", notes: "..."}
 Entonces recibo 200 OK
 Y la solicitud queda en status=APPROVED
 Y se dispara notificación tipo "verification_processed" al solicitante
@@ -960,15 +962,15 @@ Y se dispara notificación tipo "verification_processed" al solicitante
 **Escenario 2 — Rechazar verificación con razón**
 ```gherkin
 Dado que hay una solicitud en status=PENDING
-Cuando envío PATCH /api/v1/verification/requests/{id}/process con {status: "REJECTED", reason: "..."}
+Cuando envío PATCH /api/v1/verification/requests/{id}/review con {action: "REJECTED", notes: "..."}
 Entonces recibo 200 OK
 Y se dispara notificación tipo "verification_processed" al solicitante
 ```
 
-**Escenario 3 — Reason faltante en rechazo**
+**Escenario 3 — Notes faltante en rechazo**
 ```gherkin
-Dado que envío status=REJECTED sin proporcionar reason
-Cuando envío PATCH /api/v1/verification/requests/{id}/process
+Dado que envío action=REJECTED sin proporcionar notes
+Cuando envío PATCH /api/v1/verification/requests/{id}/review
 Entonces recibo 400 Bad Request con "Se requiere una razón para el rechazo"
 ```
 
@@ -993,23 +995,23 @@ Entonces recibo 409 Conflict con "La solicitud ya fue procesada"
 **Escenario 1 — Solicitud de asociación**
 ```gherkin
 Dado que soy TEACHER y la academia existe
-Cuando envío POST /api/v1/academies/{academyProfileId}/teachers/link
-Entonces recibo 201 Created con {linkId, status: "PENDING"}
+Cuando envío POST /api/v1/associations/teacher-academy con {academyProfileId: "<uuid>"}
+Entonces recibo 201 Created con {id, teacherProfileId, academyProfileId, status: "PENDING", requestedAt}
 ```
 
 **Escenario 2 — Academia acepta la solicitud**
 ```gherkin
 Dado que soy ACADEMY y hay un link en status=PENDING
-Cuando envío PATCH /api/v1/teacher-links/{linkId}/resolve con {status: "ACCEPTED"}
-Entonces recibo 200 OK con el link actualizado
+Cuando envío PATCH /api/v1/associations/teacher-academy/{id}/accept
+Entonces recibo 200 OK con el link actualizado en status=ACCEPTED
 Y se dispara notificación tipo "association_resolved" al docente
 ```
 
 **Escenario 3 — Academia rechaza la solicitud**
 ```gherkin
 Dado que soy ACADEMY y hay un link en status=PENDING
-Cuando envío PATCH /api/v1/teacher-links/{linkId}/resolve con {status: "REJECTED"}
-Entonces recibo 200 OK
+Cuando envío PATCH /api/v1/associations/teacher-academy/{id}/reject
+Entonces recibo 200 OK con el link actualizado en status=REJECTED
 Y se dispara notificación tipo "association_resolved" al docente
 ```
 
@@ -1073,9 +1075,9 @@ Entonces recibo 200 OK con los reportes abiertos paginados
 **Escenario 1 — Resolución exitosa**
 ```gherkin
 Dado que existe un reporte en status=OPEN
-Cuando envío PATCH /api/v1/moderation/reports/{id}/resolve con {action, notes}
+Cuando envío PATCH /api/v1/moderation/reports/{id}/resolve con {resolutionNote: "..."}
 Entonces recibo 200 OK con el reporte en status=RESOLVED
-Y se registra la acción en el log de auditoría (actorId + actionType + timestamp)
+Y se registra la acción en el log de auditoría (actorId + acción + timestamp) — RN-19
 ```
 
 **Escenario 2 — Reporte ya resuelto**
@@ -1121,7 +1123,7 @@ Entonces recibo 200 OK con lista vacía []
 ```gherkin
 Dado que existe una notificación no leída que me pertenece
 Cuando envío PATCH /api/v1/notifications/{id}/read
-Entonces recibo 200 OK con read_at actualizado al timestamp actual
+Entonces recibo 204 No Content (sin body) y read_at se actualiza en BD
 ```
 
 **Escenario 4 — Notificación no encontrada o de otro usuario**
@@ -1165,14 +1167,14 @@ Entonces recibo 404 Not Found
 **Escenario 1 — Crear universidad**
 ```gherkin
 Dado que soy ADMIN
-Cuando envío POST /api/v1/catalog/universities con {name, city, country}
+Cuando envío POST /api/v1/catalog/universities con {name, city}
 Entonces recibo 201 Created con la universidad registrada
 ```
 
-**Escenario 2 — Crear área de examen bajo una universidad**
+**Escenario 2 — Crear área bajo una universidad**
 ```gherkin
 Dado que soy ADMIN y la universidad existe
-Cuando envío POST /api/v1/catalog/universities/{id}/areas con {code, name}
+Cuando envío POST /api/v1/catalog/universities/{id}/areas con {name, description?}
 Entonces recibo 201 Created con el área registrada
 ```
 
@@ -1180,7 +1182,7 @@ Entonces recibo 201 Created con el área registrada
 ```gherkin
 Dado que soy ADMIN
 Cuando envío POST /api/v1/catalog/courses con {name}
-Y envío POST /api/v1/catalog/areas/{id}/courses/{courseId}
+Y envío PUT /api/v1/catalog/areas/{id}/courses/{courseId}
 Entonces recibo 201 Created en cada llamada
 Y el curso queda asociado al área
 ```
@@ -1188,7 +1190,7 @@ Y el curso queda asociado al área
 **Escenario 4 — Crear carrera**
 ```gherkin
 Dado que soy ADMIN y la universidad y el área existen
-Cuando envío POST /api/v1/catalog/universities/{id}/careers con {name, areaId}
+Cuando envío POST /api/v1/catalog/universities/{id}/careers con {areaId, name, description?}
 Entonces recibo 201 Created con la carrera registrada
 ```
 

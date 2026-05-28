@@ -9,10 +9,17 @@
       { "key": "Content-Type", "value": "application/json" }
     ],
     "body": {
-      "decision": "REJECTED"
+      "mode": "raw",
+      "raw": "{\n  \"action\": \"REJECTED\"\n}"
     }
   },
   "expectedResponse": {
-    "status": 400
-  }
+    "status": 400,
+    "body": {
+      "status": 400,
+      "error": "Bad Request",
+      "message": "Se requiere una razón para el rechazo (RN-17)"
+    }
+  },
+  "note": "Usar 'action' (no 'decision'). Para REJECTED sin notes, el servicio debe retornar 400."
 }

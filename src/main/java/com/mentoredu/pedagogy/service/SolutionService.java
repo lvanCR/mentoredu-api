@@ -43,6 +43,8 @@ public class SolutionService implements ISolutionService {
         if (!resource.isAceptaResoluciones())
             throw new SolutionAccessDeniedException("Este recurso no acepta resoluciones");
         User student = userService.findByEmailOrThrow(studentEmail);
+        if (!"STUDENT".equals(student.getRole().getName()))
+            throw new SolutionAccessDeniedException("Solo los estudiantes pueden enviar resoluciones");
         if (solutionRepository.existsByResourceIdAndStudentId(resourceId, student.getId()))
             throw new DuplicateSolutionException("Ya enviaste una resolución para este ejercicio");
         if (request.fileUrl() == null && request.content() == null)
@@ -67,6 +69,20 @@ public class SolutionService implements ISolutionService {
             .orElseThrow(() -> new SolutionNotFoundException("No has enviado resolución para este ejercicio"));
         var feedback = feedbackEntryRepository.findBySolutionId(solution.getId()).orElse(null);
         return MySolutionWithFeedbackResponse.of(solution, feedback);
+    }
+
+    @Override
+    public SolutionResponse getById(UUID resourceId, UUID solutionId, String requesterEmail) {
+        Resource resource = resourceRepository.findById(resourceId)
+            .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
+        User requester = userService.findByEmailOrThrow(requesterEmail);
+        if (!resourceAuthorizationService.isAuthorizedForResource(resource, requester))
+            throw new SolutionAccessDeniedException("Solo el autor del ejercicio puede ver las resoluciones");
+        Solution solution = solutionRepository.findById(solutionId)
+            .orElseThrow(() -> new SolutionNotFoundException("Resolución no encontrada: " + solutionId));
+        if (!solution.getResourceId().equals(resourceId))
+            throw new SolutionNotFoundException("La resolución no pertenece a este ejercicio");
+        return SolutionResponse.from(solution);
     }
 
     @Override

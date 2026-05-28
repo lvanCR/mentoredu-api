@@ -23,6 +23,7 @@ import com.mentoredu.community.exception.NotAssociationOwnerException;
 import com.mentoredu.community.exception.NotificationNotFoundException;
 import com.mentoredu.community.exception.ReportAlreadyResolvedException;
 import com.mentoredu.community.exception.ReportNotFoundException;
+import com.mentoredu.community.exception.ReportTargetNotFoundException;
 import com.mentoredu.community.exception.SelfFollowException;
 import com.mentoredu.community.exception.TeacherProfileRequiredException;
 import com.mentoredu.community.exception.VerificationNotFoundException;
@@ -227,7 +228,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(WrongProfileTypeException.class)
     public ResponseEntity<Map<String, Object>> handle(WrongProfileTypeException ex) {
-        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage()));
     }
 
     // ── Library ───────────────────────────────────────────────────────────────
@@ -263,7 +264,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidFileTypeException.class)
     public ResponseEntity<Map<String, Object>> handle(InvalidFileTypeException ex) {
-        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+            .body(body(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported Media Type", ex.getMessage()));
     }
 
     @ExceptionHandler(FileSizeLimitExceededException.class)
@@ -279,8 +281,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ThreadClosedException.class)
     public ResponseEntity<Map<String, Object>> handle(ThreadClosedException ex) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-            .body(body(HttpStatus.UNPROCESSABLE_ENTITY, "Unprocessable Entity", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(body(HttpStatus.CONFLICT, "Conflict", ex.getMessage()));
     }
 
     @ExceptionHandler(ThreadNotOwnedException.class)
@@ -342,6 +344,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ReportNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handle(ReportNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ReportTargetNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handle(ReportTargetNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage()));
     }
 

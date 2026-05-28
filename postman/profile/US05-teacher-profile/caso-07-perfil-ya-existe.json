@@ -1,16 +1,15 @@
 {
-  "scenario": "Error — Perfil de docente ya existe (RN-09)",
-  "gherkin": "Dado que ya tengo un perfil docente creado, cuando intento crear otro, entonces el sistema lo rechaza.",
+  "scenario": "Error — Perfil de docente ya existe",
+  "gherkin": "Dado que ya tengo un perfil docente creado, cuando intento crear otro, entonces el sistema lo rechaza con 409.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/profiles/teacher",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{teacher_token}}"
     },
     "body": {
-      "specialty": "Química",
-      "institutionName": "Academia Lumbre"
+      "bioProfessional": "Docente experimentado."
     }
   },
   "expected_response": {

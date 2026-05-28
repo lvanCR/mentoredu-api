@@ -1,6 +1,6 @@
 {
   "scenario": "Sin autenticación — Sin token Bearer",
-  "gherkin": "Dado que no estoy autenticado, cuando intento actualizar la universidad objetivo, entonces el sistema rechaza el acceso.",
+  "gherkin": "Dado que no estoy autenticado, cuando intento actualizar el perfil de estudiante, entonces el sistema rechaza el acceso con 401.",
   "request": {
     "method": "PATCH",
     "url": "{{api_v1}}/profiles/student/me",
@@ -8,7 +8,7 @@
       "Content-Type": "application/json"
     },
     "body": {
-      "targetUniversity": "UNMSM"
+      "targetUniversityId": "{{university_id}}"
     }
   },
   "expected_response": {

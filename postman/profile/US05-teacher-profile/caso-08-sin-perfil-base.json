@@ -1,16 +1,15 @@
 {
-  "scenario": "Error — Perfil base no existe (US04 no fue ejecutada)",
-  "gherkin": "Dado que no he seleccionado tipo de cuenta, cuando intento crear el perfil docente, entonces el sistema responde que el recurso no fue encontrado.",
+  "scenario": "Error — Perfil base no existe (US01 sin US04 completada)",
+  "gherkin": "Dado que no he completado el perfil base, cuando intento crear el perfil docente, entonces el sistema responde 404.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/profiles/teacher",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{teacher_token}}"
     },
     "body": {
-      "specialty": "Matemáticas",
-      "institutionName": "Academia Lumbre"
+      "bioProfessional": "Texto de prueba"
     }
   },
   "expected_response": {
@@ -21,5 +20,5 @@
       "message": "Profile not found for user: <email>"
     }
   },
-  "note": "Usar un token de un usuario que solo completó US01+US02, sin US04."
+  "note": "Usar un token de un usuario que solo completó US01+US02, sin completar el paso de creación de perfil base."
 }

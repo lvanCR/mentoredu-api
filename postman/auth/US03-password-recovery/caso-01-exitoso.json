@@ -13,9 +13,8 @@
   "expected_response": {
     "status": 200,
     "body": {
-      "message": "Recovery token generated. In production this would be sent via email.",
-      "token": "<hex_token_64_chars>"
+      "message": "Si existe una cuenta con ese correo, recibirás un enlace de recuperación en breve."
     }
   },
-  "notes": "Copiar el valor de 'token' para usarlo en HU26 reset-password."
+  "notes": "El token NO se devuelve en la respuesta. En entorno dev, buscar en la consola del servidor una línea como: '[DEV] Password reset link for juan@example.com: http://localhost:4200/reset-password?token=<TOKEN>'. Copiar ese token (cadena hex de 64 caracteres) para usarlo en US03-reset-password/caso-01-exitoso."
 }

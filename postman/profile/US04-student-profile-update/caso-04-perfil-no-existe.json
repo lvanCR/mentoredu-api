@@ -1,6 +1,6 @@
 {
-  "scenario": "Alt error — Perfil de estudiante no existe (US06 no ejecutada)",
-  "gherkin": "Dado que mi perfil de estudiante no existe, cuando intento editarlo, entonces el sistema responde que el recurso no fue encontrado.",
+  "scenario": "Error — Perfil de estudiante no existe (POST /profiles/student no ejecutada)",
+  "gherkin": "Dado que mi perfil de estudiante no existe, cuando intento editarlo, entonces el sistema responde 404.",
   "request": {
     "method": "PATCH",
     "url": "{{api_v1}}/profiles/student/me",
@@ -9,7 +9,7 @@
       "Authorization": "Bearer {{access_token}}"
     },
     "body": {
-      "targetUniversity": "UNMSM"
+      "targetUniversityId": "{{university_id}}"
     }
   },
   "expected_response": {
@@ -20,5 +20,5 @@
       "message": "Student profile not found for user: <email>"
     }
   },
-  "note": "Usar un token de un usuario que completó US04 con STUDENT pero NO ejecutó US06."
+  "note": "Usar un token de un usuario STUDENT que nunca ejecutó POST /api/v1/profiles/student."
 }

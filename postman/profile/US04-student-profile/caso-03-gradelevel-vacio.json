@@ -9,7 +9,7 @@
     "url": { "raw": "{{api_v1}}/profiles/student" },
     "body": {
       "mode": "raw",
-      "raw": "{\n  \"gradeLevel\": \"\",\n  \"targetUniversity\": \"UNMSM\"\n}"
+      "raw": "{\n  \"gradeLevel\": \"\"\n}"
     }
   },
   "response": {

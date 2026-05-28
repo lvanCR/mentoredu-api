@@ -1,0 +1,21 @@
+{
+  "name": "MentorEduCommunityUS24-ResolveAssociationForbiddenPATCH",
+  "description": "Caso 05 — Error: usuario que NO es la academia destino intenta aceptar/rechazar la solicitud. Espera 403 Forbidden.",
+  "request": {
+    "method": "PATCH",
+    "url": "{{api_v1}}/associations/teacher-academy/{{association_id}}/accept",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{teacher_token}}" }
+    ]
+  },
+  "expectedResponse": {
+    "status": 403,
+    "description": "Forbidden. Solo el usuario de la academia destino puede aceptar o rechazar la solicitud de asociación.",
+    "body": {
+      "status": 403,
+      "error": "Forbidden",
+      "message": "No tienes permiso para resolver esta solicitud"
+    }
+  },
+  "note": "Usar {{teacher_token}} (TEACHER) intentando resolver una asociación dirigida a la academia {{academy_profile_id}}. Solo el usuario con perfil de academia puede resolver."
+}

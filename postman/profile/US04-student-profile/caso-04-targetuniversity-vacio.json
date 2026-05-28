@@ -1,5 +1,5 @@
 {
-  "name": "MentorEduProfileHU06-CreateStudentProfilePOST-TargetUniversityVacio",
+  "name": "MentorEduProfileHU06-CreateStudentProfilePOST-GradeLevelFaltante",
   "request": {
     "method": "POST",
     "header": [
@@ -9,11 +9,12 @@
     "url": { "raw": "{{api_v1}}/profiles/student" },
     "body": {
       "mode": "raw",
-      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversity\": \"\"\n}"
+      "raw": "{\n  \"targetUniversityId\": \"{{university_id}}\"\n}"
     }
   },
   "response": {
     "status": 400,
-    "description": "targetUniversity vacío. La respuesta incluye 'details.targetUniversity' con mensaje de validación."
-  }
+    "description": "gradeLevel es obligatorio. Al omitirlo se espera 400 Bad Request con details.gradeLevel."
+  },
+  "note": "gradeLevel es el único campo obligatorio. targetUniversityId, targetAreaId y targetCareerId son opcionales."
 }

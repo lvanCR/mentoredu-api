@@ -1,15 +1,15 @@
 {
-  "scenario": "Alt error — Nombre institucional ya registrado por otra organización",
-  "gherkin": "Dado que el nombre institucional ya existe, cuando intento registrarlo, entonces el sistema devuelve un error de duplicidad.",
+  "scenario": "Alt error — Nombre de academia ya registrado por otra cuenta",
+  "gherkin": "Dado que el nombre de la academia ya existe, cuando intento registrarlo, entonces el sistema devuelve un error de duplicidad.",
   "request": {
     "method": "POST",
-    "url": "{{api_v1}}/profiles/organization",
+    "url": "{{api_v1}}/profiles/academy",
     "headers": {
       "Content-Type": "application/json",
-      "Authorization": "Bearer {{access_token}}"
+      "Authorization": "Bearer {{academy_token}}"
     },
     "body": {
-      "organizationName": "Academia Preuniversitaria Lima"
+      "academyName": "Academia Preuniversitaria Lima"
     }
   },
   "expected_response": {
@@ -17,8 +17,8 @@
     "body": {
       "status": 409,
       "error": "Conflict",
-      "message": "An organization with this name already exists: Academia Preuniversitaria Lima"
+      "message": "An academy with this name already exists: Academia Preuniversitaria Lima"
     }
   },
-  "note": "Usar un token de cuenta ORGANIZATION distinta a la que ya registró ese nombre."
+  "note": "Usar un token de cuenta ACADEMY distinta a la que ya registró ese nombre."
 }

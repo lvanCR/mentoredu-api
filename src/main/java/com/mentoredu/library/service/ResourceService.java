@@ -13,7 +13,6 @@ import com.mentoredu.library.exception.CareerAreaMismatchException;
 import com.mentoredu.library.exception.CourseIdRequiredException;
 import com.mentoredu.library.exception.ResourceAccessDeniedException;
 import com.mentoredu.library.exception.ResourceNotFoundException;
-import com.mentoredu.library.model.ResourceVisibility;
 import com.mentoredu.library.model.DownloadLog;
 import com.mentoredu.library.model.Resource;
 import com.mentoredu.library.model.ResourceType;
@@ -43,6 +42,13 @@ public class ResourceService implements IResourceService {
     public ResourceResponse publish(PublishResourceRequest request, String authorEmail) {
         User author = userService.findByEmailOrThrow(authorEmail);
 
+        // RN-05: solo TEACHER, ACADEMY y ADMIN pueden publicar recursos
+        String role = author.getRole().getName();
+        if (!"TEACHER".equals(role) && !"ACADEMY".equals(role) && !"ADMIN".equals(role)) {
+            throw new ResourceAccessDeniedException(
+                    "Solo docentes, academias y administradores pueden publicar recursos (RN-05)");
+        }
+
         ResourceType type = request.getResourceType();
 
         // RN-07: course_id obligatorio salvo para EXAMEN_COMPLETO, GUIA y APUNTES
@@ -58,13 +64,15 @@ public class ResourceService implements IResourceService {
                     "Solo los recursos de tipo PRACTICA aceptan resoluciones (RN-08)");
         }
 
-        // RN-05: solo TEACHER, ACADEMY y ADMIN pueden activar aceptaResoluciones
-        if (aceptaResoluciones) {
-            String role = author.getRole().getName();
-            if (!"TEACHER".equals(role) && !"ACADEMY".equals(role) && !"ADMIN".equals(role)) {
-                throw new ResourceAccessDeniedException(
-                        "Solo docentes, academias y administradores pueden activar aceptaResoluciones (RN-05)");
-            }
+        // Validar existencia en catálogo (RN-03)
+        if (!catalogService.universityExists(request.getUniversityId())) {
+            throw new IllegalArgumentException("Valor no encontrado en catálogo: universityId=" + request.getUniversityId());
+        }
+        if (!catalogService.areaExists(request.getAreaId())) {
+            throw new IllegalArgumentException("Valor no encontrado en catálogo: areaId=" + request.getAreaId());
+        }
+        if (request.getCourseId() != null && !catalogService.courseExists(request.getCourseId())) {
+            throw new IllegalArgumentException("Valor no encontrado en catálogo: courseId=" + request.getCourseId());
         }
 
         // RN-23: si career_id presente, la carrera debe pertenecer al area_id enviado
@@ -74,9 +82,6 @@ public class ResourceService implements IResourceService {
                     "La carrera no pertenece al área seleccionada (RN-23)");
         }
 
-        ResourceVisibility visibility = request.getVisibility() != null
-                ? request.getVisibility() : ResourceVisibility.PUBLIC;
-
         Resource resource = Resource.builder()
                 .author(author)
                 .title(request.getTitle())
@@ -85,7 +90,6 @@ public class ResourceService implements IResourceService {
                 .careerId(request.getCareerId())
                 .courseId(request.getCourseId())
                 .resourceType(type)
-                .visibility(visibility)
                 .description(request.getDescription())
                 .aceptaResoluciones(aceptaResoluciones)
                 .fileUrl(request.getFileUrl())
@@ -130,15 +134,9 @@ public class ResourceService implements IResourceService {
 
     @Override
     @Transactional(readOnly = true)
-    public ResourceResponse getById(UUID resourceId, String requesterEmail) {
+    public ResourceResponse getById(UUID resourceId) {
         Resource resource = resourceRepository.findById(resourceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
-        if (resource.getVisibility() == ResourceVisibility.PRIVATE) {
-            User requester = userService.findByEmailOrThrow(requesterEmail);
-            if (!resource.getAuthor().getId().equals(requester.getId())) {
-                throw new ResourceAccessDeniedException("No tienes acceso a este recurso");
-            }
-        }
         return new ResourceResponse(resource);
     }
 
@@ -203,11 +201,6 @@ public class ResourceService implements IResourceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
 
         User user = userService.findByEmailOrThrow(userEmail);
-
-        if (resource.getVisibility() == ResourceVisibility.PRIVATE
-                && !resource.getAuthor().getId().equals(user.getId())) {
-            throw new ResourceAccessDeniedException("No tienes acceso a este recurso");
-        }
 
         downloadLogRepository.save(DownloadLog.builder()
                 .user(user)

@@ -1,0 +1,25 @@
+{
+  "name": "MentorEduCommunityUS26-ResolveReportNoAuthPATCH",
+  "description": "Caso 05 — Error: sin token JWT. Espera 401 Unauthorized.",
+  "request": {
+    "method": "PATCH",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "url": {
+      "raw": "{{api_v1}}/moderation/reports/{{report_id}}/resolve",
+      "host": ["{{api_v1}}"],
+      "path": ["moderation", "reports", "{{report_id}}", "resolve"]
+    },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"resolutionNote\": \"Intento sin autenticación\"\n}"
+    }
+  },
+  "expectedStatus": 401,
+  "expectedBody": {
+    "status": 401,
+    "error": "Unauthorized",
+    "message": "Autenticación requerida."
+  }
+}

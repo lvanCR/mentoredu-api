@@ -1,0 +1,24 @@
+{
+  "name": "MentorEduCommunityUS22-SubmitVerificationNoAuthPOST",
+  "description": "Caso 06 — Error: sin token JWT. Espera 401 Unauthorized.",
+  "request": {
+    "method": "POST",
+    "url": "{{api_v1}}/verification/requests",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"entityType\": \"TEACHER\",\n  \"documentType\": \"DNI\",\n  \"fileUrl\": \"https://docs.example.com/docente-dni.pdf\"\n}"
+    }
+  },
+  "expectedResponse": {
+    "status": 401,
+    "description": "Unauthorized. Se requiere autenticación JWT para enviar una solicitud de verificación.",
+    "body": {
+      "status": 401,
+      "error": "Unauthorized",
+      "message": "Autenticación requerida."
+    }
+  }
+}

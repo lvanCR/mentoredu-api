@@ -8,12 +8,17 @@
     ],
     "url": { "raw": "{{api_v1}}/profiles/student" },
     "body": {
-      "mode": "raw",
-      "raw": "{\n  \"gradeLevel\": \"5TO_SECUNDARIA\",\n  \"targetUniversity\": \"Universidad Nacional Mayor de San Marcos\"\n}"
+      "gradeLevel":"5TO_SECUNDARIA",
+      "schoolName": "ZARATITO",
+      "studyShift": null,
+      "targetAreaId": null,
+      "targetCareerId": null,
+      "targetUniversityId": null
     }
   },
   "response": {
     "status": 201,
-    "description": "Perfil de estudiante creado. profileId coincide con el id del perfil base (US04). Campos opcionales quedan en null."
-  }
+    "description": "Perfil de estudiante creado. targetUniversityId debe ser un UUID del catálogo (usar {{university_id}} del entorno). Campos opcionales quedan en null."
+  },
+  "note": "targetUniversityId, targetAreaId y targetCareerId son UUIDs del catálogo. Usar las variables de entorno {{university_id}}, {{area_id}}, {{career_id}}."
 }

@@ -1,6 +1,6 @@
 {
   "description": "Caso 1: Reseteo de contraseña con token válido y vigente",
-  "prerequisite": "Ejecutar HU03 caso-01 y copiar el token de la respuesta",
+  "prerequisite": "Ejecutar US03-password-recovery/caso-01. El token NO está en la respuesta JSON: buscarlo en la consola del servidor (línea '[DEV] Password reset link for ...'). Copiar la cadena hex de 64 caracteres que aparece después de '?token='.",
   "request": {
     "method": "POST",
     "url": "{{api_v1}}/auth/reset-password",
