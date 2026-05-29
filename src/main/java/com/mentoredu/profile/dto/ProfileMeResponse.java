@@ -1,5 +1,6 @@
 package com.mentoredu.profile.dto;
 
+import com.mentoredu.auth.entity.User;
 import com.mentoredu.profile.model.Profile;
 import lombok.Getter;
 
@@ -29,5 +30,25 @@ public class ProfileMeResponse {
         this.profileType       = profile.getProfileType();
         this.isProfileComplete = isProfileComplete;
         this.createdAt         = profile.getCreatedAt();
+    }
+
+    private ProfileMeResponse(UUID id, UUID userId, String displayName, String profileType,
+                              LocalDateTime createdAt) {
+        this.id                = id;
+        this.userId            = userId;
+        this.displayName       = displayName;
+        this.avatarUrl         = null;
+        this.city              = null;
+        this.bio               = null;
+        this.profileType       = profileType;
+        this.isProfileComplete = true;
+        this.createdAt         = createdAt;
+    }
+
+    /** Synthetic response for system users (ADMIN, MODERATOR) who have no profile record. */
+    public static ProfileMeResponse forSystemUser(User user) {
+        String displayName = (user.getFirstName() + " " + user.getLastName()).trim();
+        String roleName = user.getRole() != null ? user.getRole().getName() : null;
+        return new ProfileMeResponse(null, user.getId(), displayName, roleName, user.getCreatedAt());
     }
 }

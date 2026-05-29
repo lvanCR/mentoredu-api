@@ -2,6 +2,8 @@ spring:
   main:
     lazy-initialization: true
     banner-mode: off
+  mvc:
+    log-resolved-exception: false
   jpa:
     hibernate:
       ddl-auto: validate
