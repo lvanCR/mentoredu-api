@@ -14,8 +14,10 @@ public interface IProfileService {
     StudentProfileResponse updateStudentProfile(String email, UpdateStudentProfileRequest request);
 
     TeacherProfileResponse createTeacherProfile(String email, CreateTeacherProfileRequest request);
+    TeacherProfileResponse getTeacherProfile(String email);
     TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request);
 
     AcademyProfileResponse createAcademyProfile(String email, CreateAcademyProfileRequest request);
+    AcademyProfileResponse getAcademyProfile(String email);
     AcademyProfileResponse updateAcademyProfile(String email, UpdateAcademyProfileRequest request);
 }
