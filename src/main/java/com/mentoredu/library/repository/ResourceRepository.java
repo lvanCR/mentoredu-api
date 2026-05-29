@@ -22,7 +22,6 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
           AND (:areaId IS NULL OR r.area_id = :areaId)
           AND (:careerId IS NULL OR r.career_id = :careerId)
           AND (:courseId IS NULL OR r.course_id = :courseId)
-          AND r.visibility != 'PRIVATE'
         ORDER BY r.created_at DESC
         """,
         countQuery = """
@@ -34,7 +33,6 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
           AND (:areaId IS NULL OR r.area_id = :areaId)
           AND (:careerId IS NULL OR r.career_id = :careerId)
           AND (:courseId IS NULL OR r.course_id = :courseId)
-          AND r.visibility != 'PRIVATE'
         """,
         nativeQuery = true)
     Page<Resource> search(
