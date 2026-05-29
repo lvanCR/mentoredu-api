@@ -40,7 +40,6 @@ application-local.yml
 application-local.properties
 .env
 .claude/
-historias-usuario-documentacion.md
 EVALUACION_TB3.md
 ejecucion.md
 PRUEBAS_FINALES.md
