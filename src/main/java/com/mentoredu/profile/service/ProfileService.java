@@ -58,14 +58,19 @@ public class ProfileService implements IProfileService {
     public ProfileMeResponse getMyProfile(String email) {
         User user = userService.findByEmailOrThrow(email);
 
-        Profile profile = profileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
+        // ADMIN / MODERATOR are provisioned directly in the DB with no profile record.
+        // Return a synthetic response so they don't see a 404.
+        Profile profile = profileRepository.findByUserId(user.getId()).orElse(null);
+        if (profile == null) {
+            return ProfileMeResponse.forSystemUser(user);
+        }
 
-        boolean complete = switch (profile.getProfileType()) {
+        String type = profile.getProfileType();
+        boolean complete = switch (type != null ? type : "") {
             case "STUDENT" -> studentProfileRepository.existsById(profile.getId());
             case "TEACHER" -> teacherProfileRepository.existsById(profile.getId());
             case "ACADEMY" -> academyProfileRepository.existsById(profile.getId());
-            default        -> false;
+            default        -> true; // system roles: base profile counts as complete
         };
 
         return new ProfileMeResponse(profile, complete);

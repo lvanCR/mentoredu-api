@@ -1,16 +1,9 @@
 spring:
   main:
     lazy-initialization: true
-    banner-mode: "off"
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    hikari:
-      minimum-idle: 1
-      maximum-pool-size: 5
-      connection-timeout: 20000
-      initialization-fail-timeout: 60000
+    banner-mode: off
+  mvc:
+    log-resolved-exception: false
   jpa:
     hibernate:
       ddl-auto: update
