@@ -1,0 +1,119 @@
+@startuml MentorEdu_Components_Clean
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+' === CONFIGURACIÓN PARA EVITAR DISPERSIÓN VISUAL ===
+LAYOUT_WITH_LEGEND()
+skinparam ArrowTextAlignment center
+
+title MentorEdu API — Level 3: Componentes (Organización interna por Bounded Context)
+
+Container(spa, "Single-Page Application", "Angular", "Interfaz de usuario web interactiva que envía peticiones HTTP y maneja tokens JWT.")
+
+Container_Boundary(api_boundary, "API Application (Spring Boot)") {
+
+    Component(security_cfg, "SecurityConfig", "Spring Security", "Intercepta peticiones, valida firmas de tokens JWT, maneja Rate Limiting y aplica políticas de autorización globales.")
+
+    ' === AUTH BOUNDED CONTEXT ===
+    Boundary(auth_module, "Auth Context") {
+        Component(auth_ctrl, "AuthController", "Spring RestController", "Endpoints para registro, inicio/cierre de sesión y recuperación de claves.")
+        Component(auth_svc, "AuthService", "Spring Service", "Cifra contraseñas (BCrypt), emite/revoca tokens de acceso y gestiona ciclos de sesión.")
+        Component(auth_repo, "AuthRepository", "Spring Data JPA", "Acceso a credenciales e historial de sesiones de usuarios.")
+    }
+
+    ' === PROFILE BOUNDED CONTEXT ===
+    Boundary(profile_module, "Profile Context") {
+        Component(prof_ctrl, "ProfileController", "Spring RestController", "Endpoints para la gestión y lectura de perfiles públicos y privados.")
+        Component(prof_svc, "ProfileService", "Spring Service", "Orquesta la lógica de perfiles de Estudiantes, Docentes y Academias.")
+        Component(prof_repo, "ProfileRepository", "Spring Data JPA", "Persistencia de datos académicos y biografías profesionales.")
+    }
+
+    ' === LIBRARY BOUNDED CONTEXT ===
+    Boundary(library_module, "Library Context") {
+        Component(lib_ctrl, "ResourceController", "Spring RestController", "Endpoints para catalogar, buscar, filtrar y descargar recursos.")
+        Component(lib_svc, "ResourceService", "Spring Service", "Valida metadatos de documentos y gestiona la disponibilidad de recursos evaluables.")
+        Component(lib_repo, "ResourceRepository", "Spring Data JPA", "Persistencia de metadatos de recursos y colecciones en PDF.")
+    }
+
+    ' === FORUM BOUNDED CONTEXT ===
+    Boundary(forum_module, "Forum Context") {
+        Component(forum_ctrl, "ForumController", "Spring RestController", "Endpoints para la creación de hilos, respuestas, comentarios y reacciones.")
+        Component(forum_svc, "ForumService", "Spring Service", "Reglas de control de hilos abiertos/cerrados, anonimato controlado y toggles de interacción.")
+        Component(forum_repo, "ForumRepository", "Spring Data JPA", "Operaciones CRUD para hilos, posts, comentarios y me gusta.")
+    }
+
+    ' === PEDAGOGY BOUNDED CONTEXT ===
+    Boundary(pedagogy_module, "Pedagogy Context") {
+        Component(ped_ctrl, "SolutionController", "Spring RestController", "Endpoints para envíos de tareas por alumnos y correcciones de docentes.")
+        Component(ped_svc, "PedagogyService", "Spring Service", "Controla la inmutabilidad del feedback entregado y valida escalas de notas.")
+        Component(ped_repo, "PedagogyRepository", "Spring Data JPA", "Almacena los registros formales de soluciones y retroalimentaciones.")
+    }
+
+    ' === COMMUNITY BOUNDED CONTEXT ===
+    Boundary(community_module, "Community Context") {
+        Component(comm_ctrl, "CommunityController", "Spring RestController", "Endpoints para seguimiento, solicitudes de verificación, reportes y avisos.")
+        Component(comm_svc, "CommunityService", "Spring Service", "Gestiona la capa de confianza: auditoría de moderación, vínculos docente-academia y notificaciones.")
+        Component(comm_repo, "CommunityRepository", "Spring Data JPA", "Persistencia de relaciones de seguimiento, reportes, avisos y trazas.")
+    }
+
+    ' === CATALOG BOUNDED CONTEXT ===
+    Boundary(catalog_module, "Catalog Context") {
+        Component(cat_ctrl, "CatalogController", "Spring RestController", "Endpoints públicos y administrativos para la lectura del catálogo.")
+        Component(cat_svc, "CatalogService", "Spring Service", "Provee acceso de solo lectura o administración exclusiva a los datos maestros del sistema.")
+        Component(cat_repo, "CatalogRepository", "Spring Data JPA", "Lectura optimizada de universidades, áreas, cursos y carreras.")
+    }
+}
+
+ContainerDb(db, "Database", "PostgreSQL 16", "Esquema relacional con tablas organizadas por dominios lógicos.")
+
+System_Ext(cloudinary, "Cloudinary", "Almacenamiento de archivos PDF (Materiales y Soluciones).")
+System_Ext(sendgrid, "SendGrid", "Envío de emails transaccionales (Tokens de recuperación y alertas de moderación/comunidad).")
+
+' === INTERACCIONES DEL FRONTEND ===
+Rel(spa, security_cfg, "Protege peticiones vía Filtros", "HTTPS/JWT")
+Rel(spa, auth_ctrl, "Consume", "HTTPS/JSON")
+Rel(spa, prof_ctrl, "Consume", "HTTPS/JSON")
+Rel(spa, lib_ctrl, "Consume", "HTTPS/JSON")
+Rel(spa, forum_ctrl, "Consume", "HTTPS/JSON")
+Rel(spa, ped_ctrl, "Consume", "HTTPS/JSON")
+Rel(spa, comm_ctrl, "Consume", "HTTPS/JSON")
+Rel(spa, cat_ctrl, "Consume", "HTTPS/JSON")
+
+' === RELACIONES INTERNAS POR CAPAS ===
+Rel(auth_ctrl, auth_svc, "Llama")
+Rel(auth_svc, auth_repo, "Usa")
+Rel(auth_svc, sendgrid, "Envía link de recuperación", "HTTPS/API")
+
+Rel(prof_ctrl, prof_svc, "Llama")
+Rel(prof_svc, prof_repo, "Usa")
+Rel(prof_svc, cat_svc, "Valida datos maestros", "Llamada Interna")
+
+Rel(lib_ctrl, lib_svc, "Llama")
+Rel(lib_svc, lib_repo, "Usa")
+Rel(lib_svc, cloudinary, "Sube/Descarga PDFs", "HTTPS/API")
+Rel(lib_svc, cat_svc, "Valida consistencia carrera-área", "Llamada Interna")
+
+Rel(forum_ctrl, forum_svc, "Llama")
+Rel(forum_svc, forum_repo, "Usa")
+
+Rel(ped_ctrl, ped_svc, "Llama")
+Rel(ped_svc, ped_repo, "Usa")
+Rel(ped_svc, lib_svc, "Verifica si recurso acepta resoluciones", "Llamada Interna")
+
+Rel(comm_ctrl, comm_svc, "Llama")
+Rel(comm_svc, comm_repo, "Usa")
+Rel(comm_svc, auth_svc, "Valida sesión y roles del emisor", "Llamada Interna")
+Rel(comm_svc, sendgrid, "Notifica resoluciones de verificación y vínculos", "HTTPS/API")
+
+Rel(cat_ctrl, cat_svc, "Llama")
+Rel(cat_svc, cat_repo, "Usa")
+
+' === PERSISTENCIA ===
+Rel(auth_repo, db, "Escribe/Lee", "JDBC/JPA")
+Rel(prof_repo, db, "Escribe/Lee", "JDBC/JPA")
+Rel(lib_repo, db, "Escribe/Lee", "JDBC/JPA")
+Rel(forum_repo, db, "Escribe/Lee", "JDBC/JPA")
+Rel(ped_repo, db, "Escribe/Lee", "JDBC/JPA")
+Rel(comm_repo, db, "Escribe/Lee", "JDBC/JPA")
+Rel(cat_repo, db, "Escribe/Lee", "JDBC/JPA")
+
+@enduml

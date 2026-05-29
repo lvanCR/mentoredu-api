@@ -67,6 +67,12 @@ public class ProfileController {
                 .body(profileService.createTeacherProfile(SecurityUtils.currentEmail(), request));
     }
 
+    @GetMapping("/teacher/me")
+    @Operation(summary = "US05 - Obtener mi perfil de docente")
+    public ResponseEntity<TeacherProfileResponse> getMyTeacherProfile() {
+        return ResponseEntity.ok(profileService.getTeacherProfile(SecurityUtils.currentEmail()));
+    }
+
     @PatchMapping("/teacher/me")
     @Operation(summary = "US05 - Actualizar perfil de docente")
     public ResponseEntity<TeacherProfileResponse> updateTeacherProfile(
@@ -81,6 +87,12 @@ public class ProfileController {
             @Valid @RequestBody CreateAcademyProfileRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(profileService.createAcademyProfile(SecurityUtils.currentEmail(), request));
+    }
+
+    @GetMapping("/academy/me")
+    @Operation(summary = "US06 - Obtener mi perfil de academia")
+    public ResponseEntity<AcademyProfileResponse> getMyAcademyProfile() {
+        return ResponseEntity.ok(profileService.getAcademyProfile(SecurityUtils.currentEmail()));
     }
 
     @PatchMapping("/academy/me")

@@ -78,7 +78,7 @@ class ResourceFileControllerTest {
 
     @Test
     @WithMockUser(username = "user@example.com")
-    void upload_withNonPdfFile_returns400() throws Exception {
+    void upload_withNonPdfFile_returns415() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "document.docx",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -90,8 +90,8 @@ class ResourceFileControllerTest {
                         + "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
 
         mockMvc.perform(multipart("/api/v1/resources/files").file(file))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.error").value("Unsupported Media Type"))
                 .andExpect(jsonPath("$.message").exists());
     }
 
@@ -115,7 +115,7 @@ class ResourceFileControllerTest {
 
     @Test
     @WithMockUser(username = "user@example.com")
-    void upload_withCorruptedPdf_returns400() throws Exception {
+    void upload_withCorruptedPdf_returns415() throws Exception {
         byte[] corruptedContent = "CORRUPT_DATA_NOT_PDF".getBytes(StandardCharsets.US_ASCII);
         MockMultipartFile file = new MockMultipartFile(
                 "file", "corrupted.pdf", "application/pdf", corruptedContent);
@@ -125,8 +125,8 @@ class ResourceFileControllerTest {
                         "The file appears to be corrupted or is not a valid PDF."));
 
         mockMvc.perform(multipart("/api/v1/resources/files").file(file))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.error").value("Unsupported Media Type"))
                 .andExpect(jsonPath("$.message").value(
                         "The file appears to be corrupted or is not a valid PDF."));
     }

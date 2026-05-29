@@ -179,6 +179,21 @@ public class ProfileService implements IProfileService {
     }
 
     // -------------------------------------------------------------------------
+    // GET /profiles/teacher/me
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public TeacherProfileResponse getTeacherProfile(String email) {
+        User user = userService.findByEmailOrThrow(email);
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
+        TeacherProfile teacherProfile = teacherProfileRepository.findById(profile.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Teacher profile not found for user: " + email));
+        return new TeacherProfileResponse(teacherProfile);
+    }
+
+    // -------------------------------------------------------------------------
     // Update teacher profile
     // -------------------------------------------------------------------------
 
@@ -208,6 +223,21 @@ public class ProfileService implements IProfileService {
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + userId));
         return new ProfileResponse(profile);
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /profiles/academy/me
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public AcademyProfileResponse getAcademyProfile(String email) {
+        User user = userService.findByEmailOrThrow(email);
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
+        AcademyProfile academyProfile = academyProfileRepository.findById(profile.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Academy profile not found for user: " + email));
+        return AcademyProfileResponse.from(academyProfile);
     }
 
     // -------------------------------------------------------------------------

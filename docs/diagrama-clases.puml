@@ -199,7 +199,6 @@ package "forum" {
     CLOSED
   }
 
-  note "reactionType es String abierto\n(LIKE, HELPFUL, etc. — no enum fijo)" as NReactionType
 
   class Thread {
     +id : UUID
@@ -244,7 +243,7 @@ package "forum" {
     +user : User
     +targetType : String
     +targetId : UUID
-    +reactionType : String
+    +reactionType : Boolean
     +createdAt : LocalDateTime
   }
 }

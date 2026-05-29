@@ -40,13 +40,13 @@ application-local.yml
 application-local.properties
 .env
 .claude/
-historias-usuario-documentacion.md
 EVALUACION_TB3.md
 ejecucion.md
 PRUEBAS_FINALES.md
 CUsersIvanAppDataLocalTempapi_output.log
 CONFIRMACION_TESTS.md
 postman_correcion.md
+out/
 
 # Uploaded files (dev local storage)
 uploads/
