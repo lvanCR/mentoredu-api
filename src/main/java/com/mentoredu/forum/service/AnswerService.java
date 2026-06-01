@@ -10,6 +10,7 @@ import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.model.Answer;
 import com.mentoredu.forum.model.ThreadStatus;
 import com.mentoredu.forum.repository.AnswerRepository;
+import com.mentoredu.forum.repository.ReactionRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -22,9 +23,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AnswerService implements IAnswerService {
 
-    private final AnswerRepository     answerRepository;
-    private final ThreadRepository     threadRepository;
-    private final UserService          userService;
+    private static final String ANSWER = "ANSWER";
+
+    private final AnswerRepository       answerRepository;
+    private final ThreadRepository       threadRepository;
+    private final ReactionRepository     reactionRepository;
+    private final UserService            userService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -52,27 +56,38 @@ public class AnswerService implements IAnswerService {
             eventPublisher.publishEvent(new AnswerCreatedEvent(
                     saved.getId(), thread.getAuthor().getId(), user.getId(), thread.getTitle()));
         }
-        return toResponse(saved);
+        return toResponse(saved, user.getId());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PagedResponse<AnswerResponse> listByThread(UUID threadId, int page, int size) {
+    public PagedResponse<AnswerResponse> listByThread(UUID threadId, int page, int size, String currentUserEmail) {
         if (!threadRepository.existsById(threadId)) {
             throw new ThreadNotFoundException("Thread not found: " + threadId);
         }
+        UUID userId = userService.findByEmailOrThrow(currentUserEmail).getId();
         return PagedResponse.from(
                 answerRepository.findAllByThread_IdOrderByCreatedAtAsc(threadId, PagedResponse.toPageRequest(page, size)),
-                this::toResponse);
+                a -> toResponse(a, userId));
     }
 
-    private AnswerResponse toResponse(Answer a) {
+    private AnswerResponse toResponse(Answer a, UUID currentUserId) {
+        int likes    = (int) reactionRepository.countByTargetTypeAndTargetIdAndReactionType(ANSWER, a.getId(), "LIKE");
+        int dislikes = (int) reactionRepository.countByTargetTypeAndTargetIdAndReactionType(ANSWER, a.getId(), "DISLIKE");
+        String myReaction = reactionRepository
+                .findByUserIdAndTargetTypeAndTargetId(currentUserId, ANSWER, a.getId())
+                .map(r -> r.getReactionType())
+                .orElse(null);
+
         return AnswerResponse.builder()
                 .id(a.getId())
                 .threadId(a.getThread().getId())
                 .body(a.getBody())
                 .accepted(Boolean.TRUE.equals(a.getIsAccepted()))
                 .authorDisplay(a.getAuthor().getFirstName() + " " + a.getAuthor().getLastName())
+                .likeCount(likes)
+                .dislikeCount(dislikes)
+                .myReaction(myReaction)
                 .createdAt(a.getCreatedAt())
                 .updatedAt(a.getUpdatedAt())
                 .build();

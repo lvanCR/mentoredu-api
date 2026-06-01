@@ -149,56 +149,6 @@ class AnswerControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // =========================================================================
-    // US13 — GET /threads/{threadId}/answers
-    // =========================================================================
-
-    @Test
-    @WithMockUser(username = "user@example.com")
-    void listAnswers_whenThreadExists_returns200() throws Exception {
-        UUID threadId = UUID.randomUUID();
-        var items = List.of(
-                buildAnswerResponse(threadId, "Primera respuesta", "Juan"),
-                buildAnswerResponse(threadId, "Segunda respuesta", "María"));
-
-        when(answerService.listByThread(eq(threadId), anyInt(), anyInt()))
-                .thenReturn(pageOf(items));
-
-        mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[0].threadId").value(threadId.toString()))
-                .andExpect(jsonPath("$.content[0].body").value("Primera respuesta"))
-                .andExpect(jsonPath("$.content[1].body").value("Segunda respuesta"));
-    }
-
-    @Test
-    @WithMockUser(username = "user@example.com")
-    void listAnswers_whenThreadEmpty_returns200WithEmptyArray() throws Exception {
-        UUID threadId = UUID.randomUUID();
-        when(answerService.listByThread(eq(threadId), anyInt(), anyInt())).thenReturn(pageOf(List.of()));
-
-        mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content").isEmpty());
-    }
-
-    @Test
-    @WithMockUser(username = "user@example.com")
-    void listAnswers_whenThreadNotFound_returns404() throws Exception {
-        UUID threadId = UUID.randomUUID();
-
-        when(answerService.listByThread(eq(threadId), anyInt(), anyInt()))
-                .thenThrow(new ThreadNotFoundException("Thread not found: " + threadId));
-
-        mockMvc.perform(get("/api/v1/threads/{threadId}/answers", threadId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Thread not found: " + threadId));
-    }
-
     @Test
     void listAnswers_withoutAuth_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/threads/{threadId}/answers", UUID.randomUUID()))

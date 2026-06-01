@@ -55,8 +55,7 @@ public class ThreadController {
     public ResponseEntity<PagedResponse<ThreadResponse>> listRecent(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        SecurityUtils.requireAuth();
-        return ResponseEntity.ok(threadService.listRecent(page, size));
+        return ResponseEntity.ok(threadService.listRecent(page, size, SecurityUtils.currentEmail()));
     }
 
     @GetMapping("/{id}")
@@ -66,8 +65,7 @@ public class ThreadController {
             + "Devuelve 404 si el hilo no existe. Requiere autenticación JWT."
     )
     public ResponseEntity<ThreadResponse> getById(@PathVariable UUID id) {
-        SecurityUtils.requireAuth();
-        return ResponseEntity.ok(threadService.get(id));
+        return ResponseEntity.ok(threadService.get(id, SecurityUtils.currentEmail()));
     }
 
     @PatchMapping("/{id}/close")
