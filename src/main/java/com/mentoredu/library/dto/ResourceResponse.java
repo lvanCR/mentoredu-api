@@ -24,10 +24,15 @@ public class ResourceResponse {
     private final Long         sizeBytes;
     private final boolean      aceptaResoluciones;
     private final LocalDateTime createdAt;
-    private final UUID         authorId;
-    private final String       authorName;
+    private final UUID                authorId;
+    private final String              authorName;
+    private final SubmissionStatusDto mySubmission;
 
     public ResourceResponse(Resource resource) {
+        this(resource, null);
+    }
+
+    public ResourceResponse(Resource resource, SubmissionStatusDto mySubmission) {
         this.id                 = resource.getId();
         this.title              = resource.getTitle();
         this.resourceType       = resource.getResourceType();
@@ -44,5 +49,6 @@ public class ResourceResponse {
         this.createdAt          = resource.getCreatedAt();
         this.authorId           = resource.getAuthor().getId();
         this.authorName         = resource.getAuthor().getFirstName() + " " + resource.getAuthor().getLastName();
+        this.mySubmission       = mySubmission;
     }
 }

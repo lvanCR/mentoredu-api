@@ -4,10 +4,13 @@ import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.service.UserService;
 import com.mentoredu.catalog.service.ICatalogService;
 import com.mentoredu.config.PagedResponse;
+import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
+import com.mentoredu.library.dto.SubmissionStatusDto;
 import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
+import com.mentoredu.pedagogy.repository.SolutionRepository;
 import com.mentoredu.library.exception.AceptaResolucionesPracticaOnlyException;
 import com.mentoredu.library.exception.CareerAreaMismatchException;
 import com.mentoredu.library.exception.CourseIdRequiredException;
@@ -32,6 +35,7 @@ public class ResourceService implements IResourceService {
     private final UserService           userService;
     private final ICatalogService       catalogService;
     private final DownloadLogRepository downloadLogRepository;
+    private final SolutionRepository    solutionRepository;
 
     // -------------------------------------------------------------------------
     // Publish resource (US07+US08)
@@ -137,7 +141,23 @@ public class ResourceService implements IResourceService {
     public ResourceResponse getById(UUID resourceId) {
         Resource resource = resourceRepository.findById(resourceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
-        return new ResourceResponse(resource);
+
+        SubmissionStatusDto mySubmission = null;
+        if (resource.isAceptaResoluciones()) {
+            try {
+                User student = userService.findByEmailOrThrow(SecurityUtils.currentEmail());
+                if ("STUDENT".equals(student.getRole().getName())) {
+                    mySubmission = solutionRepository
+                            .findByResourceIdAndStudentId(resourceId, student.getId())
+                            .map(s -> new SubmissionStatusDto(s.getId(), s.getStatus().name(), s.getSubmittedAt()))
+                            .orElse(null);
+                }
+            } catch (Exception ignored) {
+                // No autenticado o rol distinto a STUDENT → mySubmission queda null
+            }
+        }
+
+        return new ResourceResponse(resource, mySubmission);
     }
 
     // -------------------------------------------------------------------------
