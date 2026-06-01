@@ -40,7 +40,6 @@ public class AnswerController {
             @PathVariable UUID threadId,
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size) {
-        SecurityUtils.requireAuth();
-        return ResponseEntity.ok(answerService.listByThread(threadId, page, size));
+        return ResponseEntity.ok(answerService.listByThread(threadId, page, size, SecurityUtils.currentEmail()));
     }
 }

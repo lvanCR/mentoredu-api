@@ -11,4 +11,6 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
     Optional<Reaction> findByUserIdAndTargetTypeAndTargetId(UUID userId, String targetType, UUID targetId);
 
     long countByTargetTypeAndTargetId(String targetType, UUID targetId);
+
+    long countByTargetTypeAndTargetIdAndReactionType(String targetType, UUID targetId, String reactionType);
 }

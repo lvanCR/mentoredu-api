@@ -11,6 +11,7 @@ import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.exception.ThreadNotOwnedException;
 import com.mentoredu.forum.model.ForumThread;
 import com.mentoredu.forum.model.ThreadStatus;
+import com.mentoredu.forum.repository.ReactionRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,9 +23,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ThreadService implements IThreadService {
 
-    private final ThreadRepository threadRepository;
-    private final UserService      userService;
-    private final ICatalogService  catalogService;
+    private static final String THREAD = "THREAD";
+
+    private final ThreadRepository  threadRepository;
+    private final ReactionRepository reactionRepository;
+    private final UserService        userService;
+    private final ICatalogService    catalogService;
 
     // -------------------------------------------------------------------------
     // US12 — Create forum thread
@@ -49,22 +53,24 @@ public class ThreadService implements IThreadService {
                 .careerId(request.getCareerId())
                 .build();
 
-        return toResponse(threadRepository.save(thread));
+        return toResponse(threadRepository.save(thread), user.getId());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PagedResponse<ThreadResponse> listRecent(int page, int size) {
+    public PagedResponse<ThreadResponse> listRecent(int page, int size, String currentUserEmail) {
+        UUID userId = userService.findByEmailOrThrow(currentUserEmail).getId();
         return PagedResponse.from(
                 threadRepository.findAllByOrderByCreatedAtDesc(PagedResponse.toPageRequest(page, size)),
-                this::toResponse);
+                t -> toResponse(t, userId));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ThreadResponse get(UUID id) {
+    public ThreadResponse get(UUID id, String currentUserEmail) {
+        UUID userId = userService.findByEmailOrThrow(currentUserEmail).getId();
         return threadRepository.findById(id)
-                .map(this::toResponse)
+                .map(t -> toResponse(t, userId))
                 .orElseThrow(() -> new ThreadNotFoundException("Hilo no encontrado: " + id));
     }
 
@@ -94,7 +100,7 @@ public class ThreadService implements IThreadService {
         }
 
         thread.setStatus(ThreadStatus.CLOSED);
-        return toResponse(threadRepository.save(thread));
+        return toResponse(threadRepository.save(thread), requester.getId());
     }
 
     // -------------------------------------------------------------------------
@@ -155,10 +161,17 @@ public class ThreadService implements IThreadService {
     // Mapping (RN-13: posts anónimos exponen "Anónimo", autor interno preservado)
     // -------------------------------------------------------------------------
 
-    private ThreadResponse toResponse(ForumThread t) {
+    private ThreadResponse toResponse(ForumThread t, UUID currentUserId) {
         String display = Boolean.TRUE.equals(t.getAnonymous())
                 ? "Anónimo"
                 : t.getAuthor().getFirstName() + " " + t.getAuthor().getLastName();
+
+        int likes    = (int) reactionRepository.countByTargetTypeAndTargetIdAndReactionType(THREAD, t.getId(), "LIKE");
+        int dislikes = (int) reactionRepository.countByTargetTypeAndTargetIdAndReactionType(THREAD, t.getId(), "DISLIKE");
+        String myReaction = reactionRepository
+                .findByUserIdAndTargetTypeAndTargetId(currentUserId, THREAD, t.getId())
+                .map(r -> r.getReactionType())
+                .orElse(null);
 
         return ThreadResponse.builder()
                 .id(t.getId())
@@ -171,6 +184,9 @@ public class ThreadService implements IThreadService {
                 .areaId(t.getAreaId())
                 .courseId(t.getCourseId())
                 .careerId(t.getCareerId())
+                .likeCount(likes)
+                .dislikeCount(dislikes)
+                .myReaction(myReaction)
                 .createdAt(t.getCreatedAt())
                 .updatedAt(t.getUpdatedAt())
                 .build();

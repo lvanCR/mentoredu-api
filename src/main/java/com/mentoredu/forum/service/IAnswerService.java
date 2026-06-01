@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface IAnswerService {
     AnswerResponse create(UUID threadId, CreateAnswerRequest request, String authorEmail);
-    PagedResponse<AnswerResponse> listByThread(UUID threadId, int page, int size);
+    PagedResponse<AnswerResponse> listByThread(UUID threadId, int page, int size, String currentUserEmail);
 }

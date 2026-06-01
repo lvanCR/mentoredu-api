@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface IThreadService {
     ThreadResponse create(CreateThreadRequest request, String authorEmail);
-    PagedResponse<ThreadResponse> listRecent(int page, int size);
-    ThreadResponse get(UUID id);
+    PagedResponse<ThreadResponse> listRecent(int page, int size, String currentUserEmail);
+    ThreadResponse get(UUID id, String currentUserEmail);
     ThreadResponse close(UUID id, String requesterEmail);
 }

@@ -19,6 +19,9 @@ public class ThreadResponse {
     private UUID          areaId;
     private UUID          courseId;
     private UUID          careerId;
+    private int           likeCount;
+    private int           dislikeCount;
+    private String        myReaction;   // "LIKE" | "DISLIKE" | null
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
