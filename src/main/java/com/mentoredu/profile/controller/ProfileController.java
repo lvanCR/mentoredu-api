@@ -105,7 +105,6 @@ public class ProfileController {
     @GetMapping("/{userId}")
     @Operation(summary = "Ver perfil público de cualquier usuario")
     public ResponseEntity<ProfileResponse> getPublicProfile(@PathVariable UUID userId) {
-        SecurityUtils.requireAuth();
-        return ResponseEntity.ok(profileService.getPublicProfile(userId));
+        return ResponseEntity.ok(profileService.getPublicProfile(userId, SecurityUtils.currentEmail()));
     }
 }

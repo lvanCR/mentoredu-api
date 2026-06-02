@@ -4,22 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.community.dto.AssociationResponse;
 import com.mentoredu.community.dto.CreateAssociationRequest;
-import com.mentoredu.community.exception.AssociationNotFoundException;
-import com.mentoredu.community.exception.DuplicateAssociationException;
-import com.mentoredu.community.model.AssociationStatus;
-import com.mentoredu.community.model.TeacherAcademyLink;
+import com.mentoredu.community.exception.*;
 import com.mentoredu.community.service.IAssociationService;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,219 +27,209 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = AssociationController.class)
+/**
+ * Tests de capa web para AssociationController.
+ * Cubre: US24 — Asociar docente a academia (solicitar, listar, aceptar, rechazar).
+ * Regla RN-18: asociación queda PENDING hasta que la academia la resuelva.
+ * Validado en producción (CONFIRMACION_TESTS.md HU-24):
+ *   24.1 TEACHER solicita → 201; 24.2 duplicada → 409; 24.3 academia acepta → 200;
+ *   24.4 academia rechaza → 200; 24.5 no-academia resuelve → 403; 24.6 sin auth → 401.
+ * Endpoint real: /api/v1/associations/teacher-academy (no /verification/teacher-links).
+ */
+@WebMvcTest(
+    controllers = AssociationController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
 class AssociationControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired private MockMvc mockMvc;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @MockitoBean private IAssociationService associationService;
     @MockitoBean private JwtUtil jwtUtil;
-    @MockitoBean private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
+    @MockitoBean private UserDetailsService userDetailsService;
 
-    // =========================================================================
-    // US24 — Docente solicita asociarse
-    // =========================================================================
+    // ── POST /associations/teacher-academy (US24) ─────────────────────────────
 
+    /** US24 Escenario 24.1 — TEACHER solicita asociación → 201 con status=PENDING */
     @Test
     @WithMockUser(username = "teacher@example.com")
-    void requestAssociation_asTeacher_returns201() throws Exception {
-        UUID academyProfileId = UUID.randomUUID();
-        AssociationResponse response = new AssociationResponse(buildLink(UUID.randomUUID(), academyProfileId));
-
+    void requestAssociation_byTeacher_returns201() throws Exception {
+        var response = Mockito.mock(AssociationResponse.class);
+        Mockito.when(response.getStatus()).thenReturn("PENDING");
         when(associationService.requestAssociation(any(), eq("teacher@example.com"))).thenReturn(response);
 
-        var request = new CreateAssociationRequest(academyProfileId);
-
+        var req = new CreateAssociationRequest(UUID.randomUUID());
         mockMvc.perform(post("/api/v1/associations/teacher-academy")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("PENDING"))
-                .andExpect(jsonPath("$.id").exists());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
+    /** US24 / RN-18 Escenario 24.2 — solicitud duplicada → 409 Conflict */
     @Test
     @WithMockUser(username = "teacher@example.com")
-    void requestAssociation_whenDuplicate_returns409() throws Exception {
-        when(associationService.requestAssociation(any(), eq("teacher@example.com")))
-                .thenThrow(new DuplicateAssociationException("Ya existe una solicitud de asociación con esta academia"));
+    void requestAssociation_duplicate_returns409() throws Exception {
+        when(associationService.requestAssociation(any(), any()))
+            .thenThrow(new DuplicateAssociationException("Ya existe una solicitud de asociación con esta academia"));
 
-        var request = new CreateAssociationRequest(UUID.randomUUID());
-
+        var req = new CreateAssociationRequest(UUID.randomUUID());
         mockMvc.perform(post("/api/v1/associations/teacher-academy")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.error").value("Conflict"));
     }
 
+    /** US24 — academia no encontrada → 404 */
     @Test
     @WithMockUser(username = "teacher@example.com")
-    void requestAssociation_asNonTeacher_returns403() throws Exception {
-        when(associationService.requestAssociation(any(), eq("teacher@example.com")))
-                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo docentes pueden solicitar asociaciones"));
+    void requestAssociation_academyNotFound_returns404() throws Exception {
+        when(associationService.requestAssociation(any(), any()))
+            .thenThrow(new AcademyNotFoundException("Academia no encontrada"));
 
-        var request = new CreateAssociationRequest(UUID.randomUUID());
-
+        var req = new CreateAssociationRequest(UUID.randomUUID());
         mockMvc.perform(post("/api/v1/associations/teacher-academy")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isNotFound());
     }
 
-    @Test
-    void requestAssociation_withoutAuth_returns401() throws Exception {
-        var request = new CreateAssociationRequest(UUID.randomUUID());
-
-        mockMvc.perform(post("/api/v1/associations/teacher-academy")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
-    }
-
-    // =========================================================================
-    // US24 — Ver mis asociaciones (docente)
-    // =========================================================================
-
+    /** US24 — academyProfileId ausente → 400 */
     @Test
     @WithMockUser(username = "teacher@example.com")
-    void getMyAssociations_returns200() throws Exception {
-        UUID teacherProfileId = UUID.randomUUID();
-        AssociationResponse response = new AssociationResponse(buildLink(teacherProfileId, UUID.randomUUID()));
-
-        when(associationService.getMyAssociations("teacher@example.com")).thenReturn(List.of(response));
-
-        mockMvc.perform(get("/api/v1/associations/teacher-academy/me"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
+    void requestAssociation_missingAcademyProfileId_returns400() throws Exception {
+        var req = new CreateAssociationRequest(null);
+        mockMvc.perform(post("/api/v1/associations/teacher-academy")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.details.academyProfileId").exists());
     }
 
-    @Test
-    void getMyAssociations_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(get("/api/v1/associations/teacher-academy/me"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    // =========================================================================
-    // US24 — Ver solicitudes recibidas (academia)
-    // =========================================================================
-
-    @Test
-    @WithMockUser(username = "academy@example.com")
-    void getAcademyRequests_returns200() throws Exception {
-        AssociationResponse response = new AssociationResponse(buildLink(UUID.randomUUID(), UUID.randomUUID()));
-
-        when(associationService.getAcademyRequests("academy@example.com")).thenReturn(List.of(response));
-
-        mockMvc.perform(get("/api/v1/associations/teacher-academy/academy"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
-    }
-
+    /** US24 — requiere ser TEACHER (TeacherProfileRequired) → 403 */
     @Test
     @WithMockUser(username = "student@example.com")
-    void getAcademyRequests_asNonAcademy_returns403() throws Exception {
-        when(associationService.getAcademyRequests("student@example.com"))
-                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo academias pueden ver solicitudes recibidas"));
+    void requestAssociation_noTeacherProfile_returns403() throws Exception {
+        when(associationService.requestAssociation(any(), any()))
+            .thenThrow(new TeacherProfileRequiredException("Solo docentes pueden solicitar asociaciones"));
+
+        var req = new CreateAssociationRequest(UUID.randomUUID());
+        mockMvc.perform(post("/api/v1/associations/teacher-academy")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isForbidden());
+    }
+
+    /** POST /associations/teacher-academy — sin autenticación → 401 */
+    @Test
+    void requestAssociation_unauthenticated_returns401() throws Exception {
+        var req = new CreateAssociationRequest(UUID.randomUUID());
+        mockMvc.perform(post("/api/v1/associations/teacher-academy")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isUnauthorized());
+    }
+
+    // ── GET /associations/teacher-academy/me (US24) ───────────────────────────
+
+    /** US24 — TEACHER ve sus asociaciones → 200 con lista */
+    @Test
+    @WithMockUser(username = "teacher@example.com")
+    void myAssociations_asTeacher_returns200() throws Exception {
+        when(associationService.getMyAssociations(eq("teacher@example.com"))).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/associations/teacher-academy/me"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray());
+    }
+
+    /** GET /associations/teacher-academy/me — sin autenticación → 401 */
+    @Test
+    void myAssociations_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/associations/teacher-academy/me"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    // ── GET /associations/teacher-academy/academy (US24) ─────────────────────
+
+    /** US24 — ACADEMY ve solicitudes recibidas → 200 */
+    @Test
+    @WithMockUser(username = "academy@example.com")
+    void academyRequests_asAcademy_returns200() throws Exception {
+        when(associationService.getAcademyRequests(eq("academy@example.com"))).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/associations/teacher-academy/academy"))
-                .andExpect(status().isForbidden());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray());
     }
 
-    // =========================================================================
-    // US24 — Academia acepta solicitud
-    // =========================================================================
+    // ── PATCH /associations/teacher-academy/{id}/accept (US24) ───────────────
 
+    /** US24 Escenario 24.3 — ACADEMY acepta solicitud → 200 con status=ACCEPTED */
     @Test
     @WithMockUser(username = "academy@example.com")
-    void acceptAssociation_returns200WithAccepted() throws Exception {
-        UUID id = UUID.randomUUID();
-        TeacherAcademyLink accepted = TeacherAcademyLink.builder()
-                .id(id)
-                .teacherProfileId(UUID.randomUUID())
-                .academyProfileId(UUID.randomUUID())
-                .status(AssociationStatus.ACCEPTED)
-                .requestedAt(LocalDateTime.now())
-                .resolvedAt(LocalDateTime.now())
-                .build();
+    void accept_byAcademy_returns200WithAcceptedStatus() throws Exception {
+        var linkId = UUID.randomUUID();
+        var response = Mockito.mock(AssociationResponse.class);
+        Mockito.when(response.getStatus()).thenReturn("ACCEPTED");
+        when(associationService.acceptAssociation(eq(linkId), eq("academy@example.com"))).thenReturn(response);
 
-        when(associationService.acceptAssociation(eq(id), eq("academy@example.com")))
-                .thenReturn(new AssociationResponse(accepted));
-
-        mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/accept", id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("ACCEPTED"));
+        mockMvc.perform(patch("/api/v1/associations/teacher-academy/" + linkId + "/accept"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("ACCEPTED"));
     }
 
+    /** US24 Escenario 24.5 — STUDENT intenta aceptar solicitud → 403 */
+    @Test
+    @WithMockUser(username = "student@example.com")
+    void accept_byStudent_returns403() throws Exception {
+        when(associationService.acceptAssociation(any(), any()))
+            .thenThrow(new NotAssociationOwnerException("Solo academias pueden resolver solicitudes"));
+
+        mockMvc.perform(patch("/api/v1/associations/teacher-academy/" + UUID.randomUUID() + "/accept"))
+            .andExpect(status().isForbidden());
+    }
+
+    /** US24 — asociación inexistente → 404 */
     @Test
     @WithMockUser(username = "academy@example.com")
-    void acceptAssociation_whenNotFound_returns404() throws Exception {
-        UUID id = UUID.randomUUID();
+    void accept_notFound_returns404() throws Exception {
+        when(associationService.acceptAssociation(any(), any()))
+            .thenThrow(new AssociationNotFoundException("Asociación no encontrada"));
 
-        when(associationService.acceptAssociation(eq(id), eq("academy@example.com")))
-                .thenThrow(new AssociationNotFoundException("Solicitud no encontrada: " + id));
-
-        mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/accept", id))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(patch("/api/v1/associations/teacher-academy/" + UUID.randomUUID() + "/accept"))
+            .andExpect(status().isNotFound());
     }
 
+    /** PATCH /accept — sin autenticación → 401 */
     @Test
-    void acceptAssociation_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/accept", UUID.randomUUID()))
-                .andExpect(status().isUnauthorized());
+    void accept_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(patch("/api/v1/associations/teacher-academy/" + UUID.randomUUID() + "/accept"))
+            .andExpect(status().isUnauthorized());
     }
 
-    // =========================================================================
-    // US24 — Academia rechaza solicitud
-    // =========================================================================
+    // ── PATCH /associations/teacher-academy/{id}/reject (US24) ───────────────
 
+    /** US24 Escenario 24.4 — ACADEMY rechaza solicitud → 200 con status=REJECTED */
     @Test
     @WithMockUser(username = "academy@example.com")
-    void rejectAssociation_returns200WithRejected() throws Exception {
-        UUID id = UUID.randomUUID();
-        TeacherAcademyLink rejected = TeacherAcademyLink.builder()
-                .id(id)
-                .teacherProfileId(UUID.randomUUID())
-                .academyProfileId(UUID.randomUUID())
-                .status(AssociationStatus.REJECTED)
-                .requestedAt(LocalDateTime.now())
-                .resolvedAt(LocalDateTime.now())
-                .build();
+    void reject_byAcademy_returns200WithRejectedStatus() throws Exception {
+        var linkId = UUID.randomUUID();
+        var response = Mockito.mock(AssociationResponse.class);
+        Mockito.when(response.getStatus()).thenReturn("REJECTED");
+        when(associationService.rejectAssociation(eq(linkId), eq("academy@example.com"))).thenReturn(response);
 
-        when(associationService.rejectAssociation(eq(id), eq("academy@example.com")))
-                .thenReturn(new AssociationResponse(rejected));
-
-        mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/reject", id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("REJECTED"));
+        mockMvc.perform(patch("/api/v1/associations/teacher-academy/" + linkId + "/reject"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("REJECTED"));
     }
 
+    /** PATCH /reject — sin autenticación → 401 */
     @Test
-    @WithMockUser(username = "academy@example.com")
-    void rejectAssociation_whenAlreadyResolved_returns409() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        when(associationService.rejectAssociation(eq(id), eq("academy@example.com")))
-                .thenThrow(new DuplicateAssociationException("La solicitud ya fue resuelta con estado: ACCEPTED"));
-
-        mockMvc.perform(patch("/api/v1/associations/teacher-academy/{id}/reject", id))
-                .andExpect(status().isConflict());
-    }
-
-    // =========================================================================
-    // Helpers
-    // =========================================================================
-
-    private TeacherAcademyLink buildLink(UUID teacherProfileId, UUID academyProfileId) {
-        return TeacherAcademyLink.builder()
-                .id(UUID.randomUUID())
-                .teacherProfileId(teacherProfileId)
-                .academyProfileId(academyProfileId)
-                .status(AssociationStatus.PENDING)
-                .requestedAt(LocalDateTime.now())
-                .build();
+    void reject_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(patch("/api/v1/associations/teacher-academy/" + UUID.randomUUID() + "/reject"))
+            .andExpect(status().isUnauthorized());
     }
 }

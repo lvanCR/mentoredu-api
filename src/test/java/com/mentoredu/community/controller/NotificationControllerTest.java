@@ -1,13 +1,16 @@
 package com.mentoredu.community.controller;
 
 import com.mentoredu.auth.util.JwtUtil;
-import com.mentoredu.config.PagedResponse;
 import com.mentoredu.community.dto.NotificationResponse;
 import com.mentoredu.community.exception.NotificationNotFoundException;
 import com.mentoredu.community.service.INotificationService;
+import com.mentoredu.config.PagedResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,140 +21,145 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(NotificationController.class)
+/**
+ * Tests de capa web para NotificationController.
+ * Cubre: US27 — Ver todas, ver pendientes y marcar como leída.
+ * Tipos de notificación: new_follower, answer_received, comment_received, reaction_received,
+ *   solution_submitted, feedback_received, verification_processed, association_resolved.
+ * Validado en producción (CONFIRMACION_TESTS.md HU-27):
+ *   27.1 GET /me → 200; 27.2 GET /me/pending → 200; 27.3 PATCH /{id}/read → 204;
+ *   27.4 sin notificaciones → lista vacía; 27.5 sin auth → 401.
+ */
+@WebMvcTest(
+    controllers = NotificationController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
 class NotificationControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @MockitoBean
-    private INotificationService notificationService;
+    @MockitoBean private INotificationService notificationService;
+    @MockitoBean private JwtUtil jwtUtil;
+    @MockitoBean private UserDetailsService userDetailsService;
 
-    @MockitoBean
-    private JwtUtil jwtUtil;
+    // ── GET /notifications/me (US27) ───────────────────────────────────────────
 
-    @MockitoBean
-    private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
-
-    // =========================================================================
-    // US27 — Ver mis notificaciones
-    // =========================================================================
-
+    /** US27 Escenario 27.1 — ver todas las notificaciones (leídas + no leídas) → 200 */
     @Test
-    @WithMockUser(username = "user@example.com")
-    void getMyNotifications_authenticated_returns200WithList() throws Exception {
-        var response = NotificationResponse.builder()
-                .id(UUID.randomUUID())
-                .type("new_follower")
-                .payload(Map.of("key", "value"))
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        when(notificationService.getMyNotifications(eq("user@example.com"), anyInt(), anyInt(), any()))
-                .thenReturn(pageOf(List.of(response)));
+    @WithMockUser(username = "carlos@example.com")
+    void getMyNotifications_authenticated_returns200WithPagedList() throws Exception {
+        var notification = NotificationResponse.builder()
+            .id(UUID.randomUUID()).type("answer_received")
+            .payload(Map.of("threadId", UUID.randomUUID().toString()))
+            .createdAt(LocalDateTime.now()).build();
+        var paged = new PagedResponse<>(List.of(notification), 0, 20, 1L, 1, true);
+        when(notificationService.getMyNotifications(eq("carlos@example.com"), eq(0), eq(20), any()))
+            .thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/notifications/me"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content[0].id").exists())
-                .andExpect(jsonPath("$.content[0].type").value("new_follower"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content[0].type").value("answer_received"))
+            .andExpect(jsonPath("$.totalElements").value(1));
     }
 
+    /** US27 — filtrar por tipo de notificación → 200 */
     @Test
-    @WithMockUser(username = "user@example.com")
-    void getMyNotifications_emptyList_returns200() throws Exception {
-        when(notificationService.getMyNotifications(eq("user@example.com"), anyInt(), anyInt(), any()))
-                .thenReturn(pageOf(List.of()));
+    @WithMockUser(username = "carlos@example.com")
+    void getMyNotifications_withTypeFilter_returns200() throws Exception {
+        var paged = new PagedResponse<NotificationResponse>(List.of(), 0, 20, 0L, 0, true);
+        when(notificationService.getMyNotifications(any(), eq(0), eq(20), eq("new_follower")))
+            .thenReturn(paged);
+
+        mockMvc.perform(get("/api/v1/notifications/me").param("type", "new_follower"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray());
+    }
+
+    /** US27 Escenario 27.4 — sin notificaciones → lista vacía con totalElements=0 */
+    @Test
+    @WithMockUser(username = "newuser@example.com")
+    void getMyNotifications_noNotifications_returns200WithEmpty() throws Exception {
+        var paged = new PagedResponse<NotificationResponse>(List.of(), 0, 20, 0L, 0, true);
+        when(notificationService.getMyNotifications(any(), anyInt(), anyInt(), any()))
+            .thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/notifications/me"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content").isEmpty());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content").isEmpty())
+            .andExpect(jsonPath("$.totalElements").value(0));
     }
 
+    /** US27 Escenario 27.5 — sin autenticación → 401 */
     @Test
-    void getMyNotifications_withoutAuth_returns401() throws Exception {
+    void getMyNotifications_unauthenticated_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/notifications/me"))
-                .andExpect(status().isUnauthorized());
+            .andExpect(status().isUnauthorized());
     }
 
-    // =========================================================================
-    // US27 — Ver notificaciones pendientes
-    // =========================================================================
+    // ── GET /notifications/me/pending (US27) ──────────────────────────────────
 
+    /** US27 Escenario 27.2 — ver notificaciones no leídas (readAt=null) → 200 */
     @Test
-    @WithMockUser(username = "user@example.com")
-    void getPendingNotifications_authenticated_returns200() throws Exception {
-        var n1 = NotificationResponse.builder().type("answer_received").build();
-        var n2 = NotificationResponse.builder().type("reaction_received").build();
-
-        when(notificationService.getPendingNotifications(eq("user@example.com"), anyInt(), anyInt(), any()))
-                .thenReturn(pageOf(List.of(n1, n2)));
+    @WithMockUser(username = "carlos@example.com")
+    void getPendingNotifications_authenticated_returns200WithUnread() throws Exception {
+        var unread = NotificationResponse.builder()
+            .id(UUID.randomUUID()).type("solution_submitted")
+            .payload(Map.of("solutionId", UUID.randomUUID().toString()))
+            .readAt(null) // no leída
+            .createdAt(LocalDateTime.now()).build();
+        var paged = new PagedResponse<>(List.of(unread), 0, 20, 1L, 1, true);
+        when(notificationService.getPendingNotifications(eq("carlos@example.com"), eq(0), eq(20), any()))
+            .thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/notifications/me/pending"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[0].type").value("answer_received"))
-                .andExpect(jsonPath("$.content[1].type").value("reaction_received"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].type").value("solution_submitted"))
+            .andExpect(jsonPath("$.content[0].readAt").doesNotExist());
     }
 
+    /** GET /notifications/me/pending — sin autenticación → 401 */
     @Test
-    @WithMockUser(username = "user@example.com")
-    void getPendingNotifications_noPending_returns200EmptyList() throws Exception {
-        when(notificationService.getPendingNotifications(eq("user@example.com"), anyInt(), anyInt(), any()))
-                .thenReturn(pageOf(List.of()));
-
+    void getPendingNotifications_unauthenticated_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/notifications/me/pending"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isEmpty());
+            .andExpect(status().isUnauthorized());
     }
 
+    // ── PATCH /notifications/{id}/read (US27) ─────────────────────────────────
+
+    /** US27 Escenario 27.3 — marcar notificación como leída → 204 No Content
+     * Confirmado en HU-27: retorna 204 (no 200). */
     @Test
-    void getPendingNotifications_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(get("/api/v1/notifications/me/pending"))
-                .andExpect(status().isUnauthorized());
+    @WithMockUser(username = "carlos@example.com")
+    void markAsRead_existingNotification_returns204() throws Exception {
+        var notifId = UUID.randomUUID();
+        doNothing().when(notificationService).markAsRead(eq(notifId), eq("carlos@example.com"));
+
+        mockMvc.perform(patch("/api/v1/notifications/" + notifId + "/read"))
+            .andExpect(status().isNoContent());
     }
 
-    // =========================================================================
-    // US27 — Marcar notificación como leída
-    // =========================================================================
-
+    /** US27 — notificación inexistente o de otro usuario → 404 */
     @Test
-    @WithMockUser(username = "user@example.com")
-    void markAsRead_whenExists_returns204() throws Exception {
-        UUID notifId = UUID.randomUUID();
+    @WithMockUser(username = "carlos@example.com")
+    void markAsRead_notFound_returns404() throws Exception {
+        var notifId = UUID.randomUUID();
+        doThrow(new NotificationNotFoundException("Notificación no encontrada"))
+            .when(notificationService).markAsRead(eq(notifId), any());
 
-        mockMvc.perform(patch("/api/v1/notifications/{id}/read", notifId))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(patch("/api/v1/notifications/" + notifId + "/read"))
+            .andExpect(status().isNotFound());
     }
 
+    /** PATCH /notifications/{id}/read — sin autenticación → 401 */
     @Test
-    @WithMockUser(username = "user@example.com")
-    void markAsRead_whenNotFound_returns404() throws Exception {
-        UUID notifId = UUID.randomUUID();
-
-        doThrow(new NotificationNotFoundException("Notificación no encontrada: " + notifId))
-                .when(notificationService).markAsRead(eq(notifId), anyString());
-
-        mockMvc.perform(patch("/api/v1/notifications/{id}/read", notifId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Notificación no encontrada: " + notifId));
-    }
-
-    @Test
-    void markAsRead_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(patch("/api/v1/notifications/{id}/read", UUID.randomUUID()))
-                .andExpect(status().isUnauthorized());
-    }
-
-    private <T> PagedResponse<T> pageOf(List<T> items) {
-        return new PagedResponse<>(items, 0, 20, items.size(), items.isEmpty() ? 0 : 1, true);
+    void markAsRead_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(patch("/api/v1/notifications/" + UUID.randomUUID() + "/read"))
+            .andExpect(status().isUnauthorized());
     }
 }

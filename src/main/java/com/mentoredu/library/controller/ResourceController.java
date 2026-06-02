@@ -55,9 +55,10 @@ public class ResourceController {
             @RequestParam(required = false)              UUID areaId,
             @RequestParam(required = false)              UUID careerId,
             @RequestParam(required = false)              UUID courseId,
+            @RequestParam(required = false)              UUID authorId,
             @RequestParam(defaultValue = "0")            int page,
             @RequestParam(defaultValue = "20")           int size) {
-        return ResponseEntity.ok(resourceService.search(query, type, universityId, areaId, careerId, courseId, page, size));
+        return ResponseEntity.ok(resourceService.search(query, type, universityId, areaId, careerId, courseId, authorId, page, size));
     }
 
     @GetMapping("/{id}")

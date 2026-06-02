@@ -58,10 +58,12 @@ public class ThreadService implements IThreadService {
 
     @Override
     @Transactional(readOnly = true)
-    public PagedResponse<ThreadResponse> listRecent(int page, int size, String currentUserEmail) {
+    public PagedResponse<ThreadResponse> listRecent(int page, int size, String currentUserEmail, UUID authorId) {
         UUID userId = userService.findByEmailOrThrow(currentUserEmail).getId();
+        // Own profile → include anonymous threads; third party → hide them (privacy)
+        boolean includeAnonymous = authorId == null || authorId.equals(userId);
         return PagedResponse.from(
-                threadRepository.findAllByOrderByCreatedAtDesc(PagedResponse.toPageRequest(page, size)),
+                threadRepository.findByAuthorIdOrAll(authorId, includeAnonymous, PagedResponse.toPageRequest(page, size)),
                 t -> toResponse(t, userId));
     }
 
@@ -162,7 +164,8 @@ public class ThreadService implements IThreadService {
     // -------------------------------------------------------------------------
 
     private ThreadResponse toResponse(ForumThread t, UUID currentUserId) {
-        String display = Boolean.TRUE.equals(t.getAnonymous())
+        boolean anon   = Boolean.TRUE.equals(t.getAnonymous());
+        String display = anon
                 ? "Anónimo"
                 : t.getAuthor().getFirstName() + " " + t.getAuthor().getLastName();
 
@@ -177,7 +180,8 @@ public class ThreadService implements IThreadService {
                 .id(t.getId())
                 .title(t.getTitle())
                 .body(t.getBody())
-                .anonymous(Boolean.TRUE.equals(t.getAnonymous()))
+                .anonymous(anon)
+                .authorId(anon ? null : t.getAuthor().getId())
                 .authorDisplay(display)
                 .status(t.getStatus().name())
                 .universityId(t.getUniversityId())

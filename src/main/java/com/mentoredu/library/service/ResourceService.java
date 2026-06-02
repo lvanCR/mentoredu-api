@@ -118,7 +118,7 @@ public class ResourceService implements IResourceService {
     @Transactional(readOnly = true)
     public PagedResponse<ResourceResponse> search(String query, String type, UUID universityId,
                                                    UUID areaId, UUID careerId, UUID courseId,
-                                                   int page, int size) {
+                                                   UUID authorId, int page, int size) {
         ResourceType resourceType = null;
         if (type != null && !type.isBlank()) {
             try {
@@ -133,7 +133,7 @@ public class ResourceService implements IResourceService {
         String typeStr = (resourceType != null) ? resourceType.name() : null;
 
         org.springframework.data.domain.Page<Resource> resourcePage = resourceRepository.search(
-                q, typeStr, universityId, areaId, careerId, courseId,
+                q, typeStr, universityId, areaId, careerId, courseId, authorId,
                 PagedResponse.toPageRequest(page, size));
 
         // Populate mySubmission for the current STUDENT in a single batch query

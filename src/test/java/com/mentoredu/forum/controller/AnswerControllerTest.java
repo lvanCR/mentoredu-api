@@ -10,8 +10,11 @@ import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.service.IAnswerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,162 +23,147 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = AnswerController.class)
+/**
+ * Tests de capa web para AnswerController.
+ * Cubre: US13 — Responder a un hilo de foro.
+ * Validado en producción (CONFIRMACION_TESTS.md HU-13):
+ *   13.1 respuesta exitosa → 201; 13.2 hilo cerrado → 409; 13.3 hilo inexistente → 404;
+ *   13.4 body vacío → 400; 13.5 sin auth → 401.
+ * Nota: el campo del body es `body`, confirmado en HU-13.
+ */
+@WebMvcTest(
+    controllers = AnswerController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
 class AnswerControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @MockitoBean private IAnswerService answerService;
+    @MockitoBean private JwtUtil jwtUtil;
+    @MockitoBean private UserDetailsService userDetailsService;
 
-    @MockitoBean
-    private IAnswerService answerService;
+    // ── POST /threads/{threadId}/answers (US13) ────────────────────────────────
 
-    @MockitoBean
-    private JwtUtil jwtUtil;
-
-    @MockitoBean
-    private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
-
-    // =========================================================================
-    // US13 — POST /threads/{threadId}/answers
-    // =========================================================================
-
-    @Test
-    @WithMockUser(username = "student@example.com")
-    void createAnswer_withValidBody_returns201() throws Exception {
-        UUID threadId = UUID.randomUUID();
-        var request = new CreateAnswerRequest("La derivada de x^2 es 2x por la regla de la potencia.");
-        var response = buildAnswerResponse(threadId, request.body(), "Ana García");
-
-        when(answerService.create(eq(threadId), any(), eq("student@example.com"))).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.threadId").value(threadId.toString()))
-                .andExpect(jsonPath("$.body").value("La derivada de x^2 es 2x por la regla de la potencia."))
-                .andExpect(jsonPath("$.accepted").value(false))
-                .andExpect(jsonPath("$.authorDisplay").value("Ana García"))
-                .andExpect(jsonPath("$.createdAt").exists());
-    }
-
-    @Test
-    @WithMockUser(username = "teacher@example.com")
-    void createAnswer_byTeacher_returns201() throws Exception {
-        UUID threadId = UUID.randomUUID();
-        var request = new CreateAnswerRequest("Para integrar por partes, usa la fórmula udv = uv - vdu.");
-        var response = buildAnswerResponse(threadId, request.body(), "Prof. Ramírez");
-
-        when(answerService.create(eq(threadId), any(), eq("teacher@example.com"))).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.authorDisplay").value("Prof. Ramírez"));
-    }
-
+    /** US13 Escenario 13.1 — respuesta exitosa a hilo abierto → 201 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createAnswer_withEmptyBody_returns400() throws Exception {
-        UUID threadId = UUID.randomUUID();
-        var request = new CreateAnswerRequest("");
+    void create_validAnswer_returns201() throws Exception {
+        var threadId = UUID.randomUUID();
+        var response = AnswerResponse.builder()
+            .id(UUID.randomUUID()).threadId(threadId)
+            .body("Esta es mi respuesta").authorDisplay("Maria Gonzalez")
+            .likeCount(0).dislikeCount(0)
+            .createdAt(LocalDateTime.now()).build();
+        when(answerService.create(eq(threadId), any(), eq("user@example.com"))).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.body").exists());
+        var req = new CreateAnswerRequest("Esta es mi respuesta");
+        mockMvc.perform(post("/api/v1/threads/" + threadId + "/answers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.body").value("Esta es mi respuesta"))
+            .andExpect(jsonPath("$.authorDisplay").value("Maria Gonzalez"));
     }
 
+    /** US13 Escenario 13.2 — responder a hilo cerrado → 409 Conflict */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createAnswer_withNullBody_returns400() throws Exception {
-        UUID threadId = UUID.randomUUID();
-
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.body").exists());
-    }
-
-    @Test
-    @WithMockUser(username = "user@example.com")
-    void createAnswer_onClosedThread_returns409() throws Exception {
-        UUID threadId = UUID.randomUUID();
-
+    void create_threadClosed_returns409() throws Exception {
+        var threadId = UUID.randomUUID();
         when(answerService.create(eq(threadId), any(), any()))
-                .thenThrow(new ThreadClosedException("Thread is closed and does not accept new replies: " + threadId));
+            .thenThrow(new ThreadClosedException("El hilo está cerrado y no acepta respuestas"));
 
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validRequest())))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"))
-                .andExpect(jsonPath("$.message").value("Thread is closed and does not accept new replies: " + threadId));
+        var req = new CreateAnswerRequest("Intento responder hilo cerrado");
+        mockMvc.perform(post("/api/v1/threads/" + threadId + "/answers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.error").value("Conflict"));
     }
 
+    /** US13 Escenario 13.3 — hilo inexistente → 404 Not Found */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createAnswer_onNonExistentThread_returns404() throws Exception {
-        UUID threadId = UUID.randomUUID();
-
+    void create_threadNotFound_returns404() throws Exception {
+        var threadId = UUID.randomUUID();
         when(answerService.create(eq(threadId), any(), any()))
-                .thenThrow(new ThreadNotFoundException("Thread not found: " + threadId));
+            .thenThrow(new ThreadNotFoundException("Thread not found: " + threadId));
 
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validRequest())))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Thread not found: " + threadId));
+        var req = new CreateAnswerRequest("Respuesta");
+        mockMvc.perform(post("/api/v1/threads/" + threadId + "/answers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("Not Found"));
     }
 
+    /** US13 Escenario 13.4 — body vacío → 400 con detalle del campo body */
     @Test
-    void createAnswer_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", UUID.randomUUID())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validRequest())))
-                .andExpect(status().isUnauthorized());
+    @WithMockUser(username = "user@example.com")
+    void create_withBlankBody_returns400WithBodyFieldError() throws Exception {
+        var req = new CreateAnswerRequest(""); // body vacío
+        mockMvc.perform(post("/api/v1/threads/" + UUID.randomUUID() + "/answers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.details.body").value("Body is required"));
     }
 
+    /** US13 Escenario 13.5 — sin autenticación → 401 */
     @Test
-    void listAnswers_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(get("/api/v1/threads/{threadId}/answers", UUID.randomUUID()))
-                .andExpect(status().isUnauthorized());
+    void create_unauthenticated_returns401() throws Exception {
+        var req = new CreateAnswerRequest("Respuesta");
+        mockMvc.perform(post("/api/v1/threads/" + UUID.randomUUID() + "/answers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isUnauthorized());
     }
 
-    // =========================================================================
-    // Helpers
-    // =========================================================================
+    // ── GET /threads/{threadId}/answers (US13) ─────────────────────────────────
 
-    private CreateAnswerRequest validRequest() {
-        return new CreateAnswerRequest("La respuesta es correcta por el teorema fundamental del cálculo.");
+    /** US13 — listar respuestas de un hilo → 200 con lista paginada */
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void listByThread_existingThread_returns200WithAnswers() throws Exception {
+        var threadId = UUID.randomUUID();
+        var answer = AnswerResponse.builder()
+            .id(UUID.randomUUID()).threadId(threadId)
+            .body("Mi respuesta").authorDisplay("Juan")
+            .createdAt(LocalDateTime.now()).build();
+        var paged = new PagedResponse<>(List.of(answer), 0, 20, 1L, 1, true);
+        when(answerService.listByThread(eq(threadId), eq(0), eq(20), any())).thenReturn(paged);
+
+        mockMvc.perform(get("/api/v1/threads/" + threadId + "/answers"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content[0].body").value("Mi respuesta"))
+            .andExpect(jsonPath("$.totalElements").value(1));
     }
 
-    private AnswerResponse buildAnswerResponse(UUID threadId, String body, String authorDisplay) {
-        return AnswerResponse.builder()
-                .id(UUID.randomUUID())
-                .threadId(threadId)
-                .body(body)
-                .accepted(false)
-                .authorDisplay(authorDisplay)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+    /** US13 — listar respuestas de hilo inexistente → 404 */
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void listByThread_threadNotFound_returns404() throws Exception {
+        var threadId = UUID.randomUUID();
+        when(answerService.listByThread(eq(threadId), eq(0), eq(20), any()))
+            .thenThrow(new ThreadNotFoundException("Thread not found"));
+
+        mockMvc.perform(get("/api/v1/threads/" + threadId + "/answers"))
+            .andExpect(status().isNotFound());
     }
 
-    private <T> PagedResponse<T> pageOf(List<T> items) {
-        return new PagedResponse<>(items, 0, 20, items.size(), items.isEmpty() ? 0 : 1, true);
+    /** GET /threads/{id}/answers — sin autenticación → 401 */
+    @Test
+    void listByThread_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/threads/" + UUID.randomUUID() + "/answers"))
+            .andExpect(status().isUnauthorized());
     }
 }

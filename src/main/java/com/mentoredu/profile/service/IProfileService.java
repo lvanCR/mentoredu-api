@@ -7,7 +7,7 @@ import java.util.UUID;
 public interface IProfileService {
     ProfileResponse updateProfile(String email, UpdateProfileRequest request);
     ProfileMeResponse getMyProfile(String email);
-    ProfileResponse getPublicProfile(UUID userId);
+    ProfileResponse getPublicProfile(UUID userId, String callerEmail);
 
     StudentProfileResponse createStudentProfile(String email, CreateStudentProfileRequest request);
     StudentProfileResponse getStudentProfile(UUID userId);

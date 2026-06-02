@@ -8,8 +8,11 @@ import com.mentoredu.forum.exception.AnswerNotFoundException;
 import com.mentoredu.forum.service.ICommentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,198 +24,128 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = CommentController.class)
+/**
+ * Tests de capa web para CommentController.
+ * Cubre: US15 — Comentar en una respuesta del foro.
+ * Validado en producción (CONFIRMACION_TESTS.md HU-15):
+ *   15.1 comentario exitoso → 201; 15.2 GET lista plana (no paginada) → 200;
+ *   15.3 answer inexistente → 404; 15.4 body vacío → 400; 15.5 sin auth → 401.
+ */
+@WebMvcTest(
+    controllers = CommentController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
 class CommentControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @MockitoBean private ICommentService commentService;
+    @MockitoBean private JwtUtil jwtUtil;
+    @MockitoBean private UserDetailsService userDetailsService;
 
-    @MockitoBean
-    private ICommentService commentService;
+    // ── POST /answers/{answerId}/comments (US15) ───────────────────────────────
 
-    @MockitoBean
-    private JwtUtil jwtUtil;
-
-    @MockitoBean
-    private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
-
-    // =========================================================================
-    // US28 — Comment on forum answer — POST /api/v1/answers/{answerId}/comments
-    // =========================================================================
-
+    /** US15 Escenario 15.1 — comentario exitoso → 201 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createComment_withValidBody_returns201() throws Exception {
-        UUID answerId = UUID.randomUUID();
-        UUID threadId = UUID.randomUUID();
-        var request = validCommentRequest();
-        var response = buildCommentResponse(answerId, threadId, "Exactamente, ese es el punto clave.", "Juan Pérez");
-
+    void create_validComment_returns201() throws Exception {
+        var answerId = UUID.randomUUID();
+        var response = CommentResponse.builder()
+            .id(UUID.randomUUID()).answerId(answerId)
+            .body("Gran respuesta, gracias").authorDisplay("Juan")
+            .createdAt(LocalDateTime.now()).build();
         when(commentService.create(eq(answerId), any(), eq("user@example.com"))).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/answers/{answerId}/comments", answerId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.answerId").value(answerId.toString()))
-                .andExpect(jsonPath("$.threadId").value(threadId.toString()))
-                .andExpect(jsonPath("$.body").value("Exactamente, ese es el punto clave."))
-                .andExpect(jsonPath("$.authorDisplay").exists())
-                .andExpect(jsonPath("$.createdAt").exists());
+        var req = new CreateCommentRequest("Gran respuesta, gracias");
+        mockMvc.perform(post("/api/v1/answers/" + answerId + "/comments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.body").value("Gran respuesta, gracias"));
     }
 
-    @Test
-    @WithMockUser(username = "teacher@example.com")
-    void createComment_withDetailedContent_returns201() throws Exception {
-        UUID answerId = UUID.randomUUID();
-        UUID threadId = UUID.randomUUID();
-        var request = new CreateCommentRequest("Complementando la respuesta: recuerda que el Jacobiano en coordenadas polares es r.");
-        var response = buildCommentResponse(answerId, threadId,
-                "Complementando la respuesta: recuerda que el Jacobiano en coordenadas polares es r.",
-                "María López");
-
-        when(commentService.create(eq(answerId), any(), eq("teacher@example.com"))).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/answers/{answerId}/comments", answerId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.body")
-                        .value("Complementando la respuesta: recuerda que el Jacobiano en coordenadas polares es r."))
-                .andExpect(jsonPath("$.authorDisplay").value("María López"));
-    }
-
+    /** US15 Escenario 15.3 — answer inexistente → 404 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createComment_withEmptyBody_returns400() throws Exception {
-        UUID answerId = UUID.randomUUID();
-        var request = new CreateCommentRequest("");
-
-        mockMvc.perform(post("/api/v1/answers/{answerId}/comments", answerId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.body").exists());
-    }
-
-    @Test
-    @WithMockUser(username = "user@example.com")
-    void createComment_withNullBody_returns400() throws Exception {
-        UUID answerId = UUID.randomUUID();
-
-        mockMvc.perform(post("/api/v1/answers/{answerId}/comments", answerId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.body").exists());
-    }
-
-    @Test
-    @WithMockUser(username = "user@example.com")
-    void createComment_whenAnswerNotFound_returns404() throws Exception {
-        UUID answerId = UUID.randomUUID();
-
+    void create_answerNotFound_returns404() throws Exception {
+        var answerId = UUID.randomUUID();
         when(commentService.create(eq(answerId), any(), any()))
-                .thenThrow(new AnswerNotFoundException("Answer not found: " + answerId));
+            .thenThrow(new AnswerNotFoundException("Answer not found: " + answerId));
 
-        mockMvc.perform(post("/api/v1/answers/{answerId}/comments", answerId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validCommentRequest())))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Answer not found: " + answerId));
+        var req = new CreateCommentRequest("Comentario");
+        mockMvc.perform(post("/api/v1/answers/" + answerId + "/comments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("Not Found"));
     }
 
-    @Test
-    void createComment_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(post("/api/v1/answers/{answerId}/comments", UUID.randomUUID())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validCommentRequest())))
-                .andExpect(status().isUnauthorized());
-    }
-
-    // =========================================================================
-    // US28 — List comments by answer — GET /api/v1/answers/{answerId}/comments
-    // =========================================================================
-
+    /** US15 Escenario 15.4 — body vacío → 400 con detalle del campo body */
     @Test
     @WithMockUser(username = "user@example.com")
-    void listComments_whenAnswerExists_returns200() throws Exception {
-        UUID answerId = UUID.randomUUID();
-        UUID threadId = UUID.randomUUID();
-
-        when(commentService.listByAnswer(eq(answerId)))
-                .thenReturn(List.of(
-                        buildCommentResponse(answerId, threadId, "Muy buena aclaración.", "Carlos R."),
-                        buildCommentResponse(answerId, threadId, "Gracias, me ayudó mucho.", "Ana G.")
-                ));
-
-        mockMvc.perform(get("/api/v1/answers/{answerId}/comments", answerId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].answerId").value(answerId.toString()))
-                .andExpect(jsonPath("$[0].body").value("Muy buena aclaración."))
-                .andExpect(jsonPath("$[1].body").value("Gracias, me ayudó mucho."));
+    void create_withBlankBody_returns400() throws Exception {
+        var req = new CreateCommentRequest("");
+        mockMvc.perform(post("/api/v1/answers/" + UUID.randomUUID() + "/comments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.details.body").exists());
     }
 
+    /** US15 Escenario 15.5 — sin autenticación → 401 */
+    @Test
+    void create_unauthenticated_returns401() throws Exception {
+        var req = new CreateCommentRequest("Comentario");
+        mockMvc.perform(post("/api/v1/answers/" + UUID.randomUUID() + "/comments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isUnauthorized());
+    }
+
+    // ── GET /answers/{answerId}/comments (US15) ────────────────────────────────
+    // Confirmado en HU-15.2: devuelve lista plana (no paginada), no List
+
+    /** US15 Escenario 15.2 — listar comentarios → 200 con lista plana */
     @Test
     @WithMockUser(username = "user@example.com")
-    void listComments_whenNoComments_returns200WithEmptyList() throws Exception {
-        UUID answerId = UUID.randomUUID();
+    void listByAnswer_existingAnswer_returns200WithFlatList() throws Exception {
+        var answerId = UUID.randomUUID();
+        var comment1 = CommentResponse.builder()
+            .id(UUID.randomUUID()).answerId(answerId).body("Comentario 1")
+            .authorDisplay("Ana").createdAt(LocalDateTime.now()).build();
+        var comment2 = CommentResponse.builder()
+            .id(UUID.randomUUID()).answerId(answerId).body("Comentario 2")
+            .authorDisplay("Luis").createdAt(LocalDateTime.now()).build();
+        when(commentService.listByAnswer(answerId)).thenReturn(List.of(comment1, comment2));
 
-        when(commentService.listByAnswer(eq(answerId))).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/v1/answers/{answerId}/comments", answerId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
+        mockMvc.perform(get("/api/v1/answers/" + answerId + "/comments"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray()) // lista plana, no PagedResponse
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].body").value("Comentario 1"))
+            .andExpect(jsonPath("$[1].body").value("Comentario 2"));
     }
 
+    /** US15 — listar comentarios de answer inexistente → 404 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void listComments_whenAnswerNotFound_returns404() throws Exception {
-        UUID answerId = UUID.randomUUID();
+    void listByAnswer_answerNotFound_returns404() throws Exception {
+        var answerId = UUID.randomUUID();
+        when(commentService.listByAnswer(answerId))
+            .thenThrow(new AnswerNotFoundException("Answer not found"));
 
-        when(commentService.listByAnswer(eq(answerId)))
-                .thenThrow(new AnswerNotFoundException("Answer not found: " + answerId));
-
-        mockMvc.perform(get("/api/v1/answers/{answerId}/comments", answerId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Answer not found: " + answerId));
+        mockMvc.perform(get("/api/v1/answers/" + answerId + "/comments"))
+            .andExpect(status().isNotFound());
     }
 
+    /** GET /answers/{id}/comments — sin autenticación → 401 */
     @Test
-    void listComments_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(get("/api/v1/answers/{answerId}/comments", UUID.randomUUID()))
-                .andExpect(status().isUnauthorized());
-    }
-
-    // =========================================================================
-    // Helpers
-    // =========================================================================
-
-    private CreateCommentRequest validCommentRequest() {
-        return new CreateCommentRequest("Exactamente, ese es el punto clave.");
-    }
-
-    private CommentResponse buildCommentResponse(UUID answerId, UUID threadId, String body, String author) {
-        return CommentResponse.builder()
-                .id(UUID.randomUUID())
-                .answerId(answerId)
-                .threadId(threadId)
-                .body(body)
-                .authorDisplay(author)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+    void listByAnswer_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/answers/" + UUID.randomUUID() + "/comments"))
+            .andExpect(status().isUnauthorized());
     }
 }

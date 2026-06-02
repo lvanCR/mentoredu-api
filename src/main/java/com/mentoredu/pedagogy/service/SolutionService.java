@@ -2,15 +2,19 @@ package com.mentoredu.pedagogy.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.service.UserService;
+import com.mentoredu.config.PagedResponse;
 import com.mentoredu.library.model.Resource;
 import com.mentoredu.library.repository.ResourceRepository;
+import com.mentoredu.pedagogy.dto.MySolutionSummaryResponse;
 import com.mentoredu.pedagogy.dto.MySolutionWithFeedbackResponse;
+import com.mentoredu.pedagogy.dto.ReceivedSolutionResponse;
 import com.mentoredu.pedagogy.dto.SolutionResponse;
 import com.mentoredu.pedagogy.dto.SubmitSolutionRequest;
 import com.mentoredu.pedagogy.event.SolutionSubmittedEvent;
 import com.mentoredu.pedagogy.exception.DuplicateSolutionException;
 import com.mentoredu.pedagogy.exception.SolutionAccessDeniedException;
 import com.mentoredu.pedagogy.exception.SolutionNotFoundException;
+import com.mentoredu.pedagogy.model.FeedbackEntry;
 import com.mentoredu.pedagogy.model.Solution;
 import com.mentoredu.pedagogy.model.SolutionStatus;
 import com.mentoredu.pedagogy.repository.FeedbackEntryRepository;
@@ -18,11 +22,14 @@ import com.mentoredu.pedagogy.repository.SolutionRepository;
 import com.mentoredu.library.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -94,5 +101,49 @@ public class SolutionService implements ISolutionService {
             throw new SolutionAccessDeniedException("Solo el autor del ejercicio puede ver las resoluciones");
         return solutionRepository.findByResourceId(resourceId).stream()
             .map(SolutionResponse::from).toList();
+    }
+
+    // ── GET /solutions/mine ───────────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<MySolutionSummaryResponse> getMySolutions(String studentEmail, int page, int size) {
+        User student = userService.findByEmailOrThrow(studentEmail);
+        Page<Solution> solutionPage = solutionRepository.findByStudentIdPaged(
+                student.getId(), PagedResponse.toPageRequest(page, size));
+
+        List<UUID> resourceIds = solutionPage.map(Solution::getResourceId).toList();
+        Map<UUID, Resource> resourceMap = resourceRepository.findAllById(resourceIds)
+                .stream().collect(Collectors.toMap(Resource::getId, r -> r));
+
+        List<UUID> solutionIds = solutionPage.map(Solution::getId).toList();
+        Map<UUID, FeedbackEntry> feedbackMap = feedbackEntryRepository.findBySolution_IdIn(solutionIds)
+                .stream().collect(Collectors.toMap(f -> f.getSolution().getId(), f -> f));
+
+        return PagedResponse.from(solutionPage, s ->
+                MySolutionSummaryResponse.of(s, resourceMap.get(s.getResourceId()),
+                        feedbackMap.get(s.getId())));
+    }
+
+    // ── GET /solutions/received ───────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<ReceivedSolutionResponse> getReceivedSolutions(String teacherEmail, int page, int size) {
+        User teacher = userService.findByEmailOrThrow(teacherEmail);
+        Page<Solution> solutionPage = solutionRepository.findReceivedByAuthorId(
+                teacher.getId(), PagedResponse.toPageRequest(page, size));
+
+        List<UUID> resourceIds = solutionPage.map(Solution::getResourceId).toList();
+        Map<UUID, Resource> resourceMap = resourceRepository.findAllById(resourceIds)
+                .stream().collect(Collectors.toMap(Resource::getId, r -> r));
+
+        List<UUID> solutionIds = solutionPage.map(Solution::getId).toList();
+        Map<UUID, FeedbackEntry> feedbackMap = feedbackEntryRepository.findBySolution_IdIn(solutionIds)
+                .stream().collect(Collectors.toMap(f -> f.getSolution().getId(), f -> f));
+
+        return PagedResponse.from(solutionPage, s ->
+                ReceivedSolutionResponse.of(s, resourceMap.get(s.getResourceId()),
+                        feedbackMap.get(s.getId())));
     }
 }

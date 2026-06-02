@@ -53,9 +53,10 @@ public class ThreadController {
             + "Requiere autenticación JWT."
     )
     public ResponseEntity<PagedResponse<ThreadResponse>> listRecent(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(threadService.listRecent(page, size, SecurityUtils.currentEmail()));
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false)    UUID authorId) {
+        return ResponseEntity.ok(threadService.listRecent(page, size, SecurityUtils.currentEmail(), authorId));
     }
 
     @GetMapping("/{id}")
