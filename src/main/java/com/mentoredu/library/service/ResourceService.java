@@ -10,6 +10,7 @@ import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.dto.SubmissionStatusDto;
 import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
+import com.mentoredu.pedagogy.model.Solution;
 import com.mentoredu.pedagogy.repository.SolutionRepository;
 import com.mentoredu.library.exception.AceptaResolucionesPracticaOnlyException;
 import com.mentoredu.library.exception.CareerAreaMismatchException;
@@ -25,7 +26,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -126,10 +131,37 @@ public class ResourceService implements IResourceService {
         }
         String q = (query == null || query.isBlank()) ? null : query.trim();
         String typeStr = (resourceType != null) ? resourceType.name() : null;
-        return PagedResponse.from(
-                resourceRepository.search(q, typeStr, universityId, areaId, careerId, courseId,
-                        PagedResponse.toPageRequest(page, size)),
-                ResourceResponse::new);
+
+        org.springframework.data.domain.Page<Resource> resourcePage = resourceRepository.search(
+                q, typeStr, universityId, areaId, careerId, courseId,
+                PagedResponse.toPageRequest(page, size));
+
+        // Populate mySubmission for the current STUDENT in a single batch query
+        Map<UUID, SubmissionStatusDto> submissionMap = Collections.emptyMap();
+        try {
+            User student = userService.findByEmailOrThrow(SecurityUtils.currentEmail());
+            if ("STUDENT".equals(student.getRole().getName())) {
+                List<UUID> practicaIds = resourcePage.getContent().stream()
+                        .filter(Resource::isAceptaResoluciones)
+                        .map(Resource::getId)
+                        .collect(Collectors.toList());
+                if (!practicaIds.isEmpty()) {
+                    submissionMap = solutionRepository
+                            .findByStudentIdAndResourceIdIn(student.getId(), practicaIds)
+                            .stream()
+                            .collect(Collectors.toMap(
+                                    Solution::getResourceId,
+                                    s -> new SubmissionStatusDto(s.getId(), s.getStatus().name(), s.getSubmittedAt())
+                            ));
+                }
+            }
+        } catch (Exception ignored) {
+            // Not authenticated or non-STUDENT role → mySubmission stays null for all
+        }
+
+        final Map<UUID, SubmissionStatusDto> finalMap = submissionMap;
+        return PagedResponse.from(resourcePage,
+                resource -> new ResourceResponse(resource, finalMap.get(resource.getId())));
     }
 
     // -------------------------------------------------------------------------
