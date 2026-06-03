@@ -13,6 +13,7 @@ public class AnswerResponse {
     private UUID threadId;
     private String body;
     private boolean accepted;
+    private UUID   authorId;
     private String authorDisplay;
     private int    likeCount;
     private int    dislikeCount;

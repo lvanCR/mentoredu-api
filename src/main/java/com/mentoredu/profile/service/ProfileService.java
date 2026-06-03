@@ -5,6 +5,7 @@ import com.mentoredu.auth.service.UserService;
 import com.mentoredu.catalog.repository.AreaRepository;
 import com.mentoredu.catalog.repository.CareerRepository;
 import com.mentoredu.catalog.repository.UniversityRepository;
+import com.mentoredu.community.repository.FollowRepository;
 import com.mentoredu.profile.dto.*;
 import com.mentoredu.profile.exception.*;
 import com.mentoredu.profile.model.*;
@@ -28,6 +29,7 @@ public class ProfileService implements IProfileService {
     private final UniversityRepository         universityRepository;
     private final AreaRepository               areaRepository;
     private final CareerRepository             careerRepository;
+    private final FollowRepository             followRepository;
 
     // -------------------------------------------------------------------------
     // US05 — Update common profile data
@@ -224,10 +226,19 @@ public class ProfileService implements IProfileService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProfileResponse getPublicProfile(UUID userId) {
+    public ProfileResponse getPublicProfile(UUID userId, String callerEmail) {
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + userId));
-        return new ProfileResponse(profile);
+
+        long followerCount  = followRepository.countByFollowedId(userId);
+        long followingCount = followRepository.countByFollowerId(userId);
+
+        User caller       = userService.findByEmailOrThrow(callerEmail);
+        boolean isFollowing       = followRepository.existsByFollowerIdAndFollowedId(caller.getId(), userId);
+        boolean hasStudentProfile = "STUDENT".equals(profile.getProfileType())
+                && studentProfileRepository.existsById(profile.getId());
+
+        return new ProfileResponse(profile, followerCount, followingCount, isFollowing, hasStudentProfile);
     }
 
     // -------------------------------------------------------------------------

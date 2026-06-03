@@ -79,6 +79,7 @@ public class CommentService implements ICommentService {
                 .answerId(c.getAnswer().getId())
                 .threadId(c.getThread().getId())
                 .body(c.getBody())
+                .authorId(c.getAuthor().getId())
                 .authorDisplay(c.getAuthor().getFirstName() + " " + c.getAuthor().getLastName())
                 .createdAt(c.getCreatedAt())
                 .updatedAt(c.getUpdatedAt())

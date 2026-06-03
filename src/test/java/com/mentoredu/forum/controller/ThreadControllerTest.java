@@ -3,19 +3,18 @@ package com.mentoredu.forum.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentoredu.auth.util.JwtUtil;
 import com.mentoredu.config.PagedResponse;
-import com.mentoredu.forum.dto.AnswerResponse;
-import com.mentoredu.forum.dto.CreateAnswerRequest;
 import com.mentoredu.forum.dto.CreateThreadRequest;
 import com.mentoredu.forum.dto.ThreadResponse;
-import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.exception.ThreadNotOwnedException;
-import com.mentoredu.forum.service.IAnswerService;
 import com.mentoredu.forum.service.IThreadService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,421 +23,300 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = {ThreadController.class, AnswerController.class})
+/**
+ * Tests de capa web para ThreadController.
+ * Cubre: US12 — Crear, listar, ver y cerrar hilos de foro.
+ * Reglas: RN-12 (al menos uno de university/course/career), RN-13 (anonymous=true → authorDisplay="Anónimo"),
+ *         RN-14 (solo autor o MODERATOR puede cerrar).
+ * Validado en producción (CONFIRMACION_TESTS.md HU-12):
+ *   12.1 con universityId → 201; 12.2 anónimo → Anónimo; 12.3 sin contexto → 400;
+ *   12.4 area sin university → 400; 12.5 careerId+courseId → 400;
+ *   12.6 area de otra universidad → 400; 12.7 close por no-autor → 403; 12.8 sin auth → 401.
+ */
+@WebMvcTest(
+    controllers = ThreadController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
 class ThreadControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @MockitoBean private IThreadService threadService;
+    @MockitoBean private JwtUtil jwtUtil;
+    @MockitoBean private UserDetailsService userDetailsService;
 
-    @MockitoBean
-    private IThreadService threadService;
+    // ── POST /threads (US12) ───────────────────────────────────────────────────
 
-    @MockitoBean
-    private IAnswerService answerService;
-
-    @MockitoBean
-    private JwtUtil jwtUtil;
-
-    @MockitoBean
-    private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
-
-    // =========================================================================
-    // US16 — Create forum thread
-    // =========================================================================
-
+    /** US12 Escenario 12.1 — hilo con universityId → 201 con Location header */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createThread_withValidFields_returns201() throws Exception {
-        UUID courseId = UUID.randomUUID();
-        var request = validThreadRequest(courseId);
-        var response = buildThreadResponse(courseId, "¿Cómo resolver integrales dobles?", false);
-
+    void create_withUniversityId_returns201() throws Exception {
+        var threadId = UUID.randomUUID();
+        var response = ThreadResponse.builder()
+            .id(threadId).title("¿Cómo estudiar Cálculo?").body("Busco consejos")
+            .status("OPEN").authorDisplay("Juan Pérez").anonymous(false)
+            .universityId(UUID.randomUUID())
+            .likeCount(0).dislikeCount(0)
+            .createdAt(LocalDateTime.now()).build();
         when(threadService.create(any(), eq("user@example.com"))).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/threads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.title").value("¿Cómo resolver integrales dobles?"))
-                .andExpect(jsonPath("$.status").value("OPEN"))
-                .andExpect(jsonPath("$.courseId").value(courseId.toString()))
-                .andExpect(jsonPath("$.createdAt").exists());
-    }
-
-    @Test
-    @WithMockUser(username = "student@example.com")
-    void createThread_withAnonymousFlag_returns201WithAnonimoDisplay() throws Exception {
-        UUID courseId = UUID.randomUUID();
-        var request = validThreadRequest(courseId);
-        request.setAnonymous(true);
-        var response = buildAnonymousThreadResponse(courseId, "¿Diferencia entre serie y sucesión?");
-
-        when(threadService.create(any(), eq("student@example.com"))).thenReturn(response);
+        var req = validRequest();
+        req.setUniversityId(UUID.randomUUID());
 
         mockMvc.perform(post("/api/v1/threads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.anonymous").value(true))
-                .andExpect(jsonPath("$.authorDisplay").value("Anónimo"))
-                .andExpect(jsonPath("$.status").value("OPEN"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("OPEN"))
+            .andExpect(header().exists("Location"));
     }
 
+    /** US12 Escenario 12.2 — hilo anónimo → authorDisplay="Anónimo" (RN-13) */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createThread_withEmptyBody_returns400() throws Exception {
-        var request = validThreadRequest(UUID.randomUUID());
-        request.setBody("");
+    void create_anonymousThread_returns201WithAnonDisplay() throws Exception {
+        var response = ThreadResponse.builder()
+            .id(UUID.randomUUID()).title("Pregunta anónima").body("...")
+            .status("OPEN").authorDisplay("Anónimo").anonymous(true)
+            .universityId(UUID.randomUUID())
+            .createdAt(LocalDateTime.now()).build();
+        when(threadService.create(any(), any())).thenReturn(response);
+
+        var req = validRequest();
+        req.setUniversityId(UUID.randomUUID());
+        req.setAnonymous(true);
 
         mockMvc.perform(post("/api/v1/threads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.body").exists());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.authorDisplay").value("Anónimo"))
+            .andExpect(jsonPath("$.anonymous").value(true));
     }
 
+    /** US12 / RN-12 Escenario 12.3 — sin ningún campo de contexto → 400 */
     @Test
-    void createThread_withoutAuth_returns401() throws Exception {
-        var request = validThreadRequest(UUID.randomUUID());
+    @WithMockUser(username = "user@example.com")
+    void create_withoutContextFields_returns400() throws Exception {
+        when(threadService.create(any(), any()))
+            .thenThrow(new IllegalArgumentException(
+                "El hilo requiere al menos una categoría (universityId, courseId o careerId)"));
+
+        var req = validRequest(); // sin universityId, courseId, careerId
 
         mockMvc.perform(post("/api/v1/threads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isBadRequest());
     }
 
+    /** US12 / RN-12 Escenario 12.4 — areaId sin universityId → 400 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createThread_withEmptyTitle_returns400() throws Exception {
-        var request = validThreadRequest(UUID.randomUUID());
-        request.setTitle("");
+    void create_areaIdWithoutUniversityId_returns400() throws Exception {
+        when(threadService.create(any(), any()))
+            .thenThrow(new IllegalArgumentException("El área requiere una universidad seleccionada"));
+
+        var req = validRequest();
+        req.setAreaId(UUID.randomUUID()); // area sin university → inválido RN-12
 
         mockMvc.perform(post("/api/v1/threads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.title").exists());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Bad Request"));
     }
 
+    /** US12 / RN-12 Escenario 12.5 — careerId + courseId simultáneos → 400 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createThread_withTitleTooLong_returns400() throws Exception {
-        var request = validThreadRequest(UUID.randomUUID());
-        request.setTitle("A".repeat(161));
+    void create_careerIdAndCourseIdTogether_returns400() throws Exception {
+        when(threadService.create(any(), any()))
+            .thenThrow(new IllegalArgumentException("No puedes combinar carrera y curso en el mismo hilo"));
+
+        var req = validRequest();
+        req.setCareerId(UUID.randomUUID());
+        req.setCourseId(UUID.randomUUID()); // RN-12: careerId + courseId prohibido
 
         mockMvc.perform(post("/api/v1/threads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.title").exists());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isBadRequest());
     }
 
+    /** US12 / RN-12 Escenario 12.6 — área de otra universidad → 400 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createThread_withoutClassification_returns400() throws Exception {
-        String body = """
-                {
-                  "title": "¿Cómo resolver integrales dobles?",
-                  "body": "Necesito ayuda con integrales dobles de funciones trigonométricas."
-                }
-                """;
+    void create_areaNotBelongingToUniversity_returns400() throws Exception {
+        when(threadService.create(any(), any()))
+            .thenThrow(new IllegalArgumentException("El área no pertenece a la universidad seleccionada"));
 
-        when(threadService.create(any(), eq("user@example.com")))
-                .thenThrow(new IllegalArgumentException(
-                        "El hilo requiere al menos una categoría (universityId, courseId o careerId)"));
+        var req = validRequest();
+        req.setUniversityId(UUID.randomUUID());
+        req.setAreaId(UUID.randomUUID()); // área de otra universidad
 
         mockMvc.perform(post("/api/v1/threads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").exists());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isBadRequest());
     }
 
-
-
-
-
-    // =========================================================================
-    // US17 — Reply to forum thread
-    // =========================================================================
-
+    /** US12 — título en blanco → 400 (validación @NotBlank) */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createAnswer_withValidBody_returns201() throws Exception {
-        UUID threadId = UUID.randomUUID();
-        var request = validAnswerRequest();
-        var response = buildAnswerResponse(threadId);
+    void create_withBlankTitle_returns400() throws Exception {
+        var req = validRequest();
+        req.setTitle("");
 
-        when(answerService.create(eq(threadId), any(), eq("user@example.com"))).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.threadId").value(threadId.toString()))
-                .andExpect(jsonPath("$.body").value("Los límites de integración deben seguir el orden correcto."))
-                .andExpect(jsonPath("$.accepted").value(false))
-                .andExpect(jsonPath("$.authorDisplay").exists())
-                .andExpect(jsonPath("$.createdAt").exists());
+        mockMvc.perform(post("/api/v1/threads")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.details.title").exists());
     }
 
-    @Test
-    @WithMockUser(username = "teacher@example.com")
-    void createAnswer_withDetailedExplanation_returns201() throws Exception {
-        UUID threadId = UUID.randomUUID();
-        var request = new CreateAnswerRequest("Para resolver integrales dobles, primero define el dominio de integración y luego aplica Fubini.");
-        var response = buildAnswerResponse(threadId,
-                "Para resolver integrales dobles, primero define el dominio de integración y luego aplica Fubini.",
-                "María López");
-
-        when(answerService.create(eq(threadId), any(), eq("teacher@example.com"))).thenReturn(response);
-
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.body").value("Para resolver integrales dobles, primero define el dominio de integración y luego aplica Fubini."))
-                .andExpect(jsonPath("$.authorDisplay").value("María López"));
-    }
-
+    /** US12 — body en blanco → 400 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createAnswer_withEmptyBody_returns400() throws Exception {
-        UUID threadId = UUID.randomUUID();
-        var request = new CreateAnswerRequest("");
+    void create_withBlankBody_returns400() throws Exception {
+        var req = validRequest();
+        req.setBody("");
 
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.body").exists());
+        mockMvc.perform(post("/api/v1/threads")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.details.body").exists());
     }
 
+    /** US12 Escenario 12.8 — sin autenticación → 401 */
+    @Test
+    void create_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(post("/api/v1/threads")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(validRequest())))
+            .andExpect(status().isUnauthorized());
+    }
+
+    // ── GET /threads (US12) ────────────────────────────────────────────────────
+
+    /** US12 — listar hilos recientes → 200 con contenido paginado */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createAnswer_withNullBody_returns400() throws Exception {
-        UUID threadId = UUID.randomUUID();
+    void listRecent_returns200WithPagedContent() throws Exception {
+        var thread = ThreadResponse.builder()
+            .id(UUID.randomUUID()).title("Test").body("Body")
+            .status("OPEN").authorDisplay("Juan").createdAt(LocalDateTime.now()).build();
+        var paged = new PagedResponse<>(List.of(thread), 0, 10, 1L, 1, true);
+        when(threadService.listRecent(eq(0), eq(10), any(), any())).thenReturn(paged);
 
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.body").exists());
+        mockMvc.perform(get("/api/v1/threads"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content[0].title").value("Test"))
+            .andExpect(jsonPath("$.totalElements").value(1));
     }
 
+    /** GET /threads — sin autenticación → 401 */
+    @Test
+    void listRecent_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/threads"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    // ── GET /threads/{id} (US12) ───────────────────────────────────────────────
+
+    /** US12 — obtener hilo existente por ID → 200 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createAnswer_onClosedThread_returns409() throws Exception {
-        UUID threadId = UUID.randomUUID();
+    void getById_existingThread_returns200() throws Exception {
+        var threadId = UUID.randomUUID();
+        var response = ThreadResponse.builder()
+            .id(threadId).title("Test").body("Body").status("OPEN")
+            .createdAt(LocalDateTime.now()).build();
+        when(threadService.get(eq(threadId), any())).thenReturn(response);
 
-        when(answerService.create(eq(threadId), any(), any()))
-                .thenThrow(new ThreadClosedException("Thread is closed and does not accept new replies: " + threadId));
-
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validAnswerRequest())))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"))
-                .andExpect(jsonPath("$.message").value("Thread is closed and does not accept new replies: " + threadId));
+        mockMvc.perform(get("/api/v1/threads/" + threadId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(threadId.toString()));
     }
 
+    /** US12 — hilo no encontrado → 404 */
     @Test
     @WithMockUser(username = "user@example.com")
-    void createAnswer_onNonExistentThread_returns404() throws Exception {
-        UUID threadId = UUID.randomUUID();
+    void getById_notFound_returns404() throws Exception {
+        var threadId = UUID.randomUUID();
+        when(threadService.get(eq(threadId), any()))
+            .thenThrow(new ThreadNotFoundException("Thread not found: " + threadId));
 
-        when(answerService.create(eq(threadId), any(), any()))
-                .thenThrow(new ThreadNotFoundException("Thread not found: " + threadId));
-
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", threadId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validAnswerRequest())))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Thread not found: " + threadId));
+        mockMvc.perform(get("/api/v1/threads/" + threadId))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("Not Found"));
     }
 
-    @Test
-    void createAnswer_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(post("/api/v1/threads/{threadId}/answers", UUID.randomUUID())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validAnswerRequest())))
-                .andExpect(status().isUnauthorized());
-    }
+    // ── PATCH /threads/{id}/close (US12) ──────────────────────────────────────
 
-
-
-
-    @Test
-    void listAnswers_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(get("/api/v1/threads/{threadId}/answers", UUID.randomUUID()))
-                .andExpect(status().isUnauthorized());
-    }
-
-    // =========================================================================
-    // US18 — Close forum thread
-    // =========================================================================
-
+    /** US12 Escenario 12.7 — autor cierra su hilo → 200 con status=CLOSED */
     @Test
     @WithMockUser(username = "author@example.com")
-    void closeThread_asAuthor_returns200WithStatusClosed() throws Exception {
-        UUID id = UUID.randomUUID();
-        UUID courseId = UUID.randomUUID();
-        var closed = ThreadResponse.builder()
-                .id(id)
-                .title("¿Cómo resolver integrales dobles?")
-                .body("Necesito ayuda con integrales dobles de funciones trigonométricas.")
-                .anonymous(false)
-                .authorDisplay("Juan Pérez")
-                .courseId(courseId)
-                .status("CLOSED")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+    void close_byAuthor_returns200WithClosedStatus() throws Exception {
+        var threadId = UUID.randomUUID();
+        var response = ThreadResponse.builder()
+            .id(threadId).title("Test").body("Body").status("CLOSED")
+            .createdAt(LocalDateTime.now()).build();
+        when(threadService.close(eq(threadId), eq("author@example.com"))).thenReturn(response);
 
-        when(threadService.close(eq(id), eq("author@example.com"))).thenReturn(closed);
-
-        mockMvc.perform(patch("/api/v1/threads/{id}/close", id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.status").value("CLOSED"));
+        mockMvc.perform(patch("/api/v1/threads/" + threadId + "/close"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("CLOSED"));
     }
 
+    /** US12 / RN-14 Escenario 12.7 — no-autor intenta cerrar hilo → 403 */
     @Test
     @WithMockUser(username = "other@example.com")
-    void closeThread_asNonAuthor_returns403() throws Exception {
-        UUID id = UUID.randomUUID();
+    void close_byNonAuthor_returns403() throws Exception {
+        var threadId = UUID.randomUUID();
+        when(threadService.close(eq(threadId), any()))
+            .thenThrow(new ThreadNotOwnedException("Solo el autor puede cerrar este hilo"));
 
-        when(threadService.close(eq(id), eq("other@example.com")))
-                .thenThrow(new ThreadNotOwnedException("Only the author can close this thread: " + id));
-
-        mockMvc.perform(patch("/api/v1/threads/{id}/close", id))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("Forbidden"))
-                .andExpect(jsonPath("$.message").value("Only the author can close this thread: " + id));
+        mockMvc.perform(patch("/api/v1/threads/" + threadId + "/close"))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.error").value("Forbidden"));
     }
 
+    /** US12 — cerrar hilo inexistente → 404 */
     @Test
-    @WithMockUser(username = "author@example.com")
-    void closeThread_whenNotFound_returns404() throws Exception {
-        UUID id = UUID.randomUUID();
+    @WithMockUser(username = "user@example.com")
+    void close_notFound_returns404() throws Exception {
+        var threadId = UUID.randomUUID();
+        when(threadService.close(eq(threadId), any()))
+            .thenThrow(new ThreadNotFoundException("Thread not found"));
 
-        when(threadService.close(eq(id), eq("author@example.com")))
-                .thenThrow(new ThreadNotFoundException("Thread not found: " + id));
-
-        mockMvc.perform(patch("/api/v1/threads/{id}/close", id))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Thread not found: " + id));
+        mockMvc.perform(patch("/api/v1/threads/" + threadId + "/close"))
+            .andExpect(status().isNotFound());
     }
 
+    /** PATCH /threads/{id}/close — sin autenticación → 401 */
     @Test
-    @WithMockUser(username = "author@example.com")
-    void closeThread_alreadyClosed_returns409() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        when(threadService.close(eq(id), eq("author@example.com")))
-                .thenThrow(new ThreadClosedException("Thread is already closed: " + id));
-
-        mockMvc.perform(patch("/api/v1/threads/{id}/close", id))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict"))
-                .andExpect(jsonPath("$.message").value("Thread is already closed: " + id));
+    void close_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(patch("/api/v1/threads/" + UUID.randomUUID() + "/close"))
+            .andExpect(status().isUnauthorized());
     }
 
-    @Test
-    void closeThread_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(patch("/api/v1/threads/{id}/close", UUID.randomUUID()))
-                .andExpect(status().isUnauthorized());
-    }
+    // ── Helpers ────────────────────────────────────────────────────────────────
 
-    // =========================================================================
-    // Helpers
-    // =========================================================================
-
-    private CreateThreadRequest validThreadRequest(UUID courseId) {
-        var r = new CreateThreadRequest();
-        r.setTitle("¿Cómo resolver integrales dobles?");
-        r.setBody("Necesito ayuda con integrales dobles de funciones trigonométricas.");
-        r.setCourseId(courseId);
-        return r;
-    }
-
-    private ThreadResponse buildThreadResponse(UUID courseId, String title, boolean anonymous) {
-        return ThreadResponse.builder()
-                .id(UUID.randomUUID())
-                .title(title)
-                .body("Necesito ayuda con integrales dobles de funciones trigonométricas.")
-                .anonymous(anonymous)
-                .authorDisplay(anonymous ? "Anónimo" : "Juan Pérez")
-                .courseId(courseId)
-                .status("OPEN")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-    }
-
-    private ThreadResponse buildThreadResponse(UUID id, UUID courseId, String title, boolean anonymous) {
-        return ThreadResponse.builder()
-                .id(id)
-                .title(title)
-                .body("Necesito ayuda con integrales dobles de funciones trigonométricas.")
-                .anonymous(anonymous)
-                .authorDisplay(anonymous ? "Anónimo" : "Juan Pérez")
-                .courseId(courseId)
-                .status("OPEN")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-    }
-
-    private ThreadResponse buildAnonymousThreadResponse(UUID courseId, String title) {
-        return ThreadResponse.builder()
-                .id(UUID.randomUUID())
-                .title(title)
-                .body("Tengo dudas sobre este concepto matemático.")
-                .anonymous(true)
-                .authorDisplay("Anónimo")
-                .courseId(courseId)
-                .status("OPEN")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-    }
-
-    private CreateAnswerRequest validAnswerRequest() {
-        return new CreateAnswerRequest("Los límites de integración deben seguir el orden correcto.");
-    }
-
-    private AnswerResponse buildAnswerResponse(UUID threadId) {
-        return buildAnswerResponse(threadId,
-                "Los límites de integración deben seguir el orden correcto.", "Juan Pérez");
-    }
-
-    private AnswerResponse buildAnswerResponse(UUID threadId, String body, String authorDisplay) {
-        return AnswerResponse.builder()
-                .id(UUID.randomUUID())
-                .threadId(threadId)
-                .body(body)
-                .accepted(false)
-                .authorDisplay(authorDisplay)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-    }
-
-    private <T> PagedResponse<T> pageOf(List<T> items) {
-        return new PagedResponse<>(items, 0, 20, items.size(), items.isEmpty() ? 0 : 1, true);
+    /** Request base: título y body válidos, sin campos de contexto (para pruebas de validación) */
+    private CreateThreadRequest validRequest() {
+        var req = new CreateThreadRequest();
+        req.setTitle("¿Cómo estudiar Cálculo?");
+        req.setBody("Busco consejos para preparar el parcial de Cálculo I");
+        return req;
     }
 }

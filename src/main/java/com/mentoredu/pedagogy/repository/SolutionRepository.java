@@ -1,7 +1,11 @@
 package com.mentoredu.pedagogy.repository;
 
 import com.mentoredu.pedagogy.model.Solution;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,4 +18,16 @@ public interface SolutionRepository extends JpaRepository<Solution, UUID> {
     List<Solution> findByResourceId(UUID resourceId);
     List<Solution> findByStudentId(UUID studentId);
     List<Solution> findByStudentIdAndResourceIdIn(UUID studentId, Collection<UUID> resourceIds);
+
+    @Query("SELECT s FROM Solution s WHERE s.student.id = :studentId ORDER BY s.submittedAt DESC")
+    Page<Solution> findByStudentIdPaged(@Param("studentId") UUID studentId, Pageable pageable);
+
+    @Query("""
+        SELECT s FROM Solution s
+        WHERE s.resourceId IN (
+            SELECT r.id FROM Resource r WHERE r.author.id = :authorId
+        )
+        ORDER BY s.submittedAt DESC
+        """)
+    Page<Solution> findReceivedByAuthorId(@Param("authorId") UUID authorId, Pageable pageable);
 }

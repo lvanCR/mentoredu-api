@@ -84,6 +84,7 @@ public class AnswerService implements IAnswerService {
                 .threadId(a.getThread().getId())
                 .body(a.getBody())
                 .accepted(Boolean.TRUE.equals(a.getIsAccepted()))
+                .authorId(a.getAuthor().getId())
                 .authorDisplay(a.getAuthor().getFirstName() + " " + a.getAuthor().getLastName())
                 .likeCount(likes)
                 .dislikeCount(dislikes)

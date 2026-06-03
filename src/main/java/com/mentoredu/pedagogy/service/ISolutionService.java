@@ -1,6 +1,9 @@
 package com.mentoredu.pedagogy.service;
 
+import com.mentoredu.config.PagedResponse;
+import com.mentoredu.pedagogy.dto.MySolutionSummaryResponse;
 import com.mentoredu.pedagogy.dto.MySolutionWithFeedbackResponse;
+import com.mentoredu.pedagogy.dto.ReceivedSolutionResponse;
 import com.mentoredu.pedagogy.dto.SolutionResponse;
 import com.mentoredu.pedagogy.dto.SubmitSolutionRequest;
 
@@ -12,4 +15,6 @@ public interface ISolutionService {
     MySolutionWithFeedbackResponse getMyWithFeedback(UUID resourceId, String studentEmail);
     List<SolutionResponse> listByResource(UUID resourceId, String requesterEmail);
     SolutionResponse getById(UUID resourceId, UUID solutionId, String requesterEmail);
+    PagedResponse<MySolutionSummaryResponse> getMySolutions(String studentEmail, int page, int size);
+    PagedResponse<ReceivedSolutionResponse> getReceivedSolutions(String teacherEmail, int page, int size);
 }

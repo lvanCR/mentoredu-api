@@ -13,6 +13,7 @@ public class CommentResponse {
     private UUID answerId;
     private UUID threadId;
     private String body;
+    private UUID   authorId;
     private String authorDisplay;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
