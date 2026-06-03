@@ -21,26 +21,30 @@ public class ProfileResponse {
     private final long    followingCount;
     @JsonProperty("isFollowing")
     private final boolean isFollowing;
+    /** true solo si existe el registro en student_profiles para este usuario */
+    private final boolean hasStudentProfile;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
-    /** Used for PATCH /profiles/me — no social context needed. */
+    /** PATCH /profiles/me — sin contexto social ni datos de perfil especializado */
     public ProfileResponse(Profile profile) {
-        this(profile, 0L, 0L, false);
+        this(profile, 0L, 0L, false, false);
     }
 
-    public ProfileResponse(Profile profile, long followerCount, long followingCount, boolean isFollowing) {
-        this.id             = profile.getId();
-        this.userId         = profile.getUserId();
-        this.displayName    = profile.getDisplayName();
-        this.avatarUrl      = profile.getAvatarUrl();
-        this.city           = profile.getCity();
-        this.bio            = profile.getBio();
-        this.profileType    = profile.getProfileType();
-        this.followerCount  = followerCount;
-        this.followingCount = followingCount;
-        this.isFollowing    = isFollowing;
-        this.createdAt      = profile.getCreatedAt();
-        this.updatedAt      = profile.getUpdatedAt();
+    public ProfileResponse(Profile profile, long followerCount, long followingCount,
+                           boolean isFollowing, boolean hasStudentProfile) {
+        this.id                = profile.getId();
+        this.userId            = profile.getUserId();
+        this.displayName       = profile.getDisplayName();
+        this.avatarUrl         = profile.getAvatarUrl();
+        this.city              = profile.getCity();
+        this.bio               = profile.getBio();
+        this.profileType       = profile.getProfileType();
+        this.followerCount     = followerCount;
+        this.followingCount    = followingCount;
+        this.isFollowing       = isFollowing;
+        this.hasStudentProfile = hasStudentProfile;
+        this.createdAt         = profile.getCreatedAt();
+        this.updatedAt         = profile.getUpdatedAt();
     }
 }

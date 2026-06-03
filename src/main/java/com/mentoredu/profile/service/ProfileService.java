@@ -233,10 +233,12 @@ public class ProfileService implements IProfileService {
         long followerCount  = followRepository.countByFollowedId(userId);
         long followingCount = followRepository.countByFollowerId(userId);
 
-        User caller     = userService.findByEmailOrThrow(callerEmail);
-        boolean isFollowing = followRepository.existsByFollowerIdAndFollowedId(caller.getId(), userId);
+        User caller       = userService.findByEmailOrThrow(callerEmail);
+        boolean isFollowing       = followRepository.existsByFollowerIdAndFollowedId(caller.getId(), userId);
+        boolean hasStudentProfile = "STUDENT".equals(profile.getProfileType())
+                && studentProfileRepository.existsById(profile.getId());
 
-        return new ProfileResponse(profile, followerCount, followingCount, isFollowing);
+        return new ProfileResponse(profile, followerCount, followingCount, isFollowing, hasStudentProfile);
     }
 
     // -------------------------------------------------------------------------
