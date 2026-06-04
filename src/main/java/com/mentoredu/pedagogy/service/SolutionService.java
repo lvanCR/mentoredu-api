@@ -41,6 +41,7 @@ public class SolutionService implements ISolutionService {
     private final UserService    userService;
     private final ResourceAuthorizationService resourceAuthorizationService;
     private final ApplicationEventPublisher eventPublisher;
+    private final FeedbackService feedbackService;
 
     @Override
     @Transactional
@@ -70,12 +71,14 @@ public class SolutionService implements ISolutionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MySolutionWithFeedbackResponse getMyWithFeedback(UUID resourceId, String studentEmail) {
         User student = userService.findByEmailOrThrow(studentEmail);
         Solution solution = solutionRepository.findByResourceIdAndStudentId(resourceId, student.getId())
             .orElseThrow(() -> new SolutionNotFoundException("No has enviado resolución para este ejercicio"));
-        var feedback = feedbackEntryRepository.findBySolutionId(solution.getId()).orElse(null);
-        return MySolutionWithFeedbackResponse.of(solution, feedback);
+        var feedbackEntry = feedbackEntryRepository.findBySolutionId(solution.getId()).orElse(null);
+        var feedbackResponse = feedbackEntry != null ? feedbackService.enriched(feedbackEntry) : null;
+        return new MySolutionWithFeedbackResponse(SolutionResponse.from(solution), feedbackResponse);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.mentoredu.community.service;
 
+import com.mentoredu.community.dto.AssociatedMemberResponse;
 import com.mentoredu.community.dto.AssociationResponse;
 import com.mentoredu.community.dto.CreateAssociationRequest;
 
@@ -12,4 +13,10 @@ public interface IAssociationService {
     List<AssociationResponse> getAcademyRequests(String academyEmail);
     AssociationResponse acceptAssociation(UUID linkId, String academyEmail);
     AssociationResponse rejectAssociation(UUID linkId, String academyEmail);
+
+    /** Docentes aceptados de una academia — para mostrar en su perfil público. */
+    List<AssociatedMemberResponse> getAcceptedTeachersForAcademy(UUID academyUserId);
+
+    /** Academias a las que está asociado un docente — para su perfil público. */
+    List<AssociatedMemberResponse> getAcceptedAcademiesForTeacher(UUID teacherUserId);
 }
