@@ -50,6 +50,7 @@ public class SecurityConfig {
                     "/api/v1/catalog/courses",
                     "/api/v1/catalog/areas/*/courses",
                     "/api/v1/catalog/universities/*/careers",
+                    "/uploads/images/**",
                     "/actuator/health",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
