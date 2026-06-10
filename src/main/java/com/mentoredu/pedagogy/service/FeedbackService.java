@@ -5,6 +5,7 @@ import com.mentoredu.auth.service.UserService;
 import com.mentoredu.library.model.Resource;
 import com.mentoredu.library.repository.ResourceRepository;
 import com.mentoredu.library.exception.ResourceNotFoundException;
+import com.mentoredu.profile.repository.ProfileRepository;
 import com.mentoredu.pedagogy.dto.CreateFeedbackRequest;
 import com.mentoredu.pedagogy.dto.FeedbackResponse;
 import com.mentoredu.pedagogy.event.FeedbackGivenEvent;
@@ -35,6 +36,7 @@ public class FeedbackService implements IFeedbackService {
     private final UserService    userService;
     private final ResourceAuthorizationService resourceAuthorizationService;
     private final ApplicationEventPublisher eventPublisher;
+    private final ProfileRepository profileRepository;
 
     @Override
     @Transactional
@@ -60,13 +62,22 @@ public class FeedbackService implements IFeedbackService {
         FeedbackEntry saved = feedbackEntryRepository.save(feedback);
         eventPublisher.publishEvent(new FeedbackGivenEvent(
                 saved.getId(), solutionId, solution.getStudent().getId(), solution.getResourceId()));
-        return FeedbackResponse.from(saved);
+        return enriched(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FeedbackResponse getBySolution(UUID solutionId) {
         FeedbackEntry feedback = feedbackEntryRepository.findBySolutionId(solutionId)
             .orElseThrow(() -> new FeedbackNotFoundException("No hay feedback para esta resolución"));
-        return FeedbackResponse.from(feedback);
+        return enriched(feedback);
+    }
+
+    /** Construye FeedbackResponse con el displayName del perfil del autor si existe. */
+    @Transactional(readOnly = true)
+    public FeedbackResponse enriched(FeedbackEntry f) {
+        return profileRepository.findByUserId(f.getAuthor().getId())
+            .map(p -> FeedbackResponse.from(f, p.getDisplayName()))
+            .orElseGet(() -> FeedbackResponse.from(f));
     }
 }

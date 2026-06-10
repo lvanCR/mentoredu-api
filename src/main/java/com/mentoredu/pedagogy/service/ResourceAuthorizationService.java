@@ -1,6 +1,7 @@
 package com.mentoredu.pedagogy.service;
 
 import com.mentoredu.auth.entity.User;
+import com.mentoredu.community.model.AssociationStatus;
 import com.mentoredu.community.repository.TeacherAcademyLinkRepository;
 import com.mentoredu.library.model.Resource;
 import com.mentoredu.profile.repository.AcademyProfileRepository;
@@ -32,7 +33,7 @@ public class ResourceAuthorizationService {
         return teacherAcademyLinkRepository
             .findByTeacherProfileIdAndAcademyProfileId(
                 teacherProfile.get().getProfileId(), academyProfile.get().getProfileId())
-            .map(link -> "ACCEPTED".equals(link.getStatus()))
+            .map(link -> AssociationStatus.ACCEPTED == link.getStatus())
             .orElse(false);
     }
 }

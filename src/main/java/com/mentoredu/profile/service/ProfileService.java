@@ -5,7 +5,9 @@ import com.mentoredu.auth.service.UserService;
 import com.mentoredu.catalog.repository.AreaRepository;
 import com.mentoredu.catalog.repository.CareerRepository;
 import com.mentoredu.catalog.repository.UniversityRepository;
+import com.mentoredu.community.model.VerificationStatus;
 import com.mentoredu.community.repository.FollowRepository;
+import com.mentoredu.community.repository.VerificationRequestRepository;
 import com.mentoredu.profile.dto.*;
 import com.mentoredu.profile.exception.*;
 import com.mentoredu.profile.model.*;
@@ -30,6 +32,7 @@ public class ProfileService implements IProfileService {
     private final AreaRepository               areaRepository;
     private final CareerRepository             careerRepository;
     private final FollowRepository             followRepository;
+    private final VerificationRequestRepository verificationRequestRepository;
 
     // -------------------------------------------------------------------------
     // US05 — Update common profile data
@@ -39,6 +42,12 @@ public class ProfileService implements IProfileService {
     @Transactional
     public ProfileResponse updateProfile(String email, UpdateProfileRequest request) {
         User user = userService.findByEmailOrThrow(email);
+
+        // ADMIN y MODERATOR no tienen perfil editable
+        String role = user.getRole() != null ? user.getRole().getName() : "";
+        if ("ADMIN".equals(role) || "MODERATOR".equals(role)) {
+            throw new WrongProfileTypeException("Los usuarios del sistema no tienen un perfil editable.");
+        }
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
@@ -227,18 +236,28 @@ public class ProfileService implements IProfileService {
     @Override
     @Transactional(readOnly = true)
     public ProfileResponse getPublicProfile(UUID userId, String callerEmail) {
-        Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + userId));
+        Profile profile = profileRepository.findByUserId(userId).orElse(null);
+
+        // ADMIN / MODERATOR no tienen registro en profiles — devolver respuesta sintética
+        if (profile == null) {
+            User target = userService.findByIdOrThrow(userId);
+            String role = target.getRole() != null ? target.getRole().getName() : "";
+            if ("ADMIN".equals(role) || "MODERATOR".equals(role)) {
+                return ProfileResponse.forSystemUser(target);
+            }
+            throw new ProfileNotFoundException("Profile not found for user: " + userId);
+        }
 
         long followerCount  = followRepository.countByFollowedId(userId);
         long followingCount = followRepository.countByFollowerId(userId);
 
-        User caller       = userService.findByEmailOrThrow(callerEmail);
+        User caller               = userService.findByEmailOrThrow(callerEmail);
         boolean isFollowing       = followRepository.existsByFollowerIdAndFollowedId(caller.getId(), userId);
         boolean hasStudentProfile = "STUDENT".equals(profile.getProfileType())
                 && studentProfileRepository.existsById(profile.getId());
+        boolean isVerified = verificationRequestRepository.existsByUserIdAndStatus(userId, VerificationStatus.APPROVED);
 
-        return new ProfileResponse(profile, followerCount, followingCount, isFollowing, hasStudentProfile);
+        return new ProfileResponse(profile, followerCount, followingCount, isFollowing, hasStudentProfile, isVerified);
     }
 
     // -------------------------------------------------------------------------

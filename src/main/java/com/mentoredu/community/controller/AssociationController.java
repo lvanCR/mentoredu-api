@@ -1,5 +1,6 @@
 package com.mentoredu.community.controller;
 
+import com.mentoredu.community.dto.AssociatedMemberResponse;
 import com.mentoredu.community.dto.AssociationResponse;
 import com.mentoredu.community.dto.CreateAssociationRequest;
 import com.mentoredu.community.service.IAssociationService;
@@ -55,5 +56,17 @@ public class AssociationController {
     @Operation(summary = "US24 - Academia rechaza solicitud de asociación")
     public ResponseEntity<AssociationResponse> reject(@PathVariable UUID id) {
         return ResponseEntity.ok(associationService.rejectAssociation(id, SecurityUtils.currentEmail()));
+    }
+
+    @GetMapping("/teacher-academy/academy/{userId}/teachers")
+    @Operation(summary = "Docentes aceptados de una academia — vista pública de perfil")
+    public ResponseEntity<List<AssociatedMemberResponse>> teachersOfAcademy(@PathVariable UUID userId) {
+        return ResponseEntity.ok(associationService.getAcceptedTeachersForAcademy(userId));
+    }
+
+    @GetMapping("/teacher-academy/teacher/{userId}/academies")
+    @Operation(summary = "Academias asociadas a un docente — vista pública de perfil")
+    public ResponseEntity<List<AssociatedMemberResponse>> academiesOfTeacher(@PathVariable UUID userId) {
+        return ResponseEntity.ok(associationService.getAcceptedAcademiesForTeacher(userId));
     }
 }

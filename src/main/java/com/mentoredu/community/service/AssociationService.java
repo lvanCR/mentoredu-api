@@ -2,8 +2,11 @@ package com.mentoredu.community.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.service.UserService;
+import com.mentoredu.community.dto.AssociatedMemberResponse;
 import com.mentoredu.community.dto.AssociationResponse;
 import com.mentoredu.community.dto.CreateAssociationRequest;
+import com.mentoredu.community.model.VerificationStatus;
+import com.mentoredu.community.repository.VerificationRequestRepository;
 import com.mentoredu.community.event.AssociationResolvedEvent;
 import com.mentoredu.community.exception.AcademyNotFoundException;
 import com.mentoredu.community.exception.AcademyProfileRequiredException;
@@ -39,6 +42,7 @@ public class AssociationService implements IAssociationService {
     private final AcademyProfileRepository academyProfileRepository;
     private final UserService    userService;
     private final ApplicationEventPublisher eventPublisher;
+    private final VerificationRequestRepository verificationRequestRepository;
 
     @Override
     @Transactional
@@ -129,6 +133,44 @@ public class AssociationService implements IAssociationService {
         );
 
         return new AssociationResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssociatedMemberResponse> getAcceptedTeachersForAcademy(UUID academyUserId) {
+        Profile academyProfile = profileRepository.findByUserId(academyUserId)
+                .orElseThrow(() -> new ProfileNotFoundException("Perfil no encontrado: " + academyUserId));
+
+        return linkRepository.findByAcademyProfileId(academyProfile.getId()).stream()
+                .filter(l -> AssociationStatus.ACCEPTED == l.getStatus())
+                .map(l -> profileRepository.findById(l.getTeacherProfileId()).map(tp -> {
+                    boolean verified = verificationRequestRepository
+                            .existsByUserIdAndStatus(tp.getUserId(), VerificationStatus.APPROVED);
+                    return new AssociatedMemberResponse(
+                            tp.getId(), tp.getUserId(), tp.getDisplayName(),
+                            tp.getAvatarUrl(), tp.getProfileType(), verified);
+                }).orElse(null))
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssociatedMemberResponse> getAcceptedAcademiesForTeacher(UUID teacherUserId) {
+        Profile teacherProfile = profileRepository.findByUserId(teacherUserId)
+                .orElseThrow(() -> new ProfileNotFoundException("Perfil no encontrado: " + teacherUserId));
+
+        return linkRepository.findByTeacherProfileId(teacherProfile.getId()).stream()
+                .filter(l -> AssociationStatus.ACCEPTED == l.getStatus())
+                .map(l -> profileRepository.findById(l.getAcademyProfileId()).map(ap -> {
+                    boolean verified = verificationRequestRepository
+                            .existsByUserIdAndStatus(ap.getUserId(), VerificationStatus.APPROVED);
+                    return new AssociatedMemberResponse(
+                            ap.getId(), ap.getUserId(), ap.getDisplayName(),
+                            ap.getAvatarUrl(), ap.getProfileType(), verified);
+                }).orElse(null))
+                .filter(java.util.Objects::nonNull)
+                .toList();
     }
 
     private Profile resolveProfile(String email) {

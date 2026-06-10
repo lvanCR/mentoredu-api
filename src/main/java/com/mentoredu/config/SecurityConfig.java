@@ -50,6 +50,7 @@ public class SecurityConfig {
                     "/api/v1/catalog/courses",
                     "/api/v1/catalog/areas/*/courses",
                     "/api/v1/catalog/universities/*/careers",
+                    "/uploads/images/**",
                     "/actuator/health",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
@@ -80,7 +81,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(frontendBaseUrl));
+        config.setAllowedOrigins(List.of(frontendBaseUrl, "https://mentoredu-app.github.io"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(false);
