@@ -28,7 +28,8 @@ public class CloudinaryFileStorageService implements IFileStorageService {
             Map<String, Object> options = ObjectUtils.asMap(
                 "resource_type", "raw",
                 "folder",        "mentoredu/" + folder,
-                "public_id",     publicId
+                "public_id",     publicId,
+                "access_mode",   "public"
             );
             Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(), options);
             String fileUrl   = (String) result.get("secure_url");
