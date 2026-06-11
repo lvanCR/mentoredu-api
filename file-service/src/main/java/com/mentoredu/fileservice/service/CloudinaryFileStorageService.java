@@ -11,13 +11,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
@@ -52,83 +49,34 @@ public class CloudinaryFileStorageService implements IFileStorageService {
 
     @Override
     public byte[] fetch(String fileUrl) {
-        String publicId = null;
         try {
-            publicId = extractPublicId(fileUrl);
-            String cloudName = cloudinary.config.cloudName;
-            String apiKey    = cloudinary.config.apiKey;
-            String apiSecret = cloudinary.config.apiSecret;
-            long   timestamp = System.currentTimeMillis() / 1000L;
-
-            // Cloudinary signing: params alphabetically sorted, raw (non-URL-encoded) values
-            // "public_id" < "timestamp" alphabetically — order is correct
-            String paramsToSign = "public_id=" + publicId + "&timestamp=" + timestamp;
-            String signature    = sha1Hex(paramsToSign + apiSecret);
-            String encodedId    = URLEncoder.encode(publicId, StandardCharsets.UTF_8);
-
-            String downloadUrl = "https://api.cloudinary.com/v1_1/" + cloudName + "/raw/download"
-                               + "?public_id=" + encodedId
-                               + "&timestamp=" + timestamp
-                               + "&api_key="   + apiKey
-                               + "&signature=" + signature;
-
-            log.info("Fetching from Cloudinary API: publicId={}", publicId);
-
+            log.info("Fetching file: {}", fileUrl);
             HttpClient client = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.ALWAYS)
                 .connectTimeout(Duration.ofSeconds(30))
                 .build();
             HttpResponse<byte[]> resp = client.send(
                 HttpRequest.newBuilder()
-                    .uri(URI.create(downloadUrl))
+                    .uri(URI.create(fileUrl))
                     .timeout(Duration.ofSeconds(60))
                     .GET()
                     .build(),
                 HttpResponse.BodyHandlers.ofByteArray()
             );
-
             if (resp.statusCode() != 200) {
                 String body = new String(resp.body(), StandardCharsets.UTF_8);
-                log.error("Cloudinary download failed: HTTP {} for publicId={} — {}", resp.statusCode(), publicId, body);
-                throw new IllegalStateException(
-                    "Cloudinary HTTP " + resp.statusCode() + " for: " + publicId + " | " + body);
+                log.error("Fetch failed: HTTP {} for {} — {}", resp.statusCode(), fileUrl, body);
+                throw new IllegalStateException("HTTP " + resp.statusCode() + " fetching: " + fileUrl);
             }
-
-            log.info("Fetched {} bytes for publicId={}", resp.body().length, publicId);
+            log.info("Fetched {} bytes from {}", resp.body().length, fileUrl);
             return resp.body();
-
         } catch (IllegalStateException ex) {
             throw ex;
         } catch (IOException | InterruptedException ex) {
             if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
-            log.error("IO error fetching from Cloudinary, publicId={}: {}", publicId, ex.getMessage());
-            throw new IllegalStateException("IO error al obtener de Cloudinary: " + ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Unexpected error in fetch, publicId={}: {}", publicId, ex.getMessage(), ex);
-            throw new IllegalStateException("Error inesperado en fetch: " + ex.getMessage());
+            log.error("IO error fetching {}: {}", fileUrl, ex.getMessage());
+            throw new IllegalStateException("IO error al obtener archivo: " + ex.getMessage());
         }
-    }
-
-    private String sha1Hex(String input) {
-        try {
-            byte[] hash = MessageDigest.getInstance("SHA-1")
-                .digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder(40);
-            for (byte b : hash) sb.append(String.format("%02x", b));
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-1 not available", e);
-        }
-    }
-
-    private String extractPublicId(String cloudinaryUrl) {
-        // URL format: https://res.cloudinary.com/{cloud}/raw/upload/v{version}/{public_id}
-        String[] parts = cloudinaryUrl.split("/upload/");
-        if (parts.length < 2) {
-            log.warn("Cannot extract publicId from URL: {}", cloudinaryUrl);
-            return cloudinaryUrl;
-        }
-        return parts[1].replaceFirst("^v\\d+/", "");
     }
 
     private String extractExtension(String filename) {
