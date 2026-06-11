@@ -18,4 +18,11 @@ public class DevEmailService implements IEmailService {
         log.info("[DEV] Password reset link for {}: {}/reset-password?token={}",
                 to, frontendBaseUrl, token);
     }
+
+    @Override
+    public void sendContactNotification(String name, String email, String phone, String category, String institution) {
+        log.info("[DEV] Contact form — name: {}, email: {}, role: {}, institution: {}, phone: {}",
+                name, email, category, institution, phone);
+        log.info("[DEV] Confirmation email would be sent to: {}", email);
+    }
 }

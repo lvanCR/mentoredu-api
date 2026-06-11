@@ -29,6 +29,9 @@ public class SecurityConfig {
     @Value("${app.frontend.base-url}")
     private String frontendBaseUrl;
 
+    @Value("${app.landing.base-url:https://mentoredu-app.github.io}")
+    private String landingBaseUrl;
+
     @Bean
     @Profile("prod")
     public RateLimitFilter rateLimitFilter() {
@@ -45,6 +48,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/api/v1/auth/**",
+                    "/api/v1/contact",
                     "/api/v1/catalog/universities",
                     "/api/v1/catalog/universities/*/areas",
                     "/api/v1/catalog/courses",
@@ -81,7 +85,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(frontendBaseUrl));
+        config.setAllowedOrigins(List.of(frontendBaseUrl, landingBaseUrl));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(false);
