@@ -48,14 +48,17 @@ public class CloudinaryFileStorageService implements IFileStorageService {
     public byte[] fetch(String fileUrl) {
         try {
             String publicId = extractPublicId(fileUrl);
-            // Signed URL valid 15 minutes — bypasses account-level access restrictions
+            // forceVersion(false) avoids appending v1 which can mismatch the real version
+            // signed(true) generates HMAC signature — required for "Blocked for delivery" resources
             String signedUrl = cloudinary.url()
                 .resourceType("raw")
                 .type("upload")
+                .forceVersion(false)
                 .signed(true)
                 .generate(publicId);
 
             HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.ALWAYS)
                 .connectTimeout(Duration.ofSeconds(30))
                 .build();
             HttpRequest req = HttpRequest.newBuilder()
@@ -66,7 +69,7 @@ public class CloudinaryFileStorageService implements IFileStorageService {
             HttpResponse<byte[]> resp = client.send(req, HttpResponse.BodyHandlers.ofByteArray());
             if (resp.statusCode() != 200) {
                 throw new IllegalStateException(
-                    "Cloudinary respondió con HTTP " + resp.statusCode() + " al descargar: " + publicId);
+                    "Cloudinary respondio HTTP " + resp.statusCode() + " para: " + publicId);
             }
             return resp.body();
         } catch (IOException | InterruptedException ex) {
