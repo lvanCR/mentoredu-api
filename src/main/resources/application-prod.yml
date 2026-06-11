@@ -27,7 +27,7 @@ app:
     sendgrid:
       api-key: ${SENDGRID_API_KEY}
   file-service:
-    base-url: ${FILE_SERVICE_URL}
+    base-url: ${FILE_SERVICE_URL:https://file-service-e9i8.onrender.com}
   frontend:
     base-url: ${FRONTEND_BASE_URL:https://mentoredu-frontend.onrender.com}
   landing:
