@@ -18,11 +18,8 @@ public class ResourceFileService implements IResourceFileService {
 
     private final RestClient restClient;
 
-    @Value("${app.file-service.base-url}")
-    private String fileServiceBaseUrl;
-
-    public ResourceFileService(RestClient.Builder builder) {
-        this.restClient = builder.build();
+    public ResourceFileService(@Value("${app.file-service.base-url}") String fileServiceBaseUrl) {
+        this.restClient = RestClient.create(fileServiceBaseUrl);
     }
 
     @Override
@@ -35,7 +32,7 @@ public class ResourceFileService implements IResourceFileService {
             });
 
             Map<?, ?> response = restClient.post()
-                .uri(fileServiceBaseUrl + "/api/files/pdf")
+                .uri("/api/files/pdf")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(body)
                 .retrieve()

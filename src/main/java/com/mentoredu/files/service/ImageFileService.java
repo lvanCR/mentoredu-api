@@ -18,11 +18,8 @@ public class ImageFileService implements IImageFileService {
 
     private final RestClient restClient;
 
-    @Value("${app.file-service.base-url}")
-    private String fileServiceBaseUrl;
-
-    public ImageFileService(RestClient.Builder builder) {
-        this.restClient = builder.build();
+    public ImageFileService(@Value("${app.file-service.base-url}") String fileServiceBaseUrl) {
+        this.restClient = RestClient.create(fileServiceBaseUrl);
     }
 
     @Override
@@ -35,7 +32,7 @@ public class ImageFileService implements IImageFileService {
             });
 
             Map<?, ?> response = restClient.post()
-                .uri(fileServiceBaseUrl + "/api/files/image")
+                .uri("/api/files/image")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(body)
                 .retrieve()

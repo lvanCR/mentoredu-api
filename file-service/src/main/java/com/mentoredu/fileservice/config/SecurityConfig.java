@@ -18,7 +18,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/files/**", "/actuator/health").permitAll()
+                .requestMatchers("/api/files/**", "/uploads/**", "/actuator/health").permitAll()
                 .anyRequest().denyAll()
             );
         return http.build();

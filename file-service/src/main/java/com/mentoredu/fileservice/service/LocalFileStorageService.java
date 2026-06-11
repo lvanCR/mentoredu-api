@@ -19,15 +19,18 @@ public class LocalFileStorageService implements IFileStorageService {
     @Value("${app.file.upload-dir:uploads/files}")
     private String uploadDir;
 
+    @Value("${app.base-url:http://localhost:8081}")
+    private String baseUrl;
+
     @Override
     public FileUploadResponse store(MultipartFile file, String folder) {
         try {
-            String ext       = extractExtension(file.getOriginalFilename());
+            String ext        = extractExtension(file.getOriginalFilename());
             String storedName = UUID.randomUUID() + (ext.isEmpty() ? "" : "." + ext);
-            Path dir         = Paths.get(uploadDir, folder);
+            Path dir          = Paths.get(uploadDir, folder);
             Files.createDirectories(dir);
             Files.write(dir.resolve(storedName), file.getBytes());
-            String fileUrl = uploadDir + "/" + folder + "/" + storedName;
+            String fileUrl = baseUrl + "/" + uploadDir + "/" + folder + "/" + storedName;
             return new FileUploadResponse(fileUrl, file.getOriginalFilename(), file.getContentType(), file.getSize());
         } catch (IOException ex) {
             throw new IllegalStateException("No se pudo almacenar el archivo: " + ex.getMessage());
