@@ -19,8 +19,9 @@ app:
   frontend:
     base-url: ${FRONTEND_BASE_URL:https://mentoredu-frontend.onrender.com}
 
-cloudinary:
-  url: ${CLOUDINARY_URL}
+app:
+  file-service:
+    base-url: ${FILE_SERVICE_URL}
 
 springdoc:
   api-docs:
