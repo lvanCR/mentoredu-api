@@ -1,0 +1,26 @@
+spring:
+  main:
+    banner-mode: off
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 21MB
+
+app:
+  file:
+    upload-dir: ${FILE_UPLOAD_DIR:uploads/files}
+    max-pdf-size-mb: ${FILE_MAX_PDF_SIZE_MB:20}
+    max-image-size-mb: ${FILE_MAX_IMAGE_SIZE_MB:5}
+
+server:
+  port: ${PORT:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

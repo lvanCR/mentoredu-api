@@ -15,11 +15,22 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
-      - key: CLOUDINARY_URL
-        sync: false
       - key: SENDGRID_API_KEY
         sync: false
       - key: MAIL_FROM_ADDRESS
         sync: false
       - key: FRONTEND_BASE_URL
+        sync: false
+      - key: FILE_SERVICE_URL
+        sync: false
+
+  - type: web
+    name: file-service
+    runtime: docker
+    dockerfilePath: ./file-service/Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: CLOUDINARY_URL
         sync: false

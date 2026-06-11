@@ -9,7 +9,12 @@ title MentorEdu API — Level 3: Componentes (Organización interna por Bounded 
 
 Container(spa, "Single-Page Application", "Angular", "Interfaz de usuario web interactiva que envía peticiones HTTP y maneja tokens JWT.")
 
-Container_Boundary(api_boundary, "API Application (Spring Boot)") {
+Container_Boundary(file_api_boundary, "File Service (Spring Boot — puerto 8081)") {
+    Component(file_ctrl, "FileController", "Spring RestController", "Endpoints POST /api/files/pdf y /api/files/image. Valida tipo MIME y magic bytes antes de delegar al storage.")
+    Component(file_svc, "FileStorageService", "Spring Service (@Profile)", "LocalFileStorageService en dev (uploads/). CloudinaryFileStorageService en prod. Misma interfaz, distinta implementación.")
+}
+
+Container_Boundary(api_boundary, "API Application (Spring Boot — puerto 8080)") {
 
     Component(security_cfg, "SecurityConfig", "Spring Security", "Intercepta peticiones, valida firmas de tokens JWT, maneja Rate Limiting y aplica políticas de autorización globales.")
 
@@ -31,6 +36,7 @@ Container_Boundary(api_boundary, "API Application (Spring Boot)") {
     Boundary(library_module, "Library Context") {
         Component(lib_ctrl, "ResourceController", "Spring RestController", "Endpoints para catalogar, buscar, filtrar y descargar recursos.")
         Component(lib_svc, "ResourceService", "Spring Service", "Valida metadatos de documentos y gestiona la disponibilidad de recursos evaluables.")
+        Component(lib_file_svc, "ResourceFileService", "Spring Service (RestClient)", "Reenvía archivos PDF al File Service vía HTTP y devuelve la URL resultante al controlador.")
         Component(lib_repo, "ResourceRepository", "Spring Data JPA", "Persistencia de metadatos de recursos y colecciones en PDF.")
     }
 
@@ -89,7 +95,8 @@ Rel(prof_svc, cat_svc, "Valida datos maestros", "Llamada Interna")
 
 Rel(lib_ctrl, lib_svc, "Llama")
 Rel(lib_svc, lib_repo, "Usa")
-Rel(lib_svc, cloudinary, "Sube/Descarga PDFs", "HTTPS/API")
+Rel(lib_svc, lib_file_svc, "Delega subida de PDF")
+Rel(lib_file_svc, file_ctrl, "POST /api/files/pdf", "HTTP/Multipart")
 Rel(lib_svc, cat_svc, "Valida consistencia carrera-área", "Llamada Interna")
 
 Rel(forum_ctrl, forum_svc, "Llama")
@@ -106,6 +113,10 @@ Rel(comm_svc, sendgrid, "Notifica resoluciones de verificación y vínculos", "H
 
 Rel(cat_ctrl, cat_svc, "Llama")
 Rel(cat_svc, cat_repo, "Usa")
+
+' === FILE SERVICE (contenedor externo) ===
+Rel(file_ctrl, file_svc, "Llama")
+Rel(file_svc, cloudinary, "Sube archivos en prod", "HTTPS/API")
 
 ' === PERSISTENCIA ===
 Rel(auth_repo, db, "Escribe/Lee", "JDBC/JPA")

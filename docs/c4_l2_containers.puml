@@ -15,7 +15,9 @@ System_Boundary(mentoredu_boundary, "Plataforma MentorEdu") {
 
     Container(spa, "Single-Page Application", "Angular", "Interfaz de usuario web interactiva. Gestional el foro, biblioteca, perfiles y ciclo pedagógico.")
 
-    Container(api, "API Application", "Java 21, Spring Boot 3", "Provee la lógica de negocio modularizada por Bounded Contexts (Auth, Profile, Catalog, Library, Forum, Pedagogy, Community) vía API RESTful.")
+    Container(api, "API Application", "Java 21, Spring Boot 4", "Provee la lógica de negocio modularizada por Bounded Contexts (Auth, Profile, Catalog, Library, Forum, Pedagogy, Community) vía API RESTful.")
+
+    Container(file_service, "File Service", "Java 21, Spring Boot 4", "Servicio independiente de almacenamiento de archivos. Recibe PDFs e imágenes desde la API principal y los persiste en almacenamiento local (dev) o Cloudinary (prod).")
 
     ContainerDb(db, "Database", "PostgreSQL 16", "Almacena la información transaccional de usuarios, perfiles, metadatos de recursos, foro, calificaciones y trazas de auditoría.")
 }
@@ -35,7 +37,8 @@ Rel(spa, api, "Consume servicios y envía acciones", "HTTPS/JSON (JWT)")
 
 ' Interacciones del Backend (Lógica de Negocio)
 Rel(api, db, "Lee y escribe datos en", "JDBC/JPA")
-Rel(api, cloudinary, "Sube y recupera documentos PDF", "HTTPS/API REST")
+Rel(api, file_service, "Delega subida de archivos", "HTTP/Multipart")
+Rel(file_service, cloudinary, "Sube y recupera archivos", "HTTPS/API REST")
 Rel(api, sendgrid, "Solicita envío de emails", "HTTPS/API REST")
 
 @enduml
