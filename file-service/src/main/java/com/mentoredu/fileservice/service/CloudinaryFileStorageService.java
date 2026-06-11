@@ -14,6 +14,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,24 +46,21 @@ public class CloudinaryFileStorageService implements IFileStorageService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public byte[] fetch(String fileUrl) {
         try {
             String publicId = extractPublicId(fileUrl);
-            // forceVersion(false) avoids appending v1 which can mismatch the real version
-            // signed(true) generates HMAC signature — required for "Blocked for delivery" resources
-            String signedUrl = cloudinary.url()
-                .resourceType("raw")
-                .type("upload")
-                .forceVersion(false)
-                .signed(true)
-                .generate(publicId);
+            // privateDownload hits api.cloudinary.com (not CDN) with API key+secret auth.
+            // This bypasses access_mode restrictions entirely — works on all Cloudinary plans.
+            String downloadUrl = cloudinary.privateDownload(publicId, null,
+                ObjectUtils.asMap("resource_type", "raw", "attachment", false));
 
             HttpClient client = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.ALWAYS)
                 .connectTimeout(Duration.ofSeconds(30))
                 .build();
             HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(signedUrl))
+                .uri(URI.create(downloadUrl))
                 .timeout(Duration.ofSeconds(60))
                 .GET()
                 .build();
@@ -75,6 +73,8 @@ public class CloudinaryFileStorageService implements IFileStorageService {
         } catch (IOException | InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Error al obtener el archivo de Cloudinary: " + ex.getMessage());
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al generar URL de descarga: " + ex.getMessage());
         }
     }
 
