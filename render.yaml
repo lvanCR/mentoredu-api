@@ -28,6 +28,7 @@ services:
     name: file-service
     runtime: docker
     dockerfilePath: ./file-service/Dockerfile
+    dockerContext: ./file-service
     healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE

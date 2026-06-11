@@ -4,6 +4,7 @@ import com.mentoredu.library.dto.ResourceFileResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -11,6 +12,8 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.Map;
 
 @Service
@@ -19,7 +22,15 @@ public class ResourceFileService implements IResourceFileService {
     private final RestClient restClient;
 
     public ResourceFileService(@Value("${app.file-service.base-url}") String fileServiceBaseUrl) {
-        this.restClient = RestClient.create(fileServiceBaseUrl);
+        HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(30))
+            .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(Duration.ofSeconds(90));
+        this.restClient = RestClient.builder()
+            .baseUrl(fileServiceBaseUrl)
+            .requestFactory(factory)
+            .build();
     }
 
     @Override
