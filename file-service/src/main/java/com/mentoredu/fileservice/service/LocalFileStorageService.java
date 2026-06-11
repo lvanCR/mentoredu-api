@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +36,19 @@ public class LocalFileStorageService implements IFileStorageService {
             return new FileUploadResponse(fileUrl, file.getOriginalFilename(), file.getContentType(), file.getSize());
         } catch (IOException ex) {
             throw new IllegalStateException("No se pudo almacenar el archivo: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public byte[] fetch(String fileUrl) {
+        try {
+            String path = new URL(fileUrl).getPath(); // /uploads/files/resources/uuid.pdf
+            if (path.startsWith("/")) path = path.substring(1);
+            return Files.readAllBytes(Paths.get(path));
+        } catch (MalformedURLException ex) {
+            throw new IllegalStateException("URL de archivo inválida: " + fileUrl);
+        } catch (IOException ex) {
+            throw new IllegalStateException("No se pudo leer el archivo local: " + ex.getMessage());
         }
     }
 

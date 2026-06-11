@@ -5,4 +5,5 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface IResourceFileService {
     ResourceFileResponse upload(MultipartFile file);
+    byte[] fetchContent(String fileUrl);
 }

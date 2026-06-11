@@ -6,6 +6,7 @@ import com.mentoredu.fileservice.exception.InvalidFileTypeException;
 import com.mentoredu.fileservice.service.IFileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -81,6 +82,24 @@ public class FileController {
         if (file.getSize() > (long) maxMb * 1024 * 1024)
             throw new FileSizeLimitExceededException(
                 "El archivo supera el tamaño máximo de " + maxMb + " MB.");
+    }
+
+    @GetMapping("/stream")
+    public ResponseEntity<byte[]> stream(@RequestParam String fileUrl) {
+        byte[] content = fileStorageService.fetch(fileUrl);
+        String mimeType = detectMimeType(fileUrl);
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(mimeType))
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
+            .body(content);
+    }
+
+    private String detectMimeType(String url) {
+        String lower = url.toLowerCase();
+        if (lower.contains(".pdf"))  return "application/pdf";
+        if (lower.contains(".png"))  return "image/png";
+        if (lower.contains(".jpg") || lower.contains(".jpeg")) return "image/jpeg";
+        return "application/octet-stream";
     }
 
     private void validateMagicBytes(MultipartFile file, byte[] expected, int length) {

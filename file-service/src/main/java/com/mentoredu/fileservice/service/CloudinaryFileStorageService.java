@@ -9,6 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,6 +42,44 @@ public class CloudinaryFileStorageService implements IFileStorageService {
         } catch (IOException ex) {
             throw new IllegalStateException("Error al subir el archivo a Cloudinary: " + ex.getMessage());
         }
+    }
+
+    @Override
+    public byte[] fetch(String fileUrl) {
+        try {
+            String publicId = extractPublicId(fileUrl);
+            // Signed URL valid 15 minutes — bypasses account-level access restrictions
+            String signedUrl = cloudinary.url()
+                .resourceType("raw")
+                .type("upload")
+                .signed(true)
+                .generate(publicId);
+
+            HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(30))
+                .build();
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(signedUrl))
+                .timeout(Duration.ofSeconds(60))
+                .GET()
+                .build();
+            HttpResponse<byte[]> resp = client.send(req, HttpResponse.BodyHandlers.ofByteArray());
+            if (resp.statusCode() != 200) {
+                throw new IllegalStateException(
+                    "Cloudinary respondió con HTTP " + resp.statusCode() + " al descargar: " + publicId);
+            }
+            return resp.body();
+        } catch (IOException | InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Error al obtener el archivo de Cloudinary: " + ex.getMessage());
+        }
+    }
+
+    private String extractPublicId(String cloudinaryUrl) {
+        // https://res.cloudinary.com/{cloud}/raw/upload/v{ver}/{folder}/{uuid.ext}
+        String[] parts = cloudinaryUrl.split("/upload/");
+        if (parts.length < 2) return cloudinaryUrl;
+        return parts[1].replaceFirst("^v\\d+/", "");
     }
 
     private String extractExtension(String filename) {

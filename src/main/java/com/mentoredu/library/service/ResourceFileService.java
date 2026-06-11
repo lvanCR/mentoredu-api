@@ -12,7 +12,9 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 
@@ -58,5 +60,14 @@ public class ResourceFileService implements IResourceFileService {
         } catch (IOException ex) {
             throw new IllegalStateException("No se pudo leer el archivo para enviarlo al file-service: " + ex.getMessage());
         }
+    }
+
+    @Override
+    public byte[] fetchContent(String fileUrl) {
+        String encoded = URLEncoder.encode(fileUrl, StandardCharsets.UTF_8);
+        return restClient.get()
+            .uri("/api/files/stream?fileUrl=" + encoded)
+            .retrieve()
+            .body(byte[].class);
     }
 }

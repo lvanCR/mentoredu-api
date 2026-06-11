@@ -6,12 +6,15 @@ import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
+import com.mentoredu.library.service.IResourceFileService;
 import com.mentoredu.library.service.IResourceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -27,6 +30,7 @@ import java.util.UUID;
 public class ResourceController {
 
     private final IResourceService resourceService;
+    private final IResourceFileService resourceFileService;
 
     @PostMapping
     @Operation(
@@ -89,5 +93,19 @@ public class ResourceController {
     @Operation(summary = "US10 - Descargar un recurso académico")
     public ResponseEntity<DownloadResponse> download(@PathVariable UUID id) {
         return ResponseEntity.ok(resourceService.download(id, SecurityUtils.currentEmail()));
+    }
+
+    @GetMapping("/{id}/content")
+    @Operation(summary = "US10 - Obtener contenido binario de un recurso (proxy)")
+    public ResponseEntity<byte[]> content(@PathVariable UUID id) {
+        SecurityUtils.requireAuth();
+        ResourceResponse resource = resourceService.getById(id);
+        byte[] bytes = resourceFileService.fetchContent(resource.getFileUrl());
+        String mimeType = resource.getMimeType() != null ? resource.getMimeType() : "application/octet-stream";
+        String fileName = resource.getFileName() != null ? resource.getFileName() : "file";
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(mimeType))
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+            .body(bytes);
     }
 }
