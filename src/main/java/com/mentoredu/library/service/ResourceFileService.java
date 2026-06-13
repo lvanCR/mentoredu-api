@@ -1,8 +1,11 @@
 package com.mentoredu.library.service;
 
 import com.mentoredu.library.dto.ResourceFileResponse;
+import com.mentoredu.library.exception.FileSizeLimitExceededException;
+import com.mentoredu.library.exception.InvalidFileTypeException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 
@@ -47,6 +51,19 @@ public class ResourceFileService implements IResourceFileService {
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(body)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
+                    String raw = new String(res.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                    if (res.getStatusCode().value() == 415) {
+                        throw new InvalidFileTypeException("Solo se aceptan archivos PDF.");
+                    }
+                    if (res.getStatusCode().value() == 413) {
+                        throw new FileSizeLimitExceededException("El archivo supera el tamaño máximo permitido (20 MB).");
+                    }
+                    throw new IllegalArgumentException(raw);
+                })
+                .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
+                    throw new IllegalStateException("Error interno del servicio de archivos. Por favor intenta de nuevo.");
+                })
                 .body(Map.class);
 
             return new ResourceFileResponse(
