@@ -313,7 +313,7 @@ Y el recurso queda con acepta_resoluciones=false por defecto
 ```gherkin
 Dado que el fileId no existe o pertenece a otro usuario
 Cuando envío POST /api/v1/resources
-Entonces recibo 400 Bad Request
+Entonces recibo 403 Forbidden
 ```
 
 **Escenario 3 — Universidad/área/curso/carrera no en catálogo**
@@ -394,7 +394,6 @@ Entonces recibo 200 OK con lista vacía []
 Dado que el recurso existe y estoy autenticado
 Cuando envío GET /api/v1/resources/{id}/download
 Entonces recibo 200 OK con la URL de descarga del archivo
-Y se registra una entrada en download_logs con {userId, resourceId, downloadedAt}
 ```
 
 **Escenario 2 — Recurso no encontrado**
