@@ -27,6 +27,7 @@ public class ResourceFileService implements IResourceFileService {
 
     public ResourceFileService(@Value("${app.file-service.base-url}") String fileServiceBaseUrl) {
         HttpClient httpClient = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(30))
             .build();
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
@@ -57,7 +58,7 @@ public class ResourceFileService implements IResourceFileService {
                         throw new InvalidFileTypeException("Solo se aceptan archivos PDF.");
                     }
                     if (res.getStatusCode().value() == 413) {
-                        throw new FileSizeLimitExceededException("El archivo supera el tamaño máximo permitido (20 MB).");
+                        throw new FileSizeLimitExceededException("El archivo supera el tamaño máximo permitido (10 MB).");
                     }
                     throw new IllegalArgumentException(raw);
                 })

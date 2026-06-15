@@ -513,13 +513,6 @@ Cuando envío POST /api/v1/threads
 Entonces recibo 400 Bad Request
 ```
 
-**Escenario 10 — Carrera no pertenece a la universidad enviada**
-```gherkin
-Dado que envío universityId=UNMSM y careerId=Medicina-PUCP
-Cuando envío POST /api/v1/threads
-Entonces recibo 400 Bad Request con "La carrera no pertenece a la universidad seleccionada"
-```
-
 **Reglas:** RN-12, RN-13
 **Notificación:** ninguna al crear
 
@@ -848,14 +841,6 @@ Dado que no envié resolución para ese ejercicio
 Cuando envío GET /api/v1/resources/{id}/solutions/mine
 Entonces recibo 404 Not Found
 ```
-
-**Escenario 4 — Intento ver la resolución de otro estudiante**
-```gherkin
-Dado que intento acceder a una solución que no me pertenece
-Cuando envío la petición directa a esa resolución
-Entonces recibo 403 Forbidden
-```
-
 **Reglas:** RN-09, RN-10
 **Notificación:** ninguna (solo lectura)
 
@@ -1182,7 +1167,7 @@ Entonces recibo 201 Created con el área registrada
 Dado que soy ADMIN
 Cuando envío POST /api/v1/catalog/courses con {name}
 Y envío PUT /api/v1/catalog/areas/{id}/courses/{courseId}
-Entonces recibo 201 Created en cada llamada
+Entonces recibo 201 Created en crear curso y 204 en asociar
 Y el curso queda asociado al área
 ```
 
@@ -1203,7 +1188,7 @@ Entonces recibo 403 Forbidden
 **Escenario 6 — Consultar catálogo (público, sin autenticación)**
 ```gherkin
 Dado que soy cualquier visitante o usuario
-Cuando envío GET /api/v1/catalog/universities, /areas o /courses
+Cuando envío GET /api/v1/catalog/universities o /courses
 Entonces recibo 200 OK con los datos del catálogo sin necesitar token
 ```
 

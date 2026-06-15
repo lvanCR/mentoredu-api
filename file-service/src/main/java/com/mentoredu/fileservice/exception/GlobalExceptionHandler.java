@@ -29,6 +29,14 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo supera el tamaño máximo permitido por el servidor.");
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleCloudinaryRuntime(RuntimeException ex) {
+        if (ex.getMessage() != null && ex.getMessage().contains("File size too large")) {
+            return error(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo es demasiado grande para el almacenamiento (máximo 10 MB).");
+        }
+        return handleGeneric(ex);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         log.error("Unhandled exception: {}", ex.getMessage(), ex);

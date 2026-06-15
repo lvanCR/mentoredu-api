@@ -34,7 +34,7 @@ public class FileController {
 
     private final IFileStorageService fileStorageService;
 
-    @Value("${app.file.max-pdf-size-mb:20}")
+    @Value("${app.file.max-pdf-size-mb:10}")
     private int maxPdfSizeMb;
 
     @Value("${app.file.max-image-size-mb:5}")
