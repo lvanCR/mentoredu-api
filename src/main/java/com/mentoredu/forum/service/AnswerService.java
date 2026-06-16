@@ -56,7 +56,7 @@ public class AnswerService implements IAnswerService {
 
         if (!thread.getAuthor().getId().equals(user.getId())) {
             eventPublisher.publishEvent(new AnswerCreatedEvent(
-                    saved.getId(), thread.getAuthor().getId(), user.getId(), thread.getTitle()));
+                    saved.getId(), thread.getId(), thread.getAuthor().getId(), user.getId(), thread.getTitle()));
         }
         return toResponse(saved, user.getId());
     }

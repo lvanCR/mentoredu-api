@@ -54,7 +54,7 @@ public class CommentService implements ICommentService {
                     ? request.body().substring(0, 50) + "..."
                     : request.body();
             eventPublisher.publishEvent(new CommentCreatedEvent(
-                    saved.getId(), answerAuthorId, user.getId(), truncated));
+                    saved.getId(), answer.getThread().getId(), answerAuthorId, user.getId(), truncated));
         }
         return toResponse(saved);
     }

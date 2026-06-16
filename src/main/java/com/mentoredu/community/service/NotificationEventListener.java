@@ -41,6 +41,7 @@ public class NotificationEventListener {
                 notificationRepository.save(Notification.builder()
                         .user(recipient).type("answer_received")
                         .payload(Map.of("answerId", event.answerId().toString(),
+                                        "threadId", event.threadId().toString(),
                                         "threadTitle", event.threadTitle()))
                         .build())
             );
@@ -58,6 +59,7 @@ public class NotificationEventListener {
                 notificationRepository.save(Notification.builder()
                         .user(recipient).type("comment_received")
                         .payload(Map.of("commentId", event.commentId().toString(),
+                                        "threadId", event.threadId().toString(),
                                         "truncatedBody", event.truncatedBody()))
                         .build())
             );
