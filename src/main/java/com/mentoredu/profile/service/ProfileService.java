@@ -189,6 +189,11 @@ public class ProfileService implements IProfileService {
         TeacherProfile teacherProfile = TeacherProfile.builder()
                 .profile(profile)
                 .bioProfessional(request.getBioProfessional())
+                .universities(request.getUniversities())
+                .specialty(request.getSpecialty())
+                .courses(request.getCourses())
+                .experience(request.getExperience())
+                .summary(request.getSummary())
                 .build();
 
         return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
@@ -210,6 +215,20 @@ public class ProfileService implements IProfileService {
     }
 
     // -------------------------------------------------------------------------
+    // GET /profiles/teacher/{userId}
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public TeacherProfileResponse getTeacherProfileByUserId(UUID userId) {
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + userId));
+        TeacherProfile teacherProfile = teacherProfileRepository.findById(profile.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Teacher profile not found for user: " + userId));
+        return new TeacherProfileResponse(teacherProfile);
+    }
+
+    // -------------------------------------------------------------------------
     // Update teacher profile
     // -------------------------------------------------------------------------
 
@@ -225,6 +244,11 @@ public class ProfileService implements IProfileService {
                 .orElseThrow(() -> new ProfileNotFoundException("Teacher profile not found for user: " + email));
 
         if (request.getBioProfessional() != null) teacherProfile.setBioProfessional(request.getBioProfessional());
+        if (request.getUniversities()    != null) teacherProfile.setUniversities(request.getUniversities());
+        if (request.getSpecialty()       != null) teacherProfile.setSpecialty(request.getSpecialty());
+        if (request.getCourses()         != null) teacherProfile.setCourses(request.getCourses());
+        if (request.getExperience()      != null) teacherProfile.setExperience(request.getExperience());
+        if (request.getSummary()         != null) teacherProfile.setSummary(request.getSummary());
 
         return new TeacherProfileResponse(teacherProfileRepository.save(teacherProfile));
     }

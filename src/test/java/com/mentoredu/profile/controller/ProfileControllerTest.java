@@ -529,4 +529,25 @@ class ProfileControllerTest {
         mockMvc.perform(get("/api/v1/profiles/" + UUID.randomUUID()))
             .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getTeacherProfile_existingUser_returns200() throws Exception {
+        var userId = UUID.randomUUID();
+        var response = Mockito.mock(TeacherProfileResponse.class);
+        when(profileService.getTeacherProfileByUserId(userId)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/profiles/teacher/" + userId))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "user@example.com")
+    void getTeacherProfile_notFound_returns404() throws Exception {
+        when(profileService.getTeacherProfileByUserId(any()))
+            .thenThrow(new ProfileNotFoundException("Teacher profile not found"));
+
+        mockMvc.perform(get("/api/v1/profiles/teacher/" + UUID.randomUUID()))
+            .andExpect(status().isNotFound());
+    }
 }

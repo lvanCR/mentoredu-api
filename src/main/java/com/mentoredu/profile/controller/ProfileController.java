@@ -73,6 +73,12 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.getTeacherProfile(SecurityUtils.currentEmail()));
     }
 
+    @GetMapping("/teacher/{userId}")
+    @Operation(summary = "US05 - Obtener perfil de docente por userId")
+    public ResponseEntity<TeacherProfileResponse> getTeacherProfile(@PathVariable UUID userId) {
+        return ResponseEntity.ok(profileService.getTeacherProfileByUserId(userId));
+    }
+
     @PatchMapping("/teacher/me")
     @Operation(summary = "US05 - Actualizar perfil de docente")
     public ResponseEntity<TeacherProfileResponse> updateTeacherProfile(

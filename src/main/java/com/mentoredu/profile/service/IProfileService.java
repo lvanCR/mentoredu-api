@@ -15,6 +15,7 @@ public interface IProfileService {
 
     TeacherProfileResponse createTeacherProfile(String email, CreateTeacherProfileRequest request);
     TeacherProfileResponse getTeacherProfile(String email);
+    TeacherProfileResponse getTeacherProfileByUserId(UUID userId);
     TeacherProfileResponse updateTeacherProfile(String email, UpdateTeacherProfileRequest request);
 
     AcademyProfileResponse createAcademyProfile(String email, CreateAcademyProfileRequest request);

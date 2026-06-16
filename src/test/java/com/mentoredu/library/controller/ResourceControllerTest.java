@@ -9,6 +9,7 @@ import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
 import com.mentoredu.library.exception.*;
 import com.mentoredu.library.model.ResourceType;
+import com.mentoredu.library.service.IResourceFileService;
 import com.mentoredu.library.service.IResourceService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -52,6 +53,7 @@ class ResourceControllerTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @MockitoBean private IResourceService resourceService;
+    @MockitoBean private IResourceFileService resourceFileService;
     @MockitoBean private JwtUtil jwtUtil;
     @MockitoBean private UserDetailsService userDetailsService;
 

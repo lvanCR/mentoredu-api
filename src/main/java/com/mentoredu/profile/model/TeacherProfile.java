@@ -23,4 +23,19 @@ public class TeacherProfile {
 
     @Column(name = "bio_professional", columnDefinition = "text")
     private String bioProfessional;
+
+    @Column(name = "universities", length = 320)
+    private String universities;
+
+    @Column(name = "specialty", length = 180)
+    private String specialty;
+
+    @Column(name = "courses", length = 300)
+    private String courses;
+
+    @Column(name = "experience", length = 420)
+    private String experience;
+
+    @Column(name = "summary", length = 520)
+    private String summary;
 }
