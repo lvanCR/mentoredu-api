@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter @Setter @NoArgsConstructor
 public class CreateVerificationRequest {
@@ -18,6 +19,8 @@ public class CreateVerificationRequest {
              message = "entityType debe ser TEACHER o ACADEMY")
     @Size(max = 20, message = "El tipo de entidad no puede superar 20 caracteres")
     private String entityType;
+
+    private UUID universityId;
 
     @NotEmpty(message = "Se requiere al menos un documento adjunto (RN-16)")
     private List<DocInput> documents;

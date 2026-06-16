@@ -14,6 +14,7 @@ import com.mentoredu.community.model.VerificationRequest;
 import com.mentoredu.community.model.VerificationStatus;
 import com.mentoredu.community.repository.VerificationDocRepository;
 import com.mentoredu.community.repository.VerificationRequestRepository;
+import com.mentoredu.catalog.repository.UniversityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,6 +33,7 @@ public class VerificationService implements IVerificationService {
     private final VerificationRequestRepository verificationRepository;
     private final VerificationDocRepository     docRepository;
     private final UserService                   userService;
+    private final UniversityRepository          universityRepository;
     private final ApplicationEventPublisher     eventPublisher;
 
     @Override
@@ -43,9 +45,14 @@ public class VerificationService implements IVerificationService {
             throw new DuplicateVerificationException("Ya tienes una solicitud de verificación pendiente");
         }
 
+        if (request.getUniversityId() != null && !universityRepository.existsById(request.getUniversityId())) {
+            throw new IllegalArgumentException("Valor no encontrado en catalogo: universityId=" + request.getUniversityId());
+        }
+
         VerificationRequest vr = VerificationRequest.builder()
                 .user(user)
                 .entityType(request.getEntityType())
+                .universityId(request.getUniversityId())
                 .status(VerificationStatus.PENDING)
                 .build();
 

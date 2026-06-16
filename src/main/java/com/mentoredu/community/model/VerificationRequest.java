@@ -25,6 +25,9 @@ public class VerificationRequest {
     @Column(name = "entity_type", nullable = false, length = 20)
     private String entityType;
 
+    @Column(name = "university_id", columnDefinition = "uuid")
+    private UUID universityId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private VerificationStatus status = VerificationStatus.PENDING;

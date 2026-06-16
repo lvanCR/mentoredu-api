@@ -18,6 +18,7 @@ public class VerificationResponse {
     private final UUID id;
     private final UUID userId;
     private final String entityType;
+    private final UUID universityId;
     private final String status;
     private final String notes;
     private final LocalDateTime submittedAt;
@@ -28,6 +29,7 @@ public class VerificationResponse {
         this.id          = r.getId();
         this.userId      = r.getUser().getId();
         this.entityType  = r.getEntityType();
+        this.universityId = r.getUniversityId();
         this.status      = r.getStatus() != null ? r.getStatus().name() : null;
         this.notes       = r.getNotes();
         this.submittedAt = r.getSubmittedAt();
