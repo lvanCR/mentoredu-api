@@ -13,6 +13,7 @@ import com.mentoredu.forum.model.ForumThread;
 import com.mentoredu.forum.model.ThreadStatus;
 import com.mentoredu.forum.repository.ReactionRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
+import com.mentoredu.profile.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ public class ThreadService implements IThreadService {
     private final ReactionRepository reactionRepository;
     private final UserService        userService;
     private final ICatalogService    catalogService;
+    private final ProfileRepository  profileRepository;
 
     // -------------------------------------------------------------------------
     // US12 — Create forum thread
@@ -183,6 +185,7 @@ public class ThreadService implements IThreadService {
                 .anonymous(anon)
                 .authorId(anon ? null : t.getAuthor().getId())
                 .authorDisplay(display)
+                .authorAvatarUrl(anon ? null : avatarUrl(t.getAuthor().getId()))
                 .status(t.getStatus().name())
                 .universityId(t.getUniversityId())
                 .areaId(t.getAreaId())
@@ -195,4 +198,11 @@ public class ThreadService implements IThreadService {
                 .updatedAt(t.getUpdatedAt())
                 .build();
     }
+
+    private String avatarUrl(UUID userId) {
+        return profileRepository.findByUserId(userId)
+                .map(profile -> profile.getAvatarUrl())
+                .orElse(null);
+    }
+
 }

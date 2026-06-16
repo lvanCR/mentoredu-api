@@ -15,6 +15,7 @@ public class AnswerResponse {
     private boolean accepted;
     private UUID   authorId;
     private String authorDisplay;
+    private String authorAvatarUrl;
     private int    likeCount;
     private int    dislikeCount;
     private String myReaction;   // "LIKE" | "DISLIKE" | null

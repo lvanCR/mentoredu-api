@@ -15,6 +15,7 @@ public class CommentResponse {
     private String body;
     private UUID   authorId;
     private String authorDisplay;
+    private String authorAvatarUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -15,6 +15,7 @@ public class ThreadResponse {
     private boolean       anonymous;
     private UUID          authorId;     // null when anonymous
     private String        authorDisplay;
+    private String        authorAvatarUrl;
     private String        status;
     private UUID          universityId;
     private UUID          areaId;

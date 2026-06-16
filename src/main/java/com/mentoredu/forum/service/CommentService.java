@@ -9,6 +9,7 @@ import com.mentoredu.forum.model.Answer;
 import com.mentoredu.forum.model.Comment;
 import com.mentoredu.forum.repository.AnswerRepository;
 import com.mentoredu.forum.repository.CommentRepository;
+import com.mentoredu.profile.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class CommentService implements ICommentService {
     private final CommentRepository commentRepository;
     private final AnswerRepository answerRepository;
     private final UserService    userService;
+    private final ProfileRepository profileRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     // -------------------------------------------------------------------------
@@ -81,8 +83,16 @@ public class CommentService implements ICommentService {
                 .body(c.getBody())
                 .authorId(c.getAuthor().getId())
                 .authorDisplay(c.getAuthor().getFirstName() + " " + c.getAuthor().getLastName())
+                .authorAvatarUrl(avatarUrl(c.getAuthor().getId()))
                 .createdAt(c.getCreatedAt())
                 .updatedAt(c.getUpdatedAt())
                 .build();
     }
+
+    private String avatarUrl(UUID userId) {
+        return profileRepository.findByUserId(userId)
+                .map(profile -> profile.getAvatarUrl())
+                .orElse(null);
+    }
+
 }

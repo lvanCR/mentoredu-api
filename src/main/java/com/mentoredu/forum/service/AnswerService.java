@@ -12,6 +12,7 @@ import com.mentoredu.forum.model.ThreadStatus;
 import com.mentoredu.forum.repository.AnswerRepository;
 import com.mentoredu.forum.repository.ReactionRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
+import com.mentoredu.profile.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class AnswerService implements IAnswerService {
     private final ThreadRepository       threadRepository;
     private final ReactionRepository     reactionRepository;
     private final UserService            userService;
+    private final ProfileRepository      profileRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -86,6 +88,7 @@ public class AnswerService implements IAnswerService {
                 .accepted(Boolean.TRUE.equals(a.getIsAccepted()))
                 .authorId(a.getAuthor().getId())
                 .authorDisplay(a.getAuthor().getFirstName() + " " + a.getAuthor().getLastName())
+                .authorAvatarUrl(avatarUrl(a.getAuthor().getId()))
                 .likeCount(likes)
                 .dislikeCount(dislikes)
                 .myReaction(myReaction)
@@ -93,4 +96,11 @@ public class AnswerService implements IAnswerService {
                 .updatedAt(a.getUpdatedAt())
                 .build();
     }
+
+    private String avatarUrl(UUID userId) {
+        return profileRepository.findByUserId(userId)
+                .map(profile -> profile.getAvatarUrl())
+                .orElse(null);
+    }
+
 }
