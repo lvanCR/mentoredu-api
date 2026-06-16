@@ -207,7 +207,7 @@ class ResourceControllerTest {
     @WithMockUser(username = "user@example.com")
     void search_withNoFilters_returns200WithPagedList() throws Exception {
         var paged = new PagedResponse<ResourceResponse>(List.of(), 0, 20, 0L, 0, true);
-        when(resourceService.search(any(), any(), any(), any(), any(), any(), any(), eq(0), eq(20)))
+        when(resourceService.search(any(), any(), any(), any(), any(), any(), any(), any(), eq(0), eq(20)))
             .thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/resources"))
@@ -222,7 +222,7 @@ class ResourceControllerTest {
     @WithMockUser(username = "user@example.com")
     void search_withUniversityFilter_returns200() throws Exception {
         var paged = new PagedResponse<ResourceResponse>(List.of(), 0, 20, 0L, 0, true);
-        when(resourceService.search(any(), any(), eq(UNIVERSITY_ID), any(), any(), any(), any(), eq(0), eq(20)))
+        when(resourceService.search(any(), any(), eq(UNIVERSITY_ID), any(), any(), any(), any(), any(), eq(0), eq(20)))
             .thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/resources").param("universityId", UNIVERSITY_ID.toString()))
@@ -234,7 +234,7 @@ class ResourceControllerTest {
     @WithMockUser(username = "user@example.com")
     void search_withTextQuery_returns200() throws Exception {
         var paged = new PagedResponse<ResourceResponse>(List.of(), 0, 20, 0L, 0, true);
-        when(resourceService.search(eq("cálculo"), any(), any(), any(), any(), any(), any(), eq(0), eq(20)))
+        when(resourceService.search(eq("cálculo"), any(), any(), any(), any(), any(), any(), any(), eq(0), eq(20)))
             .thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/resources").param("q", "cálculo"))
@@ -246,7 +246,7 @@ class ResourceControllerTest {
     @WithMockUser(username = "user@example.com")
     void search_noResults_returns200WithEmptyContent() throws Exception {
         var paged = new PagedResponse<ResourceResponse>(List.of(), 0, 20, 0L, 0, true);
-        when(resourceService.search(any(), any(), any(), any(), any(), any(), any(), eq(0), eq(20)))
+        when(resourceService.search(any(), any(), any(), any(), any(), any(), any(), any(), eq(0), eq(20)))
             .thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/resources"))
@@ -260,7 +260,7 @@ class ResourceControllerTest {
     @WithMockUser(username = "user@example.com")
     void search_withCustomPagination_returns200() throws Exception {
         var paged = new PagedResponse<ResourceResponse>(List.of(), 0, 1, 21L, 21, false);
-        when(resourceService.search(any(), any(), any(), any(), any(), any(), any(), eq(0), eq(1)))
+        when(resourceService.search(any(), any(), any(), any(), any(), any(), any(), any(), eq(0), eq(1)))
             .thenReturn(paged);
 
         mockMvc.perform(get("/api/v1/resources").param("page", "0").param("size", "1"))
@@ -272,7 +272,7 @@ class ResourceControllerTest {
     @Test
     void search_unauthenticated_noEffect_stillReturns200() throws Exception {
         var paged = new PagedResponse<ResourceResponse>(List.of(), 0, 20, 0L, 0, true);
-        when(resourceService.search(any(), any(), any(), any(), any(), any(), any(), eq(0), eq(20)))
+        when(resourceService.search(any(), any(), any(), any(), any(), any(), any(), any(), eq(0), eq(20)))
             .thenReturn(paged);
         // SecurityUtils no se llama en GET /resources → accesible sin auth
         mockMvc.perform(get("/api/v1/resources"))

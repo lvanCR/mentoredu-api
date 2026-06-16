@@ -58,6 +58,9 @@ public class Resource {
     @Column(name = "resource_type", nullable = false, length = 30)
     private ResourceType resourceType;
 
+    @Column(name = "resource_year")
+    private Integer resourceYear;
+
     @Column(name = "acepta_resoluciones", nullable = false)
     private boolean aceptaResoluciones;
 

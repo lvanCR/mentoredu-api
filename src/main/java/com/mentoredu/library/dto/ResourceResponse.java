@@ -13,6 +13,7 @@ public class ResourceResponse {
     private final UUID         id;
     private final String       title;
     private final ResourceType resourceType;
+    private final Integer      resourceYear;
     private final String       description;
     private final UUID         universityId;
     private final UUID         areaId;
@@ -36,6 +37,7 @@ public class ResourceResponse {
         this.id                 = resource.getId();
         this.title              = resource.getTitle();
         this.resourceType       = resource.getResourceType();
+        this.resourceYear       = resource.getResourceYear();
         this.description        = resource.getDescription();
         this.universityId       = resource.getUniversityId();
         this.areaId             = resource.getAreaId();

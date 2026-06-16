@@ -28,6 +28,9 @@ public class PublishResourceRequest {
     @NotNull(message = "resourceType is required")
     private ResourceType resourceType;
 
+    /** Obligatorio para examenes; opcional para el resto. Null representa ano desconocido. */
+    private Integer resourceYear;
+
     private String description;
 
     private Boolean aceptaResoluciones;

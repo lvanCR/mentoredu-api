@@ -66,6 +66,15 @@ public class ResourceService implements IResourceService {
                     "courseId es obligatorio para el tipo " + type);
         }
 
+        Integer resourceYear = request.getResourceYear();
+        boolean examRequiresYear = type == ResourceType.EXAMEN_COMPLETO || type == ResourceType.EXAMEN_SECCION;
+        if (examRequiresYear && resourceYear == null) {
+            throw new IllegalArgumentException("resourceYear es obligatorio para examenes");
+        }
+        if (resourceYear != null && (resourceYear < 1900 || resourceYear > 2100)) {
+            throw new IllegalArgumentException("resourceYear debe estar entre 1900 y 2100");
+        }
+
         // RN-08: acepta_resoluciones solo válido para PRACTICA
         boolean aceptaResoluciones = Boolean.TRUE.equals(request.getAceptaResoluciones());
         if (aceptaResoluciones && type != ResourceType.PRACTICA) {
@@ -99,6 +108,7 @@ public class ResourceService implements IResourceService {
                 .careerId(request.getCareerId())
                 .courseId(request.getCourseId())
                 .resourceType(type)
+                .resourceYear(resourceYear)
                 .description(request.getDescription())
                 .aceptaResoluciones(aceptaResoluciones)
                 .fileUrl(request.getFileUrl())
@@ -118,7 +128,7 @@ public class ResourceService implements IResourceService {
     @Transactional(readOnly = true)
     public PagedResponse<ResourceResponse> search(String query, String type, UUID universityId,
                                                    UUID areaId, UUID careerId, UUID courseId,
-                                                   UUID authorId, int page, int size) {
+                                                   UUID authorId, Integer resourceYear, int page, int size) {
         ResourceType resourceType = null;
         if (type != null && !type.isBlank()) {
             try {
@@ -133,7 +143,7 @@ public class ResourceService implements IResourceService {
         String typeStr = (resourceType != null) ? resourceType.name() : null;
 
         org.springframework.data.domain.Page<Resource> resourcePage = resourceRepository.search(
-                q, typeStr, universityId, areaId, careerId, courseId, authorId,
+                q, typeStr, universityId, areaId, careerId, courseId, authorId, resourceYear,
                 PagedResponse.toPageRequest(page, size));
 
         // Populate mySubmission for the current STUDENT in a single batch query

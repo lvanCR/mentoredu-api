@@ -23,6 +23,7 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
           AND (:careerId IS NULL OR r.career_id = :careerId)
           AND (:courseId IS NULL OR r.course_id = :courseId)
           AND (:authorId IS NULL OR r.author_user_id = :authorId)
+          AND (:resourceYear IS NULL OR r.resource_year = :resourceYear)
         ORDER BY r.created_at DESC
         """,
         countQuery = """
@@ -35,6 +36,7 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
           AND (:careerId IS NULL OR r.career_id = :careerId)
           AND (:courseId IS NULL OR r.course_id = :courseId)
           AND (:authorId IS NULL OR r.author_user_id = :authorId)
+          AND (:resourceYear IS NULL OR r.resource_year = :resourceYear)
         """,
         nativeQuery = true)
     Page<Resource> search(
@@ -45,6 +47,7 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
         @Param("careerId")     UUID   careerId,
         @Param("courseId")     UUID   courseId,
         @Param("authorId")     UUID   authorId,
+        @Param("resourceYear") Integer resourceYear,
         Pageable pageable
     );
 }
