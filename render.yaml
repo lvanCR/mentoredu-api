@@ -24,14 +24,3 @@ services:
       - key: FILE_SERVICE_URL
         sync: false
 
-  - type: web
-    name: file-service
-    runtime: docker
-    dockerfilePath: ./file-service/Dockerfile
-    dockerContext: ./file-service
-    healthCheckPath: /actuator/health
-    envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: prod
-      - key: CLOUDINARY_URL
-        sync: false
