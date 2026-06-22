@@ -44,7 +44,7 @@ application-local.properties
 EVALUACION_TB3.md
 ejecucion.md
 PRUEBAS_FINALES.md
-CUsersIvanAppDataLocalTempapi_output.log
+CUsersIvanAppDataLocalTempapi_output.log
 CONFIRMACION_TESTS.md
 postman_correcion.md
 out/
@@ -52,4 +52,12 @@ out/
 # Uploaded files (dev local storage)
 uploads/
 
+# Dev-only / local docs
 feedback.md
+guia.md
+historias-usuario-documentacion.md
+postman.md
+postman/
+docs/
+
+.aider*
