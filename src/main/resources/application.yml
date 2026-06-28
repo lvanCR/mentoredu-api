@@ -20,6 +20,19 @@ spring:
       enabled: true
       max-file-size: 20MB
       max-request-size: 21MB
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+      embedding:
+        options:
+          model: text-embedding-3-small
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        dimensions: 1536
 
 app:
   jwt:
@@ -54,17 +67,3 @@ springdoc:
   swagger-ui:
     enabled: false
 
-spring:
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      chat:
-        options:
-          model: gpt-4o-mini
-      embedding:
-        options:
-          model: text-embedding-3-small
-    vectorstore:
-      pgvector:
-        initialize-schema: true
-        dimensions: 1536
