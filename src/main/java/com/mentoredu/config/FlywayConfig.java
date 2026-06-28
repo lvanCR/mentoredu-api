@@ -4,22 +4,22 @@ import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 import java.util.Arrays;
 
+// Gestiona Flyway manualmente en todos los perfiles.
+// Spring Boot 4.x rompe la ordenación Flyway → JPA con lazy-initialization; este config la restaura.
+// spring.flyway.enabled=false en application.yml para que el autoconfigure de SB no interfiera.
 @Configuration
 public class FlywayConfig {
 
-    // Activo cuando spring.flyway.enabled=false (perfil local): Spring Boot autoconfigure queda
-    // desactivado y este bean toma el control manual de las migraciones + el orden con JPA.
-    // Cuando spring.flyway.enabled=true (producción) la autoconfigure de SB gestiona Flyway.
     @Bean
-    @ConditionalOnProperty(name = "app.flyway.manual", havingValue = "true")
     public Flyway flyway(DataSource dataSource) {
+        // baselineOnMigrate: BD con tablas pero sin historial (ej. recovery local) → baseline en V17.
+        // BD vacía (prod fresh) → corre todas las migraciones desde V1 normalmente.
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
@@ -30,10 +30,8 @@ public class FlywayConfig {
         return flyway;
     }
 
-    // En Spring Boot 4.x la ordenación automática Flyway → JPA está rota; este post-processor
-    // la restaura manualmente. Solo aplica cuando la autoconfigure de SB está desactivada.
+    // Restaura el orden Flyway → JPA que Spring Boot 4.x no garantiza con lazy-initialization.
     @Bean
-    @ConditionalOnProperty(name = "app.flyway.manual", havingValue = "true")
     public static BeanFactoryPostProcessor flywayJpaDependencyPostProcessor() {
         return (ConfigurableListableBeanFactory factory) -> {
             String emfBean = "entityManagerFactory";
