@@ -3,6 +3,7 @@ package com.mentoredu.ai.controller;
 import com.mentoredu.ai.dto.ChatRequest;
 import com.mentoredu.ai.dto.ChatResponse;
 import com.mentoredu.ai.dto.SolutionReportResponse;
+import com.mentoredu.ai.dto.SuggestionsResponse;
 import com.mentoredu.ai.service.AssistantService;
 import com.mentoredu.ai.service.SupportService;
 import com.mentoredu.config.SecurityUtils;
@@ -31,6 +32,12 @@ public class AiController {
     @PostMapping("/assistant")
     public ChatResponse assistant(@RequestBody ChatRequest request) {
         return new ChatResponse(assistantService.chat(request.message()));
+    }
+
+    @Operation(summary = "Asistente: sugerencias de búsqueda basadas en recursos reales de la BD")
+    @GetMapping("/assistant/suggestions")
+    public SuggestionsResponse assistantSuggestions() {
+        return new SuggestionsResponse(assistantService.suggestions());
     }
 
     @Operation(summary = "Reporte: análisis IA de resoluciones de un ejercicio (Structured Output) — solo TEACHER y ACADEMY")

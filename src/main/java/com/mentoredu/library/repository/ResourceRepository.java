@@ -15,8 +15,8 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
 
     @Query(value = """
         SELECT * FROM resources r
-        WHERE (:query IS NULL OR r.title ILIKE CONCAT('%', :query, '%')
-                              OR r.description ILIKE CONCAT('%', :query, '%'))
+        WHERE (:query IS NULL OR unaccent(r.title) ILIKE unaccent(CONCAT('%', :query, '%'))
+                              OR unaccent(r.description) ILIKE unaccent(CONCAT('%', :query, '%')))
           AND (:type IS NULL OR r.resource_type = :type)
           AND (:universityId IS NULL OR r.university_id = :universityId)
           AND (:areaId IS NULL OR r.area_id = :areaId)
@@ -28,8 +28,8 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
         """,
         countQuery = """
         SELECT COUNT(*) FROM resources r
-        WHERE (:query IS NULL OR r.title ILIKE CONCAT('%', :query, '%')
-                              OR r.description ILIKE CONCAT('%', :query, '%'))
+        WHERE (:query IS NULL OR unaccent(r.title) ILIKE unaccent(CONCAT('%', :query, '%'))
+                              OR unaccent(r.description) ILIKE unaccent(CONCAT('%', :query, '%')))
           AND (:type IS NULL OR r.resource_type = :type)
           AND (:universityId IS NULL OR r.university_id = :universityId)
           AND (:areaId IS NULL OR r.area_id = :areaId)
