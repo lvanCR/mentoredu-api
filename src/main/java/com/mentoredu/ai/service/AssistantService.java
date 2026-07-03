@@ -92,9 +92,28 @@ public class AssistantService {
         String typeLabel = TYPE_LABELS.get(resource.getResourceType());
         String courseName = resource.getCourseId() != null ? courseNamesById.get(resource.getCourseId()) : null;
 
-        return courseName != null
+        // La búsqueda del asistente es texto libre sobre title/description (no filtra por course_id),
+        // así que solo se puede prometer un curso en la sugerencia si su nombre aparece literalmente
+        // en ese recurso — si no, la frase generaría cero resultados.
+        boolean courseNameIsSearchable = courseName != null
+            && (containsNormalized(resource.getTitle(), courseName) || containsNormalized(resource.getDescription(), courseName));
+
+        return courseNameIsSearchable
             ? "Busca " + typeLabel + " de " + courseName
             : "Busca " + typeLabel + " disponibles";
+    }
+
+    private boolean containsNormalized(String haystack, String needle) {
+        if (haystack == null || needle == null) {
+            return false;
+        }
+        return normalize(haystack).contains(normalize(needle));
+    }
+
+    private String normalize(String text) {
+        String stripped = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "");
+        return stripped.toLowerCase();
     }
 
     public SolutionReportResponse report(UUID resourceId, String requesterEmail) {
