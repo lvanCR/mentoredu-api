@@ -9,6 +9,10 @@ API REST principal de la plataforma MentorEdu. Gestiona autenticación, perfiles
 - JWT + Spring Security
 - Docker · Render.com
 
+## Versión desplegada
+
+`v1.0.0` — [ver tag](https://github.com/mentoredu-app/mentoredu-api/releases/tag/v1.0.0)
+
 ## Health check
 
 https://mentoredu-api.onrender.com/actuator/health
