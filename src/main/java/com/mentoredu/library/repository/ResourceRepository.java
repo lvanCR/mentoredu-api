@@ -50,4 +50,26 @@ public interface ResourceRepository extends JpaRepository<Resource, UUID> {
         @Param("resourceYear") Integer resourceYear,
         Pageable pageable
     );
+    @Query(value = """
+        SELECT DISTINCT r.* FROM resources r
+        LEFT JOIN universities u ON u.id = r.university_id
+        LEFT JOIN areas a ON a.id = r.area_id
+        LEFT JOIN careers ca ON ca.id = r.career_id
+        LEFT JOIN courses c ON c.id = r.course_id
+        WHERE (:query IS NULL OR unaccent(r.title) ILIKE unaccent(CONCAT('%', :query, '%'))
+                              OR unaccent(r.description) ILIKE unaccent(CONCAT('%', :query, '%'))
+                              OR unaccent(u.name) ILIKE unaccent(CONCAT('%', :query, '%'))
+                              OR unaccent(a.name) ILIKE unaccent(CONCAT('%', :query, '%'))
+                              OR unaccent(ca.name) ILIKE unaccent(CONCAT('%', :query, '%'))
+                              OR unaccent(c.name) ILIKE unaccent(CONCAT('%', :query, '%'))
+                              OR unaccent(c.description) ILIKE unaccent(CONCAT('%', :query, '%')))
+          AND (:type IS NULL OR r.resource_type = :type)
+        ORDER BY r.created_at DESC
+        """,
+        nativeQuery = true)
+    Page<Resource> assistantSearch(
+        @Param("query") String query,
+        @Param("type") String type,
+        Pageable pageable
+    );
 }

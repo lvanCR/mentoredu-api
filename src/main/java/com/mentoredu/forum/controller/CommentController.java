@@ -3,6 +3,7 @@ package com.mentoredu.forum.controller;
 import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.forum.dto.CommentResponse;
 import com.mentoredu.forum.dto.CreateCommentRequest;
+import com.mentoredu.forum.dto.UpdateBodyRequest;
 import com.mentoredu.forum.service.ICommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -49,5 +50,23 @@ public class CommentController {
     public ResponseEntity<List<CommentResponse>> listByAnswer(@PathVariable UUID answerId) {
         SecurityUtils.requireAuth();
         return ResponseEntity.ok(commentService.listByAnswer(answerId));
+    }
+
+    @PatchMapping("/{answerId}/comments/{commentId}")
+    @Operation(summary = "Editar comentario de una respuesta")
+    public ResponseEntity<CommentResponse> update(
+            @PathVariable UUID answerId,
+            @PathVariable UUID commentId,
+            @Valid @RequestBody UpdateBodyRequest request) {
+        return ResponseEntity.ok(commentService.update(answerId, commentId, request, SecurityUtils.currentEmail()));
+    }
+
+    @DeleteMapping("/{answerId}/comments/{commentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Eliminar comentario de una respuesta")
+    public void delete(
+            @PathVariable UUID answerId,
+            @PathVariable UUID commentId) {
+        commentService.delete(answerId, commentId, SecurityUtils.currentEmail());
     }
 }

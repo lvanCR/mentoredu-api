@@ -1,4 +1,4 @@
-package com.mentoredu.profile.service;
+﻿package com.mentoredu.profile.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.service.UserService;
@@ -35,7 +35,7 @@ public class ProfileService implements IProfileService {
     private final VerificationRequestRepository verificationRequestRepository;
 
     // -------------------------------------------------------------------------
-    // US05 — Update common profile data
+    // US05 â€” Update common profile data
     // -------------------------------------------------------------------------
 
     @Override
@@ -88,7 +88,7 @@ public class ProfileService implements IProfileService {
     }
 
     // -------------------------------------------------------------------------
-    // US06 — Create student profile
+    // US06 â€” Create student profile
     // -------------------------------------------------------------------------
 
     @Override
@@ -138,7 +138,7 @@ public class ProfileService implements IProfileService {
     }
 
     // -------------------------------------------------------------------------
-    // PATCH /profiles/student/me — Update student profile
+    // PATCH /profiles/student/me â€” Update student profile
     // -------------------------------------------------------------------------
 
     @Override
@@ -254,7 +254,7 @@ public class ProfileService implements IProfileService {
     }
 
     // -------------------------------------------------------------------------
-    // GET /profiles/{userId} — public profile
+    // GET /profiles/{userId} â€” public profile
     // -------------------------------------------------------------------------
 
     @Override
@@ -262,7 +262,7 @@ public class ProfileService implements IProfileService {
     public ProfileResponse getPublicProfile(UUID userId, String callerEmail) {
         Profile profile = profileRepository.findByUserId(userId).orElse(null);
 
-        // ADMIN / MODERATOR no tienen registro en profiles — devolver respuesta sintética
+        // ADMIN / MODERATOR no tienen registro en profiles â€” devolver respuesta sintÃ©tica
         if (profile == null) {
             User target = userService.findByIdOrThrow(userId);
             String role = target.getRole() != null ? target.getRole().getName() : "";
@@ -296,6 +296,15 @@ public class ProfileService implements IProfileService {
                 .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + email));
         AcademyProfile academyProfile = academyProfileRepository.findById(profile.getId())
                 .orElseThrow(() -> new ProfileNotFoundException("Academy profile not found for user: " + email));
+        return AcademyProfileResponse.from(academyProfile);
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public AcademyProfileResponse getAcademyProfileByUserId(UUID userId) {
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found for user: " + userId));
+        AcademyProfile academyProfile = academyProfileRepository.findById(profile.getId())
+                .orElseThrow(() -> new ProfileNotFoundException("Academy profile not found for user: " + userId));
         return AcademyProfileResponse.from(academyProfile);
     }
 
@@ -352,13 +361,13 @@ public class ProfileService implements IProfileService {
 
     private void validateCatalogIds(UUID universityId, UUID areaId, UUID careerId) {
         if (universityId != null && !universityRepository.existsById(universityId)) {
-            throw new IllegalArgumentException("Valor no encontrado en catálogo: universityId=" + universityId);
+            throw new IllegalArgumentException("Valor no encontrado en catÃ¡logo: universityId=" + universityId);
         }
         if (areaId != null && !areaRepository.existsById(areaId)) {
-            throw new IllegalArgumentException("Valor no encontrado en catálogo: areaId=" + areaId);
+            throw new IllegalArgumentException("Valor no encontrado en catÃ¡logo: areaId=" + areaId);
         }
         if (careerId != null && !careerRepository.existsById(careerId)) {
-            throw new IllegalArgumentException("Valor no encontrado en catálogo: careerId=" + careerId);
+            throw new IllegalArgumentException("Valor no encontrado en catÃ¡logo: careerId=" + careerId);
         }
     }
 
@@ -387,3 +396,5 @@ public class ProfileService implements IProfileService {
         return AcademyProfileResponse.from(academyProfileRepository.save(academyProfile));
     }
 }
+
+

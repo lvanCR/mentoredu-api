@@ -23,11 +23,15 @@ spring:
     openai:
       api-key: ${OPENAI_API_KEY}
       chat:
+        api-key: ${OPENAI_CHAT_API_KEY:${OPENAI_API_KEY}}
+        base-url: https://api.openai.com
         options:
-          model: gpt-4o-mini
+          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
       embedding:
+        api-key: ${OPENAI_EMBEDDING_API_KEY:${OPENAI_API_KEY}}
+        base-url: https://api.openai.com
         options:
-          model: text-embedding-3-small
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
     vectorstore:
       pgvector:
         initialize-schema: true

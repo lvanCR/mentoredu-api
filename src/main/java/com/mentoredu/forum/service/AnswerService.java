@@ -4,12 +4,16 @@ import com.mentoredu.auth.service.UserService;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.forum.dto.AnswerResponse;
 import com.mentoredu.forum.dto.CreateAnswerRequest;
+import com.mentoredu.forum.dto.UpdateBodyRequest;
 import com.mentoredu.forum.event.AnswerCreatedEvent;
+import com.mentoredu.forum.exception.AnswerNotFoundException;
+import com.mentoredu.forum.exception.ThreadNotOwnedException;
 import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.model.Answer;
 import com.mentoredu.forum.model.ThreadStatus;
 import com.mentoredu.forum.repository.AnswerRepository;
+import com.mentoredu.forum.repository.CommentRepository;
 import com.mentoredu.forum.repository.ReactionRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
 import com.mentoredu.profile.repository.ProfileRepository;
@@ -27,6 +31,7 @@ public class AnswerService implements IAnswerService {
     private static final String ANSWER = "ANSWER";
 
     private final AnswerRepository       answerRepository;
+    private final CommentRepository      commentRepository;
     private final ThreadRepository       threadRepository;
     private final ReactionRepository     reactionRepository;
     private final UserService            userService;
@@ -73,6 +78,27 @@ public class AnswerService implements IAnswerService {
                 a -> toResponse(a, userId));
     }
 
+    @Override
+    @Transactional
+    public AnswerResponse update(UUID threadId, UUID answerId, UpdateBodyRequest request, String requesterEmail) {
+        Answer answer = findAnswerInThread(threadId, answerId);
+        var requester = userService.findByEmailOrThrow(requesterEmail);
+        requireAnswerOwnerOrAdmin(answer, requester);
+        answer.setBody(request.body().trim());
+        return toResponse(answerRepository.save(answer), requester.getId());
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID threadId, UUID answerId, String requesterEmail) {
+        Answer answer = findAnswerInThread(threadId, answerId);
+        var requester = userService.findByEmailOrThrow(requesterEmail);
+        requireAnswerOwnerOrAdmin(answer, requester);
+        commentRepository.deleteAll(commentRepository.findAllByAnswer_Id(answerId));
+        reactionRepository.deleteByTargetTypeAndTargetId(ANSWER, answerId);
+        answerRepository.delete(answer);
+    }
+
     private AnswerResponse toResponse(Answer a, UUID currentUserId) {
         int likes    = (int) reactionRepository.countByTargetTypeAndTargetIdAndReactionType(ANSWER, a.getId(), "LIKE");
         int dislikes = (int) reactionRepository.countByTargetTypeAndTargetIdAndReactionType(ANSWER, a.getId(), "DISLIKE");
@@ -101,6 +127,23 @@ public class AnswerService implements IAnswerService {
         return profileRepository.findByUserId(userId)
                 .map(profile -> profile.getAvatarUrl())
                 .orElse(null);
+    }
+
+    private Answer findAnswerInThread(UUID threadId, UUID answerId) {
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new AnswerNotFoundException("Respuesta no encontrada: " + answerId));
+        if (!answer.getThread().getId().equals(threadId)) {
+            throw new AnswerNotFoundException("La respuesta no pertenece a este hilo");
+        }
+        return answer;
+    }
+
+    private void requireAnswerOwnerOrAdmin(Answer answer, com.mentoredu.auth.entity.User requester) {
+        boolean owner = answer.getAuthor().getId().equals(requester.getId());
+        boolean admin = "ADMIN".equals(requester.getRole().getName());
+        if (!owner && !admin) {
+            throw new ThreadNotOwnedException("Solo el autor o un administrador puede modificar esta respuesta");
+        }
     }
 
 }

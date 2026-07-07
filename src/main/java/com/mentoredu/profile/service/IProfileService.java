@@ -1,4 +1,4 @@
-package com.mentoredu.profile.service;
+﻿package com.mentoredu.profile.service;
 
 import com.mentoredu.profile.dto.*;
 
@@ -20,5 +20,7 @@ public interface IProfileService {
 
     AcademyProfileResponse createAcademyProfile(String email, CreateAcademyProfileRequest request);
     AcademyProfileResponse getAcademyProfile(String email);
+    AcademyProfileResponse getAcademyProfileByUserId(UUID userId);
     AcademyProfileResponse updateAcademyProfile(String email, UpdateAcademyProfileRequest request);
 }
+
