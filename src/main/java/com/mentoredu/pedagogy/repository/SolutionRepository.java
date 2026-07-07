@@ -22,12 +22,15 @@ public interface SolutionRepository extends JpaRepository<Solution, UUID> {
     @Query("SELECT s FROM Solution s WHERE s.student.id = :studentId ORDER BY s.submittedAt DESC")
     Page<Solution> findByStudentIdPaged(@Param("studentId") UUID studentId, Pageable pageable);
 
+    @Query("SELECT s FROM Solution s ORDER BY s.submittedAt DESC")
+    Page<Solution> findAllReceived(Pageable pageable);
+
     @Query("""
         SELECT s FROM Solution s
         WHERE s.resourceId IN (
-            SELECT r.id FROM Resource r WHERE r.author.id = :authorId
+            SELECT r.id FROM Resource r WHERE r.author.id IN :authorIds
         )
         ORDER BY s.submittedAt DESC
         """)
-    Page<Solution> findReceivedByAuthorId(@Param("authorId") UUID authorId, Pageable pageable);
+    Page<Solution> findReceivedByAuthorIds(@Param("authorIds") Collection<UUID> authorIds, Pageable pageable);
 }

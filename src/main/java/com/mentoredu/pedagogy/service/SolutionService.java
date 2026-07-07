@@ -1,4 +1,4 @@
-package com.mentoredu.pedagogy.service;
+﻿package com.mentoredu.pedagogy.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.service.UserService;
@@ -54,7 +54,7 @@ public class SolutionService implements ISolutionService {
         if (!"STUDENT".equals(student.getRole().getName()))
             throw new SolutionAccessDeniedException("Solo los estudiantes pueden enviar resoluciones");
         if (solutionRepository.existsByResourceIdAndStudentId(resourceId, student.getId()))
-            throw new DuplicateSolutionException("Ya enviaste una resolución para este ejercicio");
+            throw new DuplicateSolutionException("Ya enviaste una resoluciÃ³n para este ejercicio");
         if (request.fileUrl() == null && request.content() == null)
             throw new IllegalArgumentException("Debes proporcionar un archivo (fileUrl) o contenido (content)");
         Solution solution = Solution.builder()
@@ -75,13 +75,14 @@ public class SolutionService implements ISolutionService {
     public MySolutionWithFeedbackResponse getMyWithFeedback(UUID resourceId, String studentEmail) {
         User student = userService.findByEmailOrThrow(studentEmail);
         Solution solution = solutionRepository.findByResourceIdAndStudentId(resourceId, student.getId())
-            .orElseThrow(() -> new SolutionNotFoundException("No has enviado resolución para este ejercicio"));
+            .orElseThrow(() -> new SolutionNotFoundException("No has enviado resoluciÃ³n para este ejercicio"));
         var feedbackEntry = feedbackEntryRepository.findBySolutionId(solution.getId()).orElse(null);
         var feedbackResponse = feedbackEntry != null ? feedbackService.enriched(feedbackEntry) : null;
         return new MySolutionWithFeedbackResponse(SolutionResponse.from(solution), feedbackResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SolutionResponse getById(UUID resourceId, UUID solutionId, String requesterEmail) {
         Resource resource = resourceRepository.findById(resourceId)
             .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
@@ -89,13 +90,14 @@ public class SolutionService implements ISolutionService {
         if (!resourceAuthorizationService.isAuthorizedForResource(resource, requester))
             throw new SolutionAccessDeniedException("Solo el autor del ejercicio puede ver las resoluciones");
         Solution solution = solutionRepository.findById(solutionId)
-            .orElseThrow(() -> new SolutionNotFoundException("Resolución no encontrada: " + solutionId));
+            .orElseThrow(() -> new SolutionNotFoundException("ResoluciÃ³n no encontrada: " + solutionId));
         if (!solution.getResourceId().equals(resourceId))
-            throw new SolutionNotFoundException("La resolución no pertenece a este ejercicio");
+            throw new SolutionNotFoundException("La resoluciÃ³n no pertenece a este ejercicio");
         return SolutionResponse.from(solution);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SolutionResponse> listByResource(UUID resourceId, String requesterEmail) {
         Resource resource = resourceRepository.findById(resourceId)
             .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
@@ -106,7 +108,36 @@ public class SolutionService implements ISolutionService {
             .map(SolutionResponse::from).toList();
     }
 
-    // ── GET /solutions/mine ───────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public SolutionResponse update(UUID resourceId, UUID solutionId, SubmitSolutionRequest request, String requesterEmail) {
+        Solution solution = findOwnedSolution(resourceId, solutionId, requesterEmail);
+        if (request.fileUrl() == null && request.content() == null) {
+            throw new IllegalArgumentException("Debes proporcionar un archivo (fileUrl) o contenido (content)");
+        }
+        if (request.fileUrl() != null) {
+            solution.setFileUrl(request.fileUrl().isBlank() ? null : request.fileUrl());
+        }
+        if (request.content() != null) {
+            solution.setContent(request.content().isBlank() ? null : request.content());
+        }
+        if (solution.getFileUrl() == null && solution.getContent() == null) {
+            throw new IllegalArgumentException("La resolucion debe conservar archivo o contenido");
+        }
+        feedbackEntryRepository.deleteBySolutionId(solution.getId());
+        solution.setStatus(SolutionStatus.SUBMITTED);
+        return SolutionResponse.from(solutionRepository.save(solution));
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID resourceId, UUID solutionId, String requesterEmail) {
+        Solution solution = findOwnedSolution(resourceId, solutionId, requesterEmail);
+        feedbackEntryRepository.deleteBySolutionId(solution.getId());
+        solutionRepository.delete(solution);
+    }
+
+    // â”€â”€ GET /solutions/mine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Override
     @Transactional(readOnly = true)
@@ -128,14 +159,17 @@ public class SolutionService implements ISolutionService {
                         feedbackMap.get(s.getId())));
     }
 
-    // ── GET /solutions/received ───────────────────────────────────────────────
+    // â”€â”€ GET /solutions/received â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Override
     @Transactional(readOnly = true)
     public PagedResponse<ReceivedSolutionResponse> getReceivedSolutions(String teacherEmail, int page, int size) {
-        User teacher = userService.findByEmailOrThrow(teacherEmail);
-        Page<Solution> solutionPage = solutionRepository.findReceivedByAuthorId(
-                teacher.getId(), PagedResponse.toPageRequest(page, size));
+        User requester = userService.findByEmailOrThrow(teacherEmail);
+        Page<Solution> solutionPage = "ADMIN".equals(requester.getRole().getName())
+                ? solutionRepository.findAllReceived(PagedResponse.toPageRequest(page, size))
+                : solutionRepository.findReceivedByAuthorIds(
+                        resourceAuthorizationService.authorizedResourceAuthorIds(requester),
+                        PagedResponse.toPageRequest(page, size));
 
         List<UUID> resourceIds = solutionPage.map(Solution::getResourceId).toList();
         Map<UUID, Resource> resourceMap = resourceRepository.findAllById(resourceIds)
@@ -149,4 +183,20 @@ public class SolutionService implements ISolutionService {
                 ReceivedSolutionResponse.of(s, resourceMap.get(s.getResourceId()),
                         feedbackMap.get(s.getId())));
     }
+
+    private Solution findOwnedSolution(UUID resourceId, UUID solutionId, String requesterEmail) {
+        User requester = userService.findByEmailOrThrow(requesterEmail);
+        Solution solution = solutionRepository.findById(solutionId)
+            .orElseThrow(() -> new SolutionNotFoundException("Resolucion no encontrada: " + solutionId));
+        if (!solution.getResourceId().equals(resourceId)) {
+            throw new SolutionNotFoundException("La resolucion no pertenece a este ejercicio");
+        }
+        boolean owner = solution.getStudent().getId().equals(requester.getId());
+        boolean admin = "ADMIN".equals(requester.getRole().getName());
+        if (!owner && !admin) {
+            throw new SolutionAccessDeniedException("Solo el estudiante autor o un administrador puede modificar esta resolucion");
+        }
+        return solution;
+    }
 }
+

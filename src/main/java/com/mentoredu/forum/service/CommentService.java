@@ -3,8 +3,11 @@ package com.mentoredu.forum.service;
 import com.mentoredu.auth.service.UserService;
 import com.mentoredu.forum.dto.CommentResponse;
 import com.mentoredu.forum.dto.CreateCommentRequest;
+import com.mentoredu.forum.dto.UpdateBodyRequest;
 import com.mentoredu.forum.event.CommentCreatedEvent;
 import com.mentoredu.forum.exception.AnswerNotFoundException;
+import com.mentoredu.forum.exception.CommentNotFoundException;
+import com.mentoredu.forum.exception.ThreadNotOwnedException;
 import com.mentoredu.forum.model.Answer;
 import com.mentoredu.forum.model.Comment;
 import com.mentoredu.forum.repository.AnswerRepository;
@@ -71,6 +74,25 @@ public class CommentService implements ICommentService {
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public CommentResponse update(UUID answerId, UUID commentId, UpdateBodyRequest request, String requesterEmail) {
+        Comment comment = findCommentInAnswer(answerId, commentId);
+        var requester = userService.findByEmailOrThrow(requesterEmail);
+        requireCommentOwnerOrAdmin(comment, requester);
+        comment.setBody(request.body().trim());
+        return toResponse(commentRepository.save(comment));
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID answerId, UUID commentId, String requesterEmail) {
+        Comment comment = findCommentInAnswer(answerId, commentId);
+        var requester = userService.findByEmailOrThrow(requesterEmail);
+        requireCommentOwnerOrAdmin(comment, requester);
+        commentRepository.delete(comment);
+    }
+
     // -------------------------------------------------------------------------
     // Mapping
     // -------------------------------------------------------------------------
@@ -93,6 +115,23 @@ public class CommentService implements ICommentService {
         return profileRepository.findByUserId(userId)
                 .map(profile -> profile.getAvatarUrl())
                 .orElse(null);
+    }
+
+    private Comment findCommentInAnswer(UUID answerId, UUID commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException("Comentario no encontrado: " + commentId));
+        if (comment.getAnswer() == null || !comment.getAnswer().getId().equals(answerId)) {
+            throw new CommentNotFoundException("El comentario no pertenece a esta respuesta");
+        }
+        return comment;
+    }
+
+    private void requireCommentOwnerOrAdmin(Comment comment, com.mentoredu.auth.entity.User requester) {
+        boolean owner = comment.getAuthor().getId().equals(requester.getId());
+        boolean admin = "ADMIN".equals(requester.getRole().getName());
+        if (!owner && !admin) {
+            throw new ThreadNotOwnedException("Solo el autor o un administrador puede modificar este comentario");
+        }
     }
 
 }

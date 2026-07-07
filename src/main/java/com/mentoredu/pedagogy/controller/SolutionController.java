@@ -59,4 +59,22 @@ public class SolutionController {
             @PathVariable UUID solutionId) {
         return ResponseEntity.ok(solutionService.getById(resourceId, solutionId, SecurityUtils.currentEmail()));
     }
+
+    @PatchMapping("/{resourceId}/solutions/{solutionId}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Editar una resolucion enviada")
+    public ResponseEntity<SolutionResponse> update(
+            @PathVariable UUID resourceId,
+            @PathVariable UUID solutionId,
+            @Valid @RequestBody SubmitSolutionRequest request) {
+        return ResponseEntity.ok(solutionService.update(resourceId, solutionId, request, SecurityUtils.currentEmail()));
+    }
+
+    @DeleteMapping("/{resourceId}/solutions/{solutionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @io.swagger.v3.oas.annotations.Operation(summary = "Eliminar una resolucion enviada")
+    public void delete(
+            @PathVariable UUID resourceId,
+            @PathVariable UUID solutionId) {
+        solutionService.delete(resourceId, solutionId, SecurityUtils.currentEmail());
+    }
 }

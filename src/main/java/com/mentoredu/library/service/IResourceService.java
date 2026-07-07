@@ -4,6 +4,7 @@ import com.mentoredu.config.PagedResponse;
 import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
+import com.mentoredu.library.dto.UpdateResourceRequest;
 import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
 
 import java.util.UUID;
@@ -14,5 +15,7 @@ public interface IResourceService {
     ResourceResponse getById(UUID resourceId);
     PagedResponse<ResourceResponse> getByAuthor(String authorEmail, int page, int size);
     DownloadResponse download(UUID resourceId, String userEmail);
+    ResourceResponse update(UUID resourceId, UpdateResourceRequest request, String requesterEmail);
     ResourceResponse updateSettings(UUID resourceId, UpdateResourceSettingsRequest request, String requesterEmail);
+    void delete(UUID resourceId, String requesterEmail);
 }

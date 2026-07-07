@@ -11,6 +11,7 @@ public record SolutionResponse(
     UUID id,
     UUID resourceId,
     UUID studentId,
+    String studentName,
     String fileUrl,
     String content,
     String status,
@@ -21,6 +22,7 @@ public record SolutionResponse(
             .id(s.getId())
             .resourceId(s.getResourceId())
             .studentId(s.getStudent().getId())
+            .studentName(s.getStudent().getFirstName() + " " + s.getStudent().getLastName())
             .fileUrl(s.getFileUrl())
             .content(s.getContent())
             .status(s.getStatus().name())

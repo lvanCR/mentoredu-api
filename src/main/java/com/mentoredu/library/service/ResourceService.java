@@ -9,7 +9,9 @@ import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
 import com.mentoredu.library.dto.SubmissionStatusDto;
+import com.mentoredu.library.dto.UpdateResourceRequest;
 import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
+import com.mentoredu.pedagogy.repository.FeedbackEntryRepository;
 import com.mentoredu.pedagogy.model.Solution;
 import com.mentoredu.pedagogy.repository.SolutionRepository;
 import com.mentoredu.library.exception.AceptaResolucionesPracticaOnlyException;
@@ -41,6 +43,7 @@ public class ResourceService implements IResourceService {
     private final ICatalogService       catalogService;
     private final DownloadLogRepository downloadLogRepository;
     private final SolutionRepository    solutionRepository;
+    private final FeedbackEntryRepository feedbackEntryRepository;
 
     // -------------------------------------------------------------------------
     // Publish resource (US07+US08)
@@ -221,15 +224,43 @@ public class ResourceService implements IResourceService {
 
     @Override
     @Transactional
+    public ResourceResponse update(UUID resourceId, UpdateResourceRequest request, String requesterEmail) {
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
+        User requester = userService.findByEmailOrThrow(requesterEmail);
+        requireResourceOwnerOrAdmin(resource, requester);
+
+        if (request.title() != null && !request.title().isBlank()) {
+            resource.setTitle(request.title().trim());
+        }
+        if (request.description() != null) {
+            resource.setDescription(request.description().trim().isBlank() ? null : request.description().trim());
+        }
+        if (request.resourceYear() != null) {
+            validateResourceYear(request.resourceYear());
+            resource.setResourceYear(request.resourceYear());
+        }
+        if (request.aceptaResoluciones() != null) {
+            boolean activate = Boolean.TRUE.equals(request.aceptaResoluciones());
+            if (activate && resource.getResourceType() != ResourceType.PRACTICA) {
+                throw new AceptaResolucionesPracticaOnlyException(
+                    "Solo los recursos de tipo PRACTICA aceptan resoluciones (RN-08)");
+            }
+            resource.setAceptaResoluciones(activate);
+        }
+
+        return new ResourceResponse(resourceRepository.save(resource));
+    }
+
+    @Override
+    @Transactional
     public ResourceResponse updateSettings(UUID resourceId, UpdateResourceSettingsRequest request, String requesterEmail) {
         Resource resource = resourceRepository.findById(resourceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
 
         User requester = userService.findByEmailOrThrow(requesterEmail);
 
-        if (!resource.getAuthor().getId().equals(requester.getId())) {
-            throw new ResourceAccessDeniedException("Solo el autor puede modificar la configuración del recurso");
-        }
+        requireResourceOwnerOrAdmin(resource, requester);
 
         boolean activate = Boolean.TRUE.equals(request.getAceptaResoluciones());
 
@@ -250,6 +281,24 @@ public class ResourceService implements IResourceService {
 
         resource.setAceptaResoluciones(activate);
         return new ResourceResponse(resourceRepository.save(resource));
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID resourceId, String requesterEmail) {
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado: " + resourceId));
+        User requester = userService.findByEmailOrThrow(requesterEmail);
+        requireResourceOwnerOrAdmin(resource, requester);
+
+        List<Solution> solutions = solutionRepository.findByResourceId(resourceId);
+        List<UUID> solutionIds = solutions.stream().map(Solution::getId).toList();
+        if (!solutionIds.isEmpty()) {
+            feedbackEntryRepository.deleteBySolution_IdIn(solutionIds);
+            solutionRepository.deleteAll(solutions);
+        }
+        downloadLogRepository.deleteByResourceId(resourceId);
+        resourceRepository.delete(resource);
     }
 
     // -------------------------------------------------------------------------
@@ -277,5 +326,19 @@ public class ResourceService implements IResourceService {
                 .mimeType(resource.getMimeType())
                 .sizeBytes(resource.getSizeBytes())
                 .build();
+    }
+
+    private void requireResourceOwnerOrAdmin(Resource resource, User requester) {
+        boolean owner = resource.getAuthor().getId().equals(requester.getId());
+        boolean admin = "ADMIN".equals(requester.getRole().getName());
+        if (!owner && !admin) {
+            throw new ResourceAccessDeniedException("Solo el autor o un administrador puede modificar este recurso");
+        }
+    }
+
+    private void validateResourceYear(Integer resourceYear) {
+        if (resourceYear < 1900 || resourceYear > 2100) {
+            throw new IllegalArgumentException("resourceYear debe estar entre 1900 y 2100");
+        }
     }
 }

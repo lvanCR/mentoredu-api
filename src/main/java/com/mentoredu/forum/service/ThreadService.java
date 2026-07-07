@@ -6,11 +6,15 @@ import com.mentoredu.catalog.service.ICatalogService;
 import com.mentoredu.config.PagedResponse;
 import com.mentoredu.forum.dto.CreateThreadRequest;
 import com.mentoredu.forum.dto.ThreadResponse;
+import com.mentoredu.forum.dto.UpdateThreadRequest;
 import com.mentoredu.forum.exception.ThreadClosedException;
 import com.mentoredu.forum.exception.ThreadNotFoundException;
 import com.mentoredu.forum.exception.ThreadNotOwnedException;
+import com.mentoredu.forum.model.Answer;
 import com.mentoredu.forum.model.ForumThread;
 import com.mentoredu.forum.model.ThreadStatus;
+import com.mentoredu.forum.repository.AnswerRepository;
+import com.mentoredu.forum.repository.CommentRepository;
 import com.mentoredu.forum.repository.ReactionRepository;
 import com.mentoredu.forum.repository.ThreadRepository;
 import com.mentoredu.profile.repository.ProfileRepository;
@@ -18,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -27,6 +32,8 @@ public class ThreadService implements IThreadService {
     private static final String THREAD = "THREAD";
 
     private final ThreadRepository  threadRepository;
+    private final AnswerRepository  answerRepository;
+    private final CommentRepository commentRepository;
     private final ReactionRepository reactionRepository;
     private final UserService        userService;
     private final ICatalogService    catalogService;
@@ -84,6 +91,23 @@ public class ThreadService implements IThreadService {
 
     @Override
     @Transactional
+    public ThreadResponse update(UUID id, UpdateThreadRequest request, String requesterEmail) {
+        ForumThread thread = threadRepository.findById(id)
+                .orElseThrow(() -> new ThreadNotFoundException("Hilo no encontrado: " + id));
+        User requester = userService.findByEmailOrThrow(requesterEmail);
+        requireThreadOwnerOrAdmin(thread, requester);
+
+        if (request.title() != null && !request.title().isBlank()) {
+            thread.setTitle(request.title().trim());
+        }
+        if (request.body() != null && !request.body().isBlank()) {
+            thread.setBody(request.body().trim());
+        }
+        return toResponse(threadRepository.save(thread), requester.getId());
+    }
+
+    @Override
+    @Transactional
     public ThreadResponse close(UUID id, String requesterEmail) {
         ForumThread thread = threadRepository.findById(id)
                 .orElseThrow(() -> new ThreadNotFoundException("Hilo no encontrado: " + id));
@@ -94,17 +118,28 @@ public class ThreadService implements IThreadService {
 
         User requester = userService.findByEmailOrThrow(requesterEmail);
 
-        boolean isAuthor = thread.getAuthor().getEmail().equals(requesterEmail);
-        String role = requester.getRole().getName();
-        boolean isModerator = "MODERATOR".equals(role) || "ADMIN".equals(role);
-
-        // RN-14: solo el autor del hilo o un MODERATOR/ADMIN puede cerrarlo
-        if (!isAuthor && !isModerator) {
-            throw new ThreadNotOwnedException("Solo el autor, un moderador o administrador puede cerrar este hilo: " + id);
-        }
+        requireThreadOwnerOrModerator(thread, requester);
 
         thread.setStatus(ThreadStatus.CLOSED);
         return toResponse(threadRepository.save(thread), requester.getId());
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID id, String requesterEmail) {
+        ForumThread thread = threadRepository.findById(id)
+                .orElseThrow(() -> new ThreadNotFoundException("Hilo no encontrado: " + id));
+        User requester = userService.findByEmailOrThrow(requesterEmail);
+        requireThreadOwnerOrAdmin(thread, requester);
+
+        List<Answer> answers = answerRepository.findAllByThread_Id(id);
+        commentRepository.deleteAll(commentRepository.findAllByThread_Id(id));
+        for (Answer answer : answers) {
+            reactionRepository.deleteByTargetTypeAndTargetId("ANSWER", answer.getId());
+        }
+        answerRepository.deleteAll(answers);
+        reactionRepository.deleteByTargetTypeAndTargetId(THREAD, id);
+        threadRepository.delete(thread);
     }
 
     // -------------------------------------------------------------------------
@@ -203,6 +238,23 @@ public class ThreadService implements IThreadService {
         return profileRepository.findByUserId(userId)
                 .map(profile -> profile.getAvatarUrl())
                 .orElse(null);
+    }
+
+    private void requireThreadOwnerOrAdmin(ForumThread thread, User requester) {
+        boolean owner = thread.getAuthor().getId().equals(requester.getId());
+        boolean admin = "ADMIN".equals(requester.getRole().getName());
+        if (!owner && !admin) {
+            throw new ThreadNotOwnedException("Solo el autor o un administrador puede modificar este hilo: " + thread.getId());
+        }
+    }
+
+    private void requireThreadOwnerOrModerator(ForumThread thread, User requester) {
+        boolean owner = thread.getAuthor().getId().equals(requester.getId());
+        String role = requester.getRole().getName();
+        boolean moderator = "MODERATOR".equals(role) || "ADMIN".equals(role);
+        if (!owner && !moderator) {
+            throw new ThreadNotOwnedException("Solo el autor, un moderador o administrador puede cerrar este hilo: " + thread.getId());
+        }
     }
 
 }
