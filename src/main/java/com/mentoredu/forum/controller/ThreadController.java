@@ -4,6 +4,7 @@ import com.mentoredu.config.PagedResponse;
 import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.forum.dto.CreateThreadRequest;
 import com.mentoredu.forum.dto.ThreadResponse;
+import com.mentoredu.forum.dto.UpdateThreadRequest;
 import com.mentoredu.forum.service.IThreadService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -69,6 +70,14 @@ public class ThreadController {
         return ResponseEntity.ok(threadService.get(id, SecurityUtils.currentEmail()));
     }
 
+    @PatchMapping("/{id}")
+    @Operation(summary = "Editar hilo de foro", description = "Solo autor o ADMIN.")
+    public ResponseEntity<ThreadResponse> update(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateThreadRequest request) {
+        return ResponseEntity.ok(threadService.update(id, request, SecurityUtils.currentEmail()));
+    }
+
     @PatchMapping("/{id}/close")
     @Operation(
         summary = "US12 - Cerrar hilo de foro",
@@ -79,5 +88,12 @@ public class ThreadController {
     )
     public ResponseEntity<ThreadResponse> close(@PathVariable UUID id) {
         return ResponseEntity.ok(threadService.close(id, SecurityUtils.currentEmail()));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Eliminar hilo de foro", description = "Solo autor o ADMIN.")
+    public void delete(@PathVariable UUID id) {
+        threadService.delete(id, SecurityUtils.currentEmail());
     }
 }

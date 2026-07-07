@@ -1,4 +1,4 @@
-package com.mentoredu.profile.controller;
+﻿package com.mentoredu.profile.controller;
 
 import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.profile.dto.*;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/profiles")
 @RequiredArgsConstructor
-@Tag(name = "Perfil", description = "Gestión de perfiles de usuario.")
+@Tag(name = "Perfil", description = "GestiÃ³n de perfiles de usuario.")
 @SecurityRequirement(name = "bearerAuth")
 public class ProfileController {
 
@@ -107,10 +107,17 @@ public class ProfileController {
             @Valid @RequestBody UpdateAcademyProfileRequest request) {
         return ResponseEntity.ok(profileService.updateAcademyProfile(SecurityUtils.currentEmail(), request));
     }
+    @GetMapping("/academy/{userId}")
+    @Operation(summary = "US06 - Obtener perfil de academia por userId")
+    public ResponseEntity<AcademyProfileResponse> getAcademyProfile(@PathVariable UUID userId) {
+        return ResponseEntity.ok(profileService.getAcademyProfileByUserId(userId));
+    }
 
     @GetMapping("/{userId}")
-    @Operation(summary = "Ver perfil público de cualquier usuario")
+    @Operation(summary = "Ver perfil pÃºblico de cualquier usuario")
     public ResponseEntity<ProfileResponse> getPublicProfile(@PathVariable UUID userId) {
         return ResponseEntity.ok(profileService.getPublicProfile(userId, SecurityUtils.currentEmail()));
     }
 }
+
+

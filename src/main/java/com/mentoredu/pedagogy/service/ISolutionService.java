@@ -15,6 +15,8 @@ public interface ISolutionService {
     MySolutionWithFeedbackResponse getMyWithFeedback(UUID resourceId, String studentEmail);
     List<SolutionResponse> listByResource(UUID resourceId, String requesterEmail);
     SolutionResponse getById(UUID resourceId, UUID solutionId, String requesterEmail);
+    SolutionResponse update(UUID resourceId, UUID solutionId, SubmitSolutionRequest request, String requesterEmail);
+    void delete(UUID resourceId, UUID solutionId, String requesterEmail);
     PagedResponse<MySolutionSummaryResponse> getMySolutions(String studentEmail, int page, int size);
     PagedResponse<ReceivedSolutionResponse> getReceivedSolutions(String teacherEmail, int page, int size);
 }

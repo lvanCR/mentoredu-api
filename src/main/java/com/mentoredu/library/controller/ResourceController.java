@@ -5,6 +5,7 @@ import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.library.dto.DownloadResponse;
 import com.mentoredu.library.dto.PublishResourceRequest;
 import com.mentoredu.library.dto.ResourceResponse;
+import com.mentoredu.library.dto.UpdateResourceRequest;
 import com.mentoredu.library.dto.UpdateResourceSettingsRequest;
 import com.mentoredu.library.service.IResourceFileService;
 import com.mentoredu.library.service.IResourceService;
@@ -88,6 +89,21 @@ public class ResourceController {
             @PathVariable UUID id,
             @Valid @RequestBody UpdateResourceSettingsRequest request) {
         return ResponseEntity.ok(resourceService.updateSettings(id, request, SecurityUtils.currentEmail()));
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Editar metadatos de un recurso", description = "Permite editar titulo, descripcion, anio y aceptaResoluciones. Solo autor o ADMIN.")
+    public ResponseEntity<ResourceResponse> update(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateResourceRequest request) {
+        return ResponseEntity.ok(resourceService.update(id, request, SecurityUtils.currentEmail()));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    @Operation(summary = "Eliminar recurso", description = "Elimina el recurso y sus resoluciones asociadas. Solo autor o ADMIN.")
+    public void delete(@PathVariable UUID id) {
+        resourceService.delete(id, SecurityUtils.currentEmail());
     }
 
     @GetMapping("/{id}/download")

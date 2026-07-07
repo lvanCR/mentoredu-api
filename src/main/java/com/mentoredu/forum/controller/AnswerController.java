@@ -4,6 +4,7 @@ import com.mentoredu.config.PagedResponse;
 import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.forum.dto.AnswerResponse;
 import com.mentoredu.forum.dto.CreateAnswerRequest;
+import com.mentoredu.forum.dto.UpdateBodyRequest;
 import com.mentoredu.forum.service.IAnswerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,5 +42,23 @@ public class AnswerController {
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(answerService.listByThread(threadId, page, size, SecurityUtils.currentEmail()));
+    }
+
+    @PatchMapping("/{threadId}/answers/{answerId}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Editar respuesta de foro")
+    public ResponseEntity<AnswerResponse> update(
+            @PathVariable UUID threadId,
+            @PathVariable UUID answerId,
+            @Valid @RequestBody UpdateBodyRequest request) {
+        return ResponseEntity.ok(answerService.update(threadId, answerId, request, SecurityUtils.currentEmail()));
+    }
+
+    @DeleteMapping("/{threadId}/answers/{answerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @io.swagger.v3.oas.annotations.Operation(summary = "Eliminar respuesta de foro")
+    public void delete(
+            @PathVariable UUID threadId,
+            @PathVariable UUID answerId) {
+        answerService.delete(threadId, answerId, SecurityUtils.currentEmail());
     }
 }
