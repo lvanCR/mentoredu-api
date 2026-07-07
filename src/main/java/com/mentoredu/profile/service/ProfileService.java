@@ -1,4 +1,4 @@
-﻿package com.mentoredu.profile.service;
+package com.mentoredu.profile.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.service.UserService;

@@ -1,4 +1,4 @@
-﻿package com.mentoredu.ai.controller;
+package com.mentoredu.ai.controller;
 
 import com.mentoredu.ai.dto.ChatRequest;
 import com.mentoredu.ai.dto.ChatResponse;

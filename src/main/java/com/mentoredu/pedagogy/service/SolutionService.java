@@ -1,4 +1,4 @@
-﻿package com.mentoredu.pedagogy.service;
+package com.mentoredu.pedagogy.service;
 
 import com.mentoredu.auth.entity.User;
 import com.mentoredu.auth.service.UserService;

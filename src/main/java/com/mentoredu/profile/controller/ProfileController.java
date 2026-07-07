@@ -1,4 +1,4 @@
-﻿package com.mentoredu.profile.controller;
+package com.mentoredu.profile.controller;
 
 import com.mentoredu.config.SecurityUtils;
 import com.mentoredu.profile.dto.*;
