@@ -1,4 +1,4 @@
-package com.mentoredu.ai.controller;
+﻿package com.mentoredu.ai.controller;
 
 import com.mentoredu.ai.dto.ChatRequest;
 import com.mentoredu.ai.dto.ChatResponse;
@@ -15,13 +15,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/ai")
 @RequiredArgsConstructor
-@Tag(name = "IA — Asistente MentorEdu", description = "Módulo de inteligencia artificial: asistente, reporte y soporte con RAG.")
+@Tag(name = "IA — Asistente MentorEdu", description = "Modulo de inteligencia artificial: asistente, reporte y soporte con RAG.")
 @SecurityRequirement(name = "bearerAuth")
 public class AiController {
 
@@ -31,26 +32,29 @@ public class AiController {
     @Operation(summary = "Asistente: busca recursos académicos por lenguaje natural (Tool Calling)")
     @PostMapping("/assistant")
     public ChatResponse assistant(@RequestBody ChatRequest request) {
-        return new ChatResponse(assistantService.chat(request.message()));
+        return new ChatResponse(assistantService.chat(request.message(), SecurityUtils.currentEmail()));
     }
 
-    @Operation(summary = "Asistente: sugerencias de búsqueda basadas en recursos reales de la BD")
+    @Operation(summary = "Asistente: sugerencias de bÃºsqueda basadas en recursos reales de la BD")
     @GetMapping("/assistant/suggestions")
     public SuggestionsResponse assistantSuggestions() {
         return new SuggestionsResponse(assistantService.suggestions());
     }
 
-    @Operation(summary = "Reporte: análisis IA de resoluciones de un ejercicio (Structured Output) — solo TEACHER y ACADEMY")
+    @Operation(summary = "Reporte: analisis IA de resoluciones de un ejercicio (Structured Output) solo TEACHER y ACADEMY")
     @PreAuthorize("hasAnyRole('TEACHER', 'ACADEMY')")
     @GetMapping("/report/{resourceId}")
-    public SolutionReportResponse report(@PathVariable UUID resourceId) {
-        return assistantService.report(resourceId, SecurityUtils.currentEmail());
+    public SolutionReportResponse report(
+        @PathVariable UUID resourceId,
+        @RequestParam(required = false) List<UUID> solutionIds
+    ) {
+        return assistantService.report(resourceId, SecurityUtils.currentEmail(), solutionIds);
     }
 
     @Operation(summary = "Soporte: pregunta respondida con el PDF guía de MentorEdu (RAG)")
     @PostMapping("/support/ask")
     public ChatResponse supportAsk(@RequestBody ChatRequest request) {
-        return new ChatResponse(supportService.ask(request.message()));
+        return new ChatResponse(supportService.ask(request.message(), SecurityUtils.currentEmail()));
     }
 
     @Operation(summary = "Soporte: ingesta el PDF guía al vector store — solo ADMIN")
