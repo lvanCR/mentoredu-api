@@ -24,12 +24,12 @@ spring:
       api-key: ${OPENAI_API_KEY}
       chat:
         api-key: ${OPENAI_CHAT_API_KEY:${OPENAI_API_KEY}}
-        base-url: https://api.openai.com
+        base-url: https://api.openai.com/v1
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
       embedding:
         api-key: ${OPENAI_EMBEDDING_API_KEY:${OPENAI_API_KEY}}
-        base-url: https://api.openai.com
+        base-url: https://api.openai.com/v1
         options:
           model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
     vectorstore:
