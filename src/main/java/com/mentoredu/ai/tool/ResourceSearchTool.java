@@ -51,13 +51,18 @@ public class ResourceSearchTool {
         Map.entry("quim", List.of("quimica")),
         Map.entry("mate", List.of("matematica")),
         Map.entry("mat", List.of("matematica")),
-        Map.entry("uni", List.of("UNI", "Universidad Nacional de Ingenieria")),
-        Map.entry("unmsm", List.of("UNMSM", "San Marcos")),
-        Map.entry("marcos", List.of("San Marcos", "UNMSM")),
-        Map.entry("pucp", List.of("PUCP", "Pontificia Universidad Catolica")),
-        Map.entry("catolica", List.of("PUCP", "Pontificia Universidad Catolica")),
-        Map.entry("catolico", List.of("PUCP", "Pontificia Universidad Catolica"))
+        Map.entry("uni", List.of("Universidad Nacional de Ingenieria")),
+        Map.entry("unmsm", List.of("San Marcos")),
+        Map.entry("marcos", List.of("San Marcos")),
+        Map.entry("pucp", List.of("Pontificia Universidad Catolica")),
+        Map.entry("catolica", List.of("Pontificia Universidad Catolica")),
+        Map.entry("catolico", List.of("Pontificia Universidad Catolica"))
     );
+
+    // Tokens demasiado cortos o genericos como para buscarse tal cual con ILIKE (ej. "uni" es
+    // substring de la propia palabra "Universidad", "san"/"marcos" son muy comunes). Sus
+    // ramas de arriba ya agregan el nombre completo y preciso de la universidad.
+    private static final Set<String> AMBIGUOUS_TOKENS = Set.of("uni", "san", "marcos");
 
     private final ResourceRepository resourceRepository;
 
@@ -131,13 +136,12 @@ public class ResourceSearchTool {
             hasSpecificTerm = true;
         }
         if (containsToken(normalized, "uni")) {
-            candidates.add("UNI");
             candidates.add("Universidad Nacional de Ingenieria");
             hasSpecificTerm = true;
         }
         if (normalized.contains("san marcos") || normalized.contains("unmsm")) {
-            candidates.add("UNMSM");
             candidates.add("San Marcos");
+            candidates.add("UNMSM");
             hasSpecificTerm = true;
         }
         if (normalized.contains("fisica") || normalized.contains("fis")) {
@@ -153,7 +157,9 @@ public class ResourceSearchTool {
 
         for (String token : normalized.split("[^a-z0-9]+")) {
             if (token.length() >= 3 && !STOPWORDS.contains(token)) {
-                candidates.add(token);
+                if (!AMBIGUOUS_TOKENS.contains(token)) {
+                    candidates.add(token);
+                }
                 QUERY_EXPANSIONS.getOrDefault(token, List.of()).forEach(candidates::add);
                 hasSpecificTerm = true;
             }
