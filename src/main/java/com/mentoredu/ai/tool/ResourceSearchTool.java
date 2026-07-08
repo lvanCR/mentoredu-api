@@ -74,14 +74,17 @@ public class ResourceSearchTool {
     ) {
         String requestedType = normalizeType(type, query);
         LinkedHashMap<UUID, Resource> matches = new LinkedHashMap<>();
+        QueryPlan plan = queryCandidates(query);
 
-        collectMatches(matches, queryCandidates(query), requestedType);
+        collectMatches(matches, plan.candidates(), requestedType);
         if (matches.isEmpty() && requestedType != null) {
-            collectMatches(matches, queryCandidates(query), null);
+            collectMatches(matches, plan.candidates(), null);
         }
-        // Solo se navega sin ninguna palabra clave si de verdad no hubo ningún match:
-        // nunca se usa para "rellenar" resultados ya encontrados con recursos fuera de contexto.
-        if (matches.isEmpty()) {
+        // Solo se navega sin ninguna palabra clave cuando el usuario NO dio ningún termino
+        // especifico (solo relleno/stopwords) — asi el tipo detectado igual se puede explorar.
+        // Si dio un termino especifico (ej. "UPC") y no hubo match, no se rellena con recursos
+        // sin relacion: es mejor que el asistente diga que no encontro nada.
+        if (matches.isEmpty() && !plan.hasSpecificTerm()) {
             resourceRepository
                 .assistantSearch(null, requestedType, PageRequest.of(0, 5))
                 .getContent()
@@ -110,9 +113,12 @@ public class ResourceSearchTool {
         }
     }
 
-    private List<String> queryCandidates(String query) {
+    private record QueryPlan(List<String> candidates, boolean hasSpecificTerm) {}
+
+    private QueryPlan queryCandidates(String query) {
         LinkedHashSet<String> candidates = new LinkedHashSet<>();
         String normalized = normalize(query);
+        boolean hasSpecificTerm = false;
 
         if (query != null && !query.isBlank()) candidates.add(query.trim());
         if (!normalized.isBlank()) candidates.add(normalized);
@@ -121,33 +127,39 @@ public class ResourceSearchTool {
             candidates.add("catolica");
             candidates.add("pucp");
             candidates.add("pontificia");
+            hasSpecificTerm = true;
         }
         if (containsToken(normalized, "uni")) {
             candidates.add("UNI");
             candidates.add("Universidad Nacional de Ingenieria");
+            hasSpecificTerm = true;
         }
         if (normalized.contains("san marcos") || normalized.contains("unmsm")) {
             candidates.add("UNMSM");
             candidates.add("San Marcos");
+            hasSpecificTerm = true;
         }
         if (normalized.contains("fisica") || normalized.contains("fis")) {
             candidates.add("fisica");
             candidates.add("cinematica");
+            hasSpecificTerm = true;
         }
         if (normalized.contains("mate")) {
             candidates.add("matematica");
             candidates.add("razonamiento matematico");
+            hasSpecificTerm = true;
         }
 
         for (String token : normalized.split("[^a-z0-9]+")) {
             if (token.length() >= 3 && !STOPWORDS.contains(token)) {
                 candidates.add(token);
                 QUERY_EXPANSIONS.getOrDefault(token, List.of()).forEach(candidates::add);
+                hasSpecificTerm = true;
             }
         }
 
         if (candidates.isEmpty()) candidates.add(null);
-        return new ArrayList<>(candidates);
+        return new QueryPlan(new ArrayList<>(candidates), hasSpecificTerm);
     }
 
     private String normalizeType(String type, String query) {
