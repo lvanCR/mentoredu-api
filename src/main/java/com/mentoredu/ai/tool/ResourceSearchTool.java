@@ -29,7 +29,7 @@ public class ResourceSearchTool {
         "universidad", "universitario", "universitaria", "de", "del", "la", "el", "los", "las",
         "un", "una", "para", "por", "con", "sobre", "pes", "pues", "pe", "en",
         "guia", "guias", "examen", "examenes", "completo", "completos", "apunte", "apuntes",
-        "practica", "practicas", "ejercicio", "ejercicios"
+        "practica", "practicas", "ejercicio", "ejercicios", "disponible", "disponibles"
     );
 
     private static final Map<String, List<String>> QUERY_EXPANSIONS = Map.ofEntries(
@@ -137,7 +137,9 @@ public class ResourceSearchTool {
             }
         }
 
-        if (candidates.isEmpty()) candidates.add(null);
+        // Último recurso: sin palabra clave útil (todo eran stopwords o no hubo match literal),
+        // se navega solo por el tipo detectado (o todo, si tampoco hay tipo).
+        candidates.add(null);
         return new ArrayList<>(candidates);
     }
 
