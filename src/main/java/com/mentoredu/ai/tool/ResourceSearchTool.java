@@ -29,7 +29,8 @@ public class ResourceSearchTool {
         "universidad", "universitario", "universitaria", "de", "del", "la", "el", "los", "las",
         "un", "una", "para", "por", "con", "sobre", "pes", "pues", "pe", "en",
         "guia", "guias", "examen", "examenes", "completo", "completos", "apunte", "apuntes",
-        "practica", "practicas", "ejercicio", "ejercicios", "disponible", "disponibles"
+        "practica", "practicas", "ejercicio", "ejercicios", "disponible", "disponibles",
+        "quiero", "necesito", "dame", "solo", "solamente", "algo", "algun", "alguna", "algunos", "algunas"
     );
 
     private static final Map<String, List<String>> QUERY_EXPANSIONS = Map.ofEntries(
@@ -77,6 +78,14 @@ public class ResourceSearchTool {
         collectMatches(matches, queryCandidates(query), requestedType);
         if (matches.isEmpty() && requestedType != null) {
             collectMatches(matches, queryCandidates(query), null);
+        }
+        // Solo se navega sin ninguna palabra clave si de verdad no hubo ningún match:
+        // nunca se usa para "rellenar" resultados ya encontrados con recursos fuera de contexto.
+        if (matches.isEmpty()) {
+            resourceRepository
+                .assistantSearch(null, requestedType, PageRequest.of(0, 5))
+                .getContent()
+                .forEach(resource -> matches.putIfAbsent(resource.getId(), resource));
         }
 
         return matches.values().stream()
@@ -137,9 +146,7 @@ public class ResourceSearchTool {
             }
         }
 
-        // Último recurso: sin palabra clave útil (todo eran stopwords o no hubo match literal),
-        // se navega solo por el tipo detectado (o todo, si tampoco hay tipo).
-        candidates.add(null);
+        if (candidates.isEmpty()) candidates.add(null);
         return new ArrayList<>(candidates);
     }
 
