@@ -30,7 +30,8 @@ public class ResourceSearchTool {
         "un", "una", "para", "por", "con", "sobre", "pes", "pues", "pe", "en",
         "guia", "guias", "examen", "examenes", "completo", "completos", "apunte", "apuntes",
         "practica", "practicas", "ejercicio", "ejercicios", "disponible", "disponibles",
-        "quiero", "necesito", "dame", "solo", "solamente", "algo", "algun", "alguna", "algunos", "algunas"
+        "quiero", "necesito", "dame", "solo", "solamente", "algo", "algun", "alguna", "algunos", "algunas",
+        "seccion", "secciones", "otro", "otros", "otra", "otras"
     );
 
     private static final Map<String, List<String>> QUERY_EXPANSIONS = Map.ofEntries(
