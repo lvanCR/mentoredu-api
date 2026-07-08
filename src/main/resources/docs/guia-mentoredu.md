@@ -14,6 +14,24 @@ En MentorEdu puedes:
 
 ---
 
+## Reglas actuales importantes
+
+Esta seccion resume reglas vigentes de la version actual de MentorEdu y tiene prioridad si alguna seccion antigua de la guia contradice estos puntos.
+
+- **Estudiantes:** pueden buscar recursos, participar en el foro, seguir usuarios, completar su perfil y subir resoluciones cuando una practica acepta resoluciones.
+- **Docentes:** pueden publicar recursos, editar o eliminar sus propios recursos, revisar resoluciones recibidas, dar feedback, usar analisis IA y participar en el foro.
+- **Academias:** pueden publicar recursos propios, gestionar recursos de docentes asociados, revisar resoluciones recibidas, usar analisis IA y gestionar asociaciones.
+- **Administradores:** pueden gestionar recursos, hilos, respuestas, comentarios y resoluciones de cualquier usuario.
+- **Editar y eliminar contenido:** cada usuario puede gestionar su contenido propio segun su rol. Las acciones aparecen como **Editar** o **Eliminar** en las vistas donde el usuario tiene permiso.
+- **Resoluciones:** los estudiantes gestionan sus entregas desde **Mis resoluciones** o desde **Mi resolucion** en la practica. Docentes, academias y administradores revisan entregas desde **Resoluciones recibidas**.
+- **Recursos:** docentes y academias editan o eliminan recursos desde **Mis recursos** o desde el detalle del recurso.
+- **Foro:** para abrir un hilo se entra a **Foro** y se hace clic en el titulo o tarjeta del hilo. Para crear uno se usa **Publicar pregunta**. El autor puede cerrar su hilo.
+- **Comentarios y respuestas:** el autor puede editar o eliminar sus respuestas y comentarios. El administrador puede intervenir sobre cualquier contenido.
+- **Modo oscuro:** se activa o desactiva desde **Settings** o **Configuracion**, usando el control de **Dark Mode** o **Modo oscuro**.
+- **Analisis IA:** docentes y academias pueden analizar una, varias o todas las resoluciones seleccionadas desde las vistas de resoluciones.
+
+---
+
 ## 2. Roles de usuario
 
 | Rol | Quién es | Qué puede hacer |
@@ -194,6 +212,18 @@ MentorEdu cuenta con recursos y carreras de las siguientes universidades de Lima
 | **UNALM** — Universidad Nacional Agraria La Molina | Ciencias Agrarias y Ambientales |
 
 Los cursos disponibles incluyen: Matemática, Física, Química, Biología, Lengua y Literatura, Historia del Perú, Historia Universal, Geografía, Economía, Filosofía y Lógica, Aptitud Académica, Razonamiento Matemático, Razonamiento Verbal, Álgebra, Aritmética, Geometría, Trigonometría e Inglés.
+
+---
+
+## Gestion de contenido propio
+
+En la version actual, MentorEdu permite editar o eliminar contenido segun el rol y los permisos del usuario.
+
+- **Recursos:** docentes y academias pueden editar o eliminar sus propios recursos desde **Mis recursos** o desde el detalle del recurso. Las academias tambien pueden gestionar recursos de docentes asociados cuando corresponde. El administrador puede gestionar cualquier recurso.
+- **Resoluciones:** estudiantes pueden gestionar sus propias resoluciones desde **Mis resoluciones** o **Mi resolucion** cuando la accion aparece disponible. Docentes, academias y administradores revisan resoluciones desde **Resoluciones recibidas**.
+- **Foro:** para abrir un hilo, entra a **Foro** y haz clic en el titulo o tarjeta del hilo. Para crear uno nuevo usa **Publicar pregunta**. El autor puede cerrar su hilo.
+- **Respuestas y comentarios:** el autor puede editar o eliminar sus propias respuestas y comentarios. El administrador puede intervenir sobre cualquier contenido.
+- **Modo oscuro:** entra a **Settings** o **Configuracion** y activa/desactiva el control de **Dark Mode** o **Modo oscuro**.
 
 ---
 
